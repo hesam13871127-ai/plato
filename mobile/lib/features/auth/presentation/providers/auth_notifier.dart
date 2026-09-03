@@ -91,6 +91,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return _completeAuth(_repository.loginWithEmail(email: email, password: password));
   }
 
+  /// Re-fetches the current user (wallet, cosmetics, stats) after a mutation.
+  Future<void> refreshUser() async {
+    final result = await _repository.getCurrentUser();
+    result.fold(
+      (_) {/* keep existing state on transient refresh errors */},
+      (user) {
+        if (user.isAuthenticated) {
+          state = state.copyWith(user: user, isLoading: false);
+        }
+      },
+    );
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);

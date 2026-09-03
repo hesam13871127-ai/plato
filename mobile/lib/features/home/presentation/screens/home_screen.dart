@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/wallet_chip.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../quests/presentation/providers/quests_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -13,11 +15,26 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authNotifierProvider.select((s) => s.user));
+    final dailyAvailable = ref.watch(dailyPanelProvider).maybeWhen(
+          data: (panel) => !panel.daily.claimedToday,
+          orElse: () => false,
+        );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('VibeTable'),
         actions: [
+          // Daily reward shortcut — pulses/highlights when unclaimed.
+          IconButton(
+            icon: Badge(
+              isLabelVisible: dailyAvailable,
+              label: const Text('1'),
+              child: const Icon(Icons.calendar_month_rounded, size: 26),
+            ),
+            color: AppColors.softCyan,
+            onPressed: () => context.push(AppRoutes.quests),
+            tooltip: 'Daily rewards',
+          ),
           IconButton(
             icon: const Icon(Icons.account_circle_rounded, size: 28),
             color: AppColors.softCyan,
@@ -32,6 +49,7 @@ class HomeScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           children: [
             GlassCard(
+              onTap: () => context.push(AppRoutes.wallet),
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -59,14 +77,52 @@ class HomeScreen extends ConsumerWidget {
                           'Hi, ${user.displayName.isNotEmpty ? user.displayName : 'Player'}',
                           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                         ),
-                        Text('@${user.username}',
+                        Text('@${user.username} · Level ${user.level}',
                             style: const TextStyle(color: AppColors.textSecondary)),
                       ],
                     ),
                   ),
-                  _WalletChip(coins: user.coins, gems: user.gems),
+                  WalletChip(coins: user.coins, pips: user.pips),
                 ],
               ),
+            ),
+            const SizedBox(height: 20),
+            const Text('Your stuff',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.5,
+              children: const [
+                _HubTile(
+                  title: 'Shop',
+                  subtitle: 'Cosmetics & gifts',
+                  icon: Icons.storefront_rounded,
+                  route: AppRoutes.shop,
+                ),
+                _HubTile(
+                  title: 'Inventory',
+                  subtitle: 'Equip your look',
+                  icon: Icons.checkroom_rounded,
+                  route: AppRoutes.inventory,
+                ),
+                _HubTile(
+                  title: 'Daily rewards',
+                  subtitle: 'Free coins & quests',
+                  icon: Icons.card_giftcard_rounded,
+                  route: AppRoutes.quests,
+                ),
+                _HubTile(
+                  title: 'Wallet',
+                  subtitle: 'Balance & history',
+                  icon: Icons.account_balance_wallet_rounded,
+                  route: AppRoutes.wallet,
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             const Text('Popular Tables',
@@ -82,28 +138,54 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _WalletChip extends StatelessWidget {
-  const _WalletChip({required this.coins, required this.gems});
-  final int coins;
-  final int gems;
+class _HubTile extends StatelessWidget {
+  const _HubTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.route,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String route;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Row(children: [
-          const Icon(Icons.monetization_on_rounded, color: AppColors.softCyan, size: 18),
-          const SizedBox(width: 4),
-          Text('$coins', style: const TextStyle(fontWeight: FontWeight.w700)),
-        ]),
-        const SizedBox(height: 4),
-        Row(children: [
-          const Icon(Icons.diamond_rounded, color: AppColors.electricPurple, size: 18),
-          const SizedBox(width: 4),
-          Text('$gems', style: const TextStyle(fontWeight: FontWeight.w700)),
-        ]),
-      ],
+    return GlassCard(
+      onTap: () => context.push(route),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: AppColors.brandGradient,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                Text(subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
