@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/wallet_chip.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../quests/presentation/providers/quests_providers.dart';
