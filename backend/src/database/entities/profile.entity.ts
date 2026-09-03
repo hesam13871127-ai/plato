@@ -51,7 +51,7 @@ export class ProfileEntity {
   coins: number;
 
   @Column({ type: 'bigint', default: 0 })
-  gems: number;
+  pips: number;
 
   @Column({ type: 'int', default: 0 })
   gamesPlayed: number;
@@ -67,6 +67,41 @@ export class ProfileEntity {
 
   @Column({ type: 'int', default: 0 })
   streakDays: number;
+
+  // ── Phase 2: economy/social stats ──────────────────────────────────────
+  @Column({ type: 'int', default: 0 })
+  giftsSent: number;
+
+  @Column({ type: 'int', default: 0 })
+  giftsReceived: number;
+
+  // ── Phase 2: equipped cosmetics (references user_inventory.id) ──────────
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  equippedFrameId: string | null;
+
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  equippedBannerId: string | null;
+
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  equippedChatBubbleId: string | null;
+
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  equippedThemeId: string | null;
+
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  equippedIdColorId: string | null;
+
+  /** Currently active title string (must be present in `unlockedTitles`). */
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  activeTitle: string | null;
+
+  /** Titles the user has unlocked, e.g. ["Lucky Roller","Champion"]. */
+  @Column({ type: 'json', nullable: true })
+  unlockedTitles: string[] | null;
+
+  /** Badges earned, e.g. [{ "code": "first_win", "earnedAt": "..." }]. */
+  @Column({ type: 'json', nullable: true })
+  badges: Array<Record<string, unknown>> | null;
 
   @Column({ type: 'json', nullable: true })
   settings: Record<string, unknown> | null;

@@ -26,6 +26,9 @@ import { MessageEntity } from './message.entity';
 import { MessageReadEntity } from './message-read.entity';
 import { ReportEntity } from './report.entity';
 import { BanEntity } from './ban.entity';
+import { QuestEntity } from './quest.entity';
+import { UserQuestEntity } from './user-quest.entity';
+import { DailyRewardClaimEntity } from './daily-reward.entity';
 
 export * from './user.entity';
 export * from './profile.entity';
@@ -51,6 +54,9 @@ export * from './message.entity';
 export * from './message-read.entity';
 export * from './report.entity';
 export * from './ban.entity';
+export * from './quest.entity';
+export * from './user-quest.entity';
+export * from './daily-reward.entity';
 
 export const entities = [
   UserEntity,
@@ -77,4 +83,7 @@ export const entities = [
   MessageReadEntity,
   ReportEntity,
   BanEntity,
+  QuestEntity,
+  UserQuestEntity,
+  DailyRewardClaimEntity,
 ];

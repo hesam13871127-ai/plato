@@ -9,7 +9,7 @@ import { DataSource, Repository } from 'typeorm';
 import { ProfileEntity } from '../database/entities/profile.entity';
 import { UserEntity } from '../database/entities/user.entity';
 import { UpdateProfileDto, UserDto } from './dto/user.dto';
-import { toUserDto } from './user.serializer';
+import { ProfileViewService } from './profile-view.service';
 
 const USERNAME_TAKEN_ERROR = 1062;
 
@@ -21,6 +21,7 @@ export class UsersService {
     @InjectRepository(ProfileEntity)
     private readonly profiles: Repository<ProfileEntity>,
     private readonly dataSource: DataSource,
+    private readonly profileView: ProfileViewService,
   ) {}
 
   async findById(id: string): Promise<UserEntity> {
@@ -34,9 +35,22 @@ export class UsersService {
     return user;
   }
 
+  /** Full profile with wallet, stats, badges, titles and equipped cosmetics. */
   async getProfile(id: string): Promise<UserDto> {
     const user = await this.findById(id);
-    return toUserDto(user);
+    return this.profileView.toUserDto(user);
+  }
+
+  /** Public profile of another user (by username). */
+  async getPublicProfile(username: string): Promise<UserDto> {
+    const profile = await this.profiles.findOne({
+      where: { username },
+      relations: { user: true },
+    });
+    if (!profile || !profile.user) {
+      throw new NotFoundException('User not found.');
+    }
+    return this.profileView.toUserDto(profile.user);
   }
 
   async updateProfile(id: string, dto: UpdateProfileDto): Promise<UserDto> {
@@ -44,27 +58,33 @@ export class UsersService {
     if (!user.profile) {
       throw new NotFoundException('Profile not found.');
     }
+    const profile = user.profile;
 
-    if (dto.username && dto.username !== user.profile.username) {
-      const existing = await this.profiles.findOne({
-        where: { username: dto.username },
-      });
+    if (dto.username && dto.username !== profile.username) {
+      const existing = await this.profiles.findOne({ where: { username: dto.username } });
       if (existing && existing.userId !== id) {
         throw new ConflictException('Username is already taken.');
       }
-      user.profile.username = dto.username;
+      profile.username = dto.username;
     }
 
-    if (dto.displayName !== undefined) user.profile.displayName = dto.displayName;
-    if (dto.avatarUrl !== undefined) user.profile.avatarUrl = dto.avatarUrl;
-    if (dto.country !== undefined) user.profile.country = dto.country;
-    if (dto.bio !== undefined) user.profile.bio = dto.bio;
+    if (dto.displayName !== undefined) profile.displayName = dto.displayName;
+    if (dto.avatarUrl !== undefined) profile.avatarUrl = dto.avatarUrl;
+    if (dto.country !== undefined) profile.country = dto.country;
+    if (dto.bio !== undefined) profile.bio = dto.bio;
     if (dto.gender !== undefined) user.gender = dto.gender;
+    if (dto.title !== undefined) {
+      const titles = Array.isArray(profile.unlockedTitles) ? (profile.unlockedTitles as string[]) : [];
+      if (dto.title !== null && !titles.includes(dto.title)) {
+        throw new BadRequestException('You have not unlocked that title.');
+      }
+      profile.activeTitle = dto.title;
+    }
 
     try {
       await this.dataSource.transaction(async (manager) => {
         await manager.save(user);
-        await manager.save(user.profile as ProfileEntity);
+        await manager.save(profile);
       });
     } catch (error) {
       const driverError = error as { driverError?: { errno?: number } };
@@ -74,7 +94,8 @@ export class UsersService {
       throw error;
     }
 
-    return toUserDto(user);
+    const refreshed = await this.findById(id);
+    return this.profileView.toUserDto(refreshed);
   }
 
   /**
@@ -91,7 +112,6 @@ export class UsersService {
         return candidate;
       }
     }
-    // Extremely unlikely: fall back to a fully random name.
     return `player${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`.slice(0, 32);
   }
 
@@ -104,7 +124,6 @@ export class UsersService {
     return cleaned.length >= 3 ? cleaned : 'player';
   }
 
-  /** Pagination is intentionally kept off the public surface for phase 1. */
   assertNotBot(user: UserEntity): void {
     if (user.isBot) {
       throw new BadRequestException('Bot accounts cannot perform this action.');

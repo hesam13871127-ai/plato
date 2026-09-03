@@ -8,7 +8,7 @@ SET NAMES utf8mb4;
 -- ── Games catalogue ────────────────────────────────────────────────────────
 INSERT INTO games (id, slug, name, description, icon_url, min_players, max_players, avg_duration_minutes, supports_bots, ranked_enabled, status)
 VALUES
-  ('11111111-0000-4000-8000-000000000001', 'backgammon', 'Backgammon', 'The classic race-and-bear-off board game.', NULL, 2, 2, 12, 1, 1, 'active'),
+  ('11111111-0000-4000-8800-000000000001', 'backgammon', 'Backgammon', 'The classic race-and-bear-off board game.', NULL, 2, 2, 12, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000002', 'dominoes',    'Dominoes',    'Match tiles and score the board.',        NULL, 2, 4, 15, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000003', 'ludo',        'Ludo',        'Race your tokens home in this party hit.', NULL, 2, 4, 20, 1, 0, 'active'),
   ('11111111-0000-4000-8000-000000000004', 'chess',       'Chess',       'The timeless strategy duel (coming soon).', NULL, 2, 2, 25, 0, 1, 'coming_soon')
@@ -17,32 +17,64 @@ ON DUPLICATE KEY UPDATE name = VALUES(name);
 -- ── First season ───────────────────────────────────────────────────────────
 INSERT INTO seasons (id, name, season_number, starts_at, ends_at, status, rewards)
 VALUES
-  ('22222222-0000-4000-8000-000000000001', 'Season 1 — Neon Launch', 1,
+  ('22222222-0000-4000-8800-000000000001', 'Season 1 — Neon Launch', 1,
    UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL 90 DAY), 'active',
-   JSON_OBJECT('rewards', JSON_ARRAY('avatar_frame_neon', '500 gems')))
+   JSON_OBJECT('rewards', JSON_ARRAY('avatar_frame_neon', '200 pips')))
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
--- ── Example shop items ─────────────────────────────────────────────────────
-INSERT INTO shop_items (id, name, description, type, rarity, price, currency, discount_percent, is_unique_owned, is_available, stock)
-VALUES
-  ('33333333-0000-4000-8000-000000000001', 'Neon Felt Table',     'Glowing electric-purple table skin.', 'table_skin',   'epic',      1500, 'coins', 0,  1, 1, 0),
-  ('33333333-0000-4000-8000-000000000002', 'Cyan Dice Set',       'Translucent cyan dice.',              'dice_set',     'rare',      800,  'coins', 10, 1, 1, 0),
-  ('33333333-0000-4000-8000-000000000003', 'Halo Avatar Frame',   'Legendary golden frame.',             'avatar_frame', 'legendary', 250,  'gems',  0,  1, 1, 0),
-  ('33333333-0000-4000-8000-000000000004', 'Victory Emote Pack',  'Five flashy victory emotes.',         'emote',        'common',    300,  'coins', 0,  0, 1, 999)
+-- ── Shop catalogue ─────────────────────────────────────────────────────────
+-- Category prefix in the id encodes the type for readability.
+INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, currency, discount_percent, is_unique_owned, giftable, is_available, stock, sort_order, metadata) VALUES
+  -- Frames (avatar frames)
+  ('33333333-0000-4000-8100-000000000001', 'Neon Halo Frame',   'A glowing electric-purple halo.', 'avatar_frame', 'epic',      NULL, 1500, 'coins', 0,  1, 1, 1, 0, 10, JSON_OBJECT('colors', JSON_ARRAY('#7B5CFF','#00E5FF'), 'style', 'halo')),
+  ('33333333-0000-4000-8100-000000000002', 'Cyan Ring Frame',   'A crisp cyan rim.',               'avatar_frame', 'rare',      NULL, 800,  'coins', 10, 1, 1, 1, 0, 11, JSON_OBJECT('colors', JSON_ARRAY('#00E5FF'), 'style', 'ring')),
+  ('33333333-0000-4000-1000-000000000003', 'Golden Crown Frame','Legendary crown frame.',           'avatar_frame', 'legendary', NULL, 250,  'pips',  0,  1, 1, 1, 0, 12, JSON_OBJECT('colors', JSON_ARRAY('#FFC857'), 'style', 'crown')),
+  -- Banners
+  ('33333333-0000-4000-8200-000000000001', 'Aurora Banner',     'Shifting purple-cyan aurora.',    'banner', 'epic',      NULL, 1200, 'coins', 0,  1, 1, 1, 0, 20, JSON_OBJECT('gradient', JSON_ARRAY('#7B5CFF','#00E5FF'))),
+  ('33333333-0000-4000-8200-000000000002', 'Midnight Banner',   'Deep navy static banner.',        'banner', 'common',    NULL, 400,  'coins', 0,  1, 1, 1, 0, 21, JSON_OBJECT('gradient', JSON_ARRAY('#0B1426','#152241'))),
+  -- Chat bubbles
+  ('33333333-0000-4000-8300-000000000003', 'Starter Bubble',    'A friendly little chat bubble.',  'chat_bubble', 'common', NULL, 300, 'coins', 0, 1, 1, 1, 0, 29, JSON_OBJECT('color', '#3300E5FF')),
+  ('33333333-0000-4000-8300-000000000001', 'Glass Bubble',      'Frosted glass chat bubble.',      'chat_bubble', 'rare', NULL, 900, 'coins', 0, 1, 1, 1, 0, 30, JSON_OBJECT('color', '#1AFFFFFF')),
+  ('33333333-0000-4000-8300-000000000002', 'Neon Bubble',       'Electric purple bubble.',         'chat_bubble', 'epic', NULL, 150,  'pips',  0, 1, 1, 1, 0, 31, JSON_OBJECT('color', '#7B5CFF')),
+  -- Themes
+  ('33333333-0000-4000-8400-000000000001', 'Neon Night Theme',  'Purple & cyan interface theme.',  'theme', 'legendary',  NULL, 300, 'pips', 0, 1, 1, 1, 0, 40, JSON_OBJECT('accent', '#7B5CFF')),
+  ('33333333-0000-4000-8400-000000000002', 'Ocean Theme',       'Soft cyan interface theme.',      'theme', 'rare',       NULL, 1000, 'coins', 20, 1, 1, 1, 0, 41, JSON_OBJECT('accent', '#00E5FF')),
+  -- Game skins
+  ('33333333-0000-4000-8500-000000000001', 'Neon Felt Table',   'Glowing purple table skin.',      'game_skin', 'epic',   NULL, 1500, 'coins', 0, 1, 1, 1, 0, 50, JSON_OBJECT('felt', '#7B5CFF')),
+  ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
+  -- ID color
+  ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),
+  ('33333333-0000-4000-8600-000000000002', 'Cyan ID Color',     'Soft-cyan username color.',       'id_color', 'rare',    NULL, 1200, 'coins', 0, 1, 1, 1, 0, 61, JSON_OBJECT('color', '#00E5FF')),
+  ('33333333-0000-4000-8600-000000000003', 'Gold ID Color',     'Legendary gold username color.',  'id_color', 'legendary',NULL, 500, 'pips', 0, 1, 1, 1, 0, 62, JSON_OBJECT('color', '#FFC857')),
+  -- Username change (consumable — not a unique cosmetic, not giftable)
+  ('33333333-0000-4000-8700-000000000001', 'Username Change',   'Change your username once.',      'username_change', 'common', NULL, 500, 'coins', 0, 0, 0, 1, 0, 70, JSON_OBJECT('service', 'rename')),
+  -- Emote pack (consumable quantity / collection)
+  ('33333333-0000-4000-8800-000000000001', 'Victory Emote Pack','Five flashy victory emotes.',     'emote', 'common',      NULL, 300, 'coins', 0, 1, 1, 1, 0, 80, JSON_OBJECT('emotes', 5))
+ON DUPLICATE KEY UPDATE name = VALUES(name);
+
+-- ── Daily quests ───────────────────────────────────────────────────────────
+INSERT INTO quests (id, code, name, description, goal_type, goal_target, reward_coins, reward_pips, reward_xp, reward_currency, sort_order, is_active) VALUES
+  ('55555555-0000-4000-0000-000000000001', 'daily_login',        'Daily Check-in',  'Log in today.',                 'login',             1, 100, 0,  10, 'coins', 1, 1),
+  ('55555555-0000-4000-0000-000000000002', 'play_match',         'Get Rolling',     'Play 3 matches.',               'play_match',        3, 200, 0,  20, 'coins', 2, 1),
+  ('55555555-0000-4000-0000-000000000003', 'win_match',          'Winner Winner',   'Win 1 match.',                  'win_match',         1, 300, 0,  30, 'coins', 3, 1),
+  ('55555555-0000-4000-0000-000000000004', 'play_with_friends',  'Social Roller',   'Play 2 matches with friends.',  'play_with_friends', 2, 250, 0,  25, 'coins', 4, 1),
+  ('55555555-0000-4000-0000-000000000005', 'send_gift',          'Generous Spirit', 'Send 1 gift to a friend.',      'send_gift',         1, 150, 5,  20, 'pips',  5, 1)
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── A demo bot account ─────────────────────────────────────────────────────
--- The bot user is flagged is_bot=1 (internal) and has a bots config row.
 INSERT INTO users (id, primary_provider, status, is_verified, is_bot, gender, presence, created_at, updated_at)
-VALUES ('44444444-0000-4000-8000-000000000001', 'phone', 'active', 1, 1, 'unspecified', 'online', UTC_TIMESTAMP(), UTC_TIMESTAMP())
+VALUES ('44444444-0000-4000-8800-000000000001', 'phone', 'active', 1, 1, 'unspecified', 'online', UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE status = 'active';
 
-INSERT INTO profiles (user_id, username, display_name, avatar_url, level, xp, coins, gems, settings, created_at, updated_at)
-VALUES ('44444444-0000-4000-8000-000000000001', 'vibebot', 'Vibe Bot', NULL, 5, 1200, 0, 0,
+INSERT INTO profiles (user_id, username, display_name, avatar_url, level, xp, coins, pips, gifts_sent, gifts_received, active_title, unlocked_titles, badges, settings, created_at, updated_at)
+VALUES ('44444444-0000-4000-8800-000000000001', 'vibebot', 'Vibe Bot', NULL, 5, 1200, 0, 0, 0, 0,
+        'Veteran',
+        JSON_ARRAY('New Player','Veteran'),
+        JSON_ARRAY(JSON_OBJECT('code','first_win','label','First Victory')),
         JSON_OBJECT('notifications', false), UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE display_name = VALUES(display_name);
 
 INSERT INTO bots (user_id, difficulty, personality, config, is_active, created_at, updated_at)
-VALUES ('44444444-0000-4000-8000-000000000001', 'medium', 'friendly',
+VALUES ('44444444-0000-4000-8800-000000000001', 'medium', 'friendly',
         JSON_OBJECT('aggression', 0.5, 'bluffRate', 0.2), 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE difficulty = VALUES(difficulty);

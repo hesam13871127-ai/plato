@@ -50,7 +50,7 @@ export class UserDto {
   coins: number;
 
   @ApiProperty({ example: 10 })
-  gems: number;
+  pips: number;
 
   @ApiProperty({ example: 'male' })
   gender: Gender;
@@ -64,8 +64,64 @@ export class UserDto {
   @ApiProperty({ example: 0 })
   gamesWon: number;
 
+  @ApiProperty({ example: 0 })
+  gamesLost: number;
+
+  @ApiProperty({ example: 0 })
+  gamesDrawn: number;
+
+  @ApiProperty({ example: 0, description: 'Current daily-login streak.' })
+  streakDays: number;
+
+  @ApiProperty({ example: 0 })
+  giftsSent: number;
+
+  @ApiProperty({ example: 0 })
+  giftsReceived: number;
+
+  @ApiProperty({ nullable: true, example: 'Lucky Roller' })
+  title: string | null;
+
+  @ApiProperty({ type: [String], example: ['Lucky Roller', 'Champion'] })
+  unlockedTitles: string[];
+
+  @ApiProperty({ type: [Object], description: 'Earned badges.' })
+  badges: Array<Record<string, unknown>>;
+
+  @ApiProperty({ nullable: true, description: 'Equipped frame item details.' })
+  frame: EquippedCosmeticDto | null;
+
+  @ApiProperty({ nullable: true, description: 'Equipped banner item details.' })
+  banner: EquippedCosmeticDto | null;
+
+  @ApiProperty({ nullable: true, description: 'Equipped chat bubble item details.' })
+  chatBubble: EquippedCosmeticDto | null;
+
+  @ApiProperty({ nullable: true, description: 'Equipped theme item details.' })
+  theme: EquippedCosmeticDto | null;
+
+  @ApiProperty({ nullable: true, description: 'Equipped ID color item details.' })
+  idColor: EquippedCosmeticDto | null;
+
   @ApiProperty()
   createdAt: Date;
+}
+
+export class EquippedCosmeticDto {
+  @ApiProperty({ format: 'uuid' })
+  inventoryId: string;
+
+  @ApiProperty({ format: 'uuid' })
+  itemId: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({ example: 'avatar_frame' })
+  type: string;
+
+  @ApiProperty({ nullable: true, type: Object })
+  metadata: Record<string, unknown> | null;
 }
 
 export class UpdateProfileDto {
@@ -106,4 +162,14 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsIn(GENDERS)
   gender?: Gender;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    example: 'Lucky Roller',
+    description: 'Set the active title, or null to clear it.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  title?: string | null;
 }

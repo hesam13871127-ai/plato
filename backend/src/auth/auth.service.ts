@@ -265,7 +265,7 @@ export class AuthService {
         level: 1,
         xp: 0,
         coins: 500,
-        gems: 0,
+        pips: 0,
         gamesPlayed: 0,
         gamesWon: 0,
         gamesLost: 0,

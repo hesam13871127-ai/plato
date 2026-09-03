@@ -24,11 +24,26 @@ export function toUserDto(user: UserEntity, profile?: ProfileEntity | null): Use
     level: Number(p?.level ?? 1),
     xp: Number(p?.xp ?? 0),
     coins: Number(p?.coins ?? 0),
-    gems: Number(p?.gems ?? 0),
+    pips: Number(p?.pips ?? 0),
     gender: user.gender,
     presence: user.presence,
     gamesPlayed: Number(p?.gamesPlayed ?? 0),
     gamesWon: Number(p?.gamesWon ?? 0),
+    gamesLost: Number(p?.gamesLost ?? 0),
+    gamesDrawn: Number(p?.gamesDrawn ?? 0),
+    streakDays: Number(p?.streakDays ?? 0),
+    giftsSent: Number(p?.giftsSent ?? 0),
+    giftsReceived: Number(p?.giftsReceived ?? 0),
+    title: p?.activeTitle ?? null,
+    unlockedTitles: Array.isArray(p?.unlockedTitles) ? (p!.unlockedTitles as string[]) : [],
+    badges: Array.isArray(p?.badges) ? (p!.badges as Array<Record<string, unknown>>) : [],
+    // Cosmetics are resolved by ProfileViewService for the full profile; the
+    // compact auth serializer leaves them null.
+    frame: null,
+    banner: null,
+    chatBubble: null,
+    theme: null,
+    idColor: null,
     createdAt: user.createdAt,
   };
 }

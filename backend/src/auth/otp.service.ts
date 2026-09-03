@@ -93,11 +93,13 @@ export class OtpService {
     const normalized = normalizePhone(phone);
     const now = new Date();
 
-    // The most recently issued code for this phone + purpose. Ordering by the
-    // auto-generated id (monotonic) is stable even when timestamps coincide.
+    // The most recently issued code for this phone + purpose. The primary key is
+    // a random UUID (not monotonic) and creation timestamps can share the same
+    // second, so order by the explicitly-set send timestamp (with id as a
+    // tie-breaker) to reliably pick the newest code.
     const candidates = await this.otpCodes.find({
       where: { phone: normalized, purpose },
-      order: { id: 'DESC' },
+      order: { lastSentAt: 'DESC', id: 'DESC' },
       take: 1,
     });
     const entity = candidates[0] ?? null;

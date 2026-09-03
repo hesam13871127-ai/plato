@@ -24,6 +24,9 @@ export class InitialSchema1700000000000 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     const tables = [
+      'daily_reward_claims',
+      'user_quests',
+      'quests',
       'bots',
       'bans',
       'reports',

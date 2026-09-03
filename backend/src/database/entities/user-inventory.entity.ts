@@ -24,7 +24,7 @@ export class UserInventoryEntity {
   id: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ name: 'user_id', type: 'varchar', length: 36 })
   userId: string;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
@@ -32,7 +32,7 @@ export class UserInventoryEntity {
   user: UserEntity;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ name: 'item_id', type: 'varchar', length: 36 })
   itemId: string;
 
   @ManyToOne(() => ShopItemEntity, { onDelete: 'RESTRICT' })
@@ -47,6 +47,19 @@ export class UserInventoryEntity {
 
   @Column({ type: 'boolean', default: true })
   isUniqueOwned: boolean;
+
+  /** How the item was acquired. */
+  @Column({ type: 'varchar', length: 16, default: 'purchase' })
+  source: 'purchase' | 'gift';
+
+  /** Set when `source = 'gift'` — the user who gifted this item. */
+  @Index()
+  @Column({ name: 'gifted_by_id', type: 'varchar', length: 36, nullable: true })
+  giftedById: string | null;
+
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'gifted_by_id' })
+  giftedBy: UserEntity | null;
 
   @Column({ type: 'datetime', precision: 6, nullable: true })
   expiresAt: Date | null;

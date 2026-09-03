@@ -44,17 +44,83 @@ export const MATCH_RESULTS: MatchResult[] = ['win', 'loss', 'draw', 'abandoned']
 export type SeasonStatus = 'upcoming' | 'active' | 'completed';
 export const SEASON_STATUSES: SeasonStatus[] = ['upcoming', 'active', 'completed'];
 
-export type ItemType = 'table_skin' | 'dice_set' | 'avatar_frame' | 'emote' | 'consumable' | 'bundle';
-export const ITEM_TYPES: ItemType[] = ['table_skin', 'dice_set', 'avatar_frame', 'emote', 'consumable', 'bundle'];
+/**
+ * Shop item categories. Cosmetics are owned once (unique) and equipped onto the
+ * profile; `username_change` is a consumable service. Nothing in the shop
+ * affects gameplay (strictly cosmetic).
+ */
+export type ItemType =
+  | 'avatar_frame' // Frames
+  | 'banner' // Banners
+  | 'chat_bubble' // Chat Bubbles
+  | 'theme' // Themes
+  | 'game_skin' // Game Skins (table/felt skins)
+  | 'id_color' // ID Color
+  | 'username_change' // Username Change (consumable)
+  | 'dice_set'
+  | 'emote'
+  | 'bundle'
+  | 'consumable';
+export const ITEM_TYPES: ItemType[] = [
+  'avatar_frame',
+  'banner',
+  'chat_bubble',
+  'theme',
+  'game_skin',
+  'id_color',
+  'username_change',
+  'dice_set',
+  'emote',
+  'bundle',
+  'consumable',
+];
 
 export type ItemRarity = 'common' | 'rare' | 'epic' | 'legendary';
 export const ITEM_RARITIES: ItemRarity[] = ['common', 'rare', 'epic', 'legendary'];
 
-export type Currency = 'coins' | 'gems';
-export const CURRENCIES: Currency[] = ['coins', 'gems'];
+/** Coins (soft, earned) and Pips (premium). */
+export type Currency = 'coins' | 'pips';
+export const CURRENCIES: Currency[] = ['coins', 'pips'];
 
-export type TransactionType = 'purchase' | 'reward' | 'gift' | 'refund' | 'admin_adjustment' | 'match_payout';
-export const TRANSACTION_TYPES: TransactionType[] = ['purchase', 'reward', 'gift', 'refund', 'admin_adjustment', 'match_payout'];
+export type TransactionType =
+  | 'purchase'
+  | 'reward'
+  | 'gift'
+  | 'gift_purchase'
+  | 'refund'
+  | 'admin_adjustment'
+  | 'match_payout'
+  | 'daily_reward'
+  | 'quest_reward';
+export const TRANSACTION_TYPES: TransactionType[] = [
+  'purchase',
+  'reward',
+  'gift',
+  'gift_purchase',
+  'refund',
+  'admin_adjustment',
+  'match_payout',
+  'daily_reward',
+  'quest_reward',
+];
+
+/** Daily quest goal categories (progress is counted by the backend). */
+export type QuestGoalType =
+  | 'login'
+  | 'play_match'
+  | 'win_match'
+  | 'play_with_friends'
+  | 'send_gift';
+export const QUEST_GOAL_TYPES: QuestGoalType[] = [
+  'login',
+  'play_match',
+  'win_match',
+  'play_with_friends',
+  'send_gift',
+];
+
+export type QuestStatus = 'in_progress' | 'claimable' | 'claimed' | 'expired';
+export const QUEST_STATUSES: QuestStatus[] = ['in_progress', 'claimable', 'claimed', 'expired'];
 
 export type ChatType = 'direct' | 'group' | 'room' | 'system';
 export const CHAT_TYPES: ChatType[] = ['direct', 'group', 'room', 'system'];
