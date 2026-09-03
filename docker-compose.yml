@@ -1,0 +1,63 @@
+version: "3.9"
+
+# Full VibeTable stack: MySQL 8.0 + NestJS API.
+# The API waits for MySQL to be healthy, then runs migrations automatically
+# (DB_RUN_MIGRATIONS=true), which creates every table from database/schema.sql.
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: vibetable-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: vibetable
+      MYSQL_USER: vibetable
+      MYSQL_PASSWORD: vibetable
+    ports:
+      - "3306:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - vibetable-mysql-data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uvibetable", "-pvibetable"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vibetable-api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_TYPE: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: vibetable
+      DB_PASSWORD: vibetable
+      DB_DATABASE: vibetable
+      DB_SYNCHRONIZE: "false"
+      DB_RUN_MIGRATIONS: "true"
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-please-change-me-to-a-long-random-secret-0001}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-please-change-me-to-a-long-random-secret-0002}
+      JWT_ACCESS_TTL: 900s
+      JWT_REFRESH_TTL: 30d
+      SMS_PROVIDER: development
+      OTP_RATE_LIMIT_SECONDS: "60"
+      CORS_ORIGINS: "*"
+    ports:
+      - "3000:3000"
+
+volumes:
+  vibetable-mysql-data:
