@@ -11,6 +11,7 @@ Failure mapErrorToFailure(Object error) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.sendTimeout:
+      case DioExceptionType.transformTimeout:
         return const NetworkFailure('The request timed out. Check your connection.');
       case DioExceptionType.connectionError:
         return const NetworkFailure();

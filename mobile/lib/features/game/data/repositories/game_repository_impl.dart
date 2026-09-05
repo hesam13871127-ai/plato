@@ -8,6 +8,7 @@ import '../../domain/entities/game_entities.dart';
 import '../../domain/repositories/game_repository.dart';
 import '../datasources/game_remote_datasource.dart';
 import '../datasources/game_socket_service.dart';
+import '../models/game_models.dart';
 
 class GameRepositoryImpl implements GameRepository {
   GameRepositoryImpl({
