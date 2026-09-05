@@ -20,6 +20,7 @@ import '../../features/quests/presentation/screens/quests_screen.dart';
 import '../../features/shop/presentation/screens/inventory_screen.dart';
 import '../../features/shop/presentation/screens/shop_screen.dart';
 import '../../features/shop/presentation/screens/wallet_screen.dart';
+import '../../features/social/presentation/screens/friends_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 
 /// Named routes.
@@ -35,6 +36,7 @@ class AppRoutes {
   static const String wallet = '/wallet';
   static const String chat = '/chat';
   static const String season = '/season';
+  static const String friends = '/friends';
 
   // Games
   static const String games = '/games';
@@ -93,6 +95,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.season, builder: (_, __) => const SeasonScreen()),
       GoRoute(path: AppRoutes.wallet, builder: (_, __) => const WalletScreen()),
       GoRoute(path: AppRoutes.chat, builder: (_, __) => const ChatListScreen()),
+      GoRoute(path: AppRoutes.friends, builder: (_, __) => const FriendsScreen()),
 
       // Games
       GoRoute(path: AppRoutes.games, builder: (_, __) => const GameHubScreen()),

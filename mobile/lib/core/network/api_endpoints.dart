@@ -74,4 +74,27 @@ class ApiEndpoints {
   static const String competitiveSeason = '/competitive/season';
   static const String competitiveMe = '/competitive/me';
   static const String competitiveLeaderboard = '/competitive/leaderboard';
+
+  // Social: friends, groups/clubs, game invites
+  static const String socialFriends = '/social/friends';
+  static const String socialFriendsOnline = '/social/friends/online';
+  static const String socialFriendRequests = '/social/friends/requests';
+  static const String socialFriendsBlocked = '/social/friends/blocked';
+  static const String socialFriendRelationships = '/social/friends/relationships';
+  static const String socialFriendRemove = '/social/friends/remove';
+  static const String socialFriendBlock = '/social/friends/block';
+  static String socialFriendUnblock(String userId) => '/social/friends/unblock/$userId';
+  static String socialFriendAccept(String id) => '/social/friends/requests/$id/accept';
+  static String socialFriendReject(String id) => '/social/friends/requests/$id/reject';
+  static String socialFriendCancel(String id) => '/social/friends/requests/$id';
+  static const String socialGroups = '/social/groups';
+  static String socialGroup(String id) => '/social/groups/$id';
+  static String socialGroupMembers(String id) => '/social/groups/$id/members';
+  static String socialGroupMember(String id, String userId) => '/social/groups/$id/members/$userId';
+  static String socialGroupLeave(String id) => '/social/groups/$id/leave';
+  static String socialGroupRoles(String id) => '/social/groups/$id/roles';
+  static String socialGroupTransfer(String id, String userId) =>
+      '/social/groups/$id/transfer/$userId';
+  static const String socialInviteRoom = '/social/invites/room';
+  static const String socialInviteRoomCreate = '/social/invites/room/create';
 }

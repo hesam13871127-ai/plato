@@ -40,6 +40,10 @@ export class GroupEntity {
   @OneToMany(() => GroupMemberEntity, (member) => member.group)
   members: GroupMemberEntity[];
 
+  @Index()
+  @Column({ name: 'chat_id', type: 'varchar', length: 36, nullable: true })
+  chatId: string | null;
+
   @Column({ type: 'int', default: 1 })
   memberCount: number;
 

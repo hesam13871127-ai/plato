@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../social/presentation/widgets/invite_friends_sheet.dart';
 import '../../domain/entities/game_entities.dart';
 import '../providers/game_providers.dart';
 
@@ -101,6 +102,20 @@ class _RoomLobbyScreenState extends ConsumerState<RoomLobbyScreen> {
                         children: [
                           if (room.isPrivate && room.accessCode != null)
                             _InviteCard(code: room.accessCode!, inviteUrl: room.inviteUrl),
+                          if (room.hostId == myId) ...[
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.softCyan,
+                                side: const BorderSide(color: AppColors.softCyan),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              icon: const Icon(Icons.person_add_alt_1, size: 18),
+                              label: const Text('Invite friends'),
+                              onPressed: () => InviteFriendsSheet.open(context, room.id),
+                            ),
+                          ],
                           const SizedBox(height: 16),
                           GlassCard(
                             child: Column(

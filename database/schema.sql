@@ -164,12 +164,15 @@ CREATE TABLE groups (
   avatar_url    VARCHAR(512) NULL,
   description   VARCHAR(512) NULL,
   owner_id      CHAR(36)     NOT NULL,
+  chat_id       CHAR(36)     NULL,
   member_count  INT          NOT NULL DEFAULT 1,
   created_at    DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   updated_at    DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (id),
   KEY idx_groups_owner (owner_id),
-  CONSTRAINT fk_groups_owner FOREIGN KEY (owner_id) REFERENCES users (id) ON DELETE RESTRICT
+  KEY idx_groups_chat (chat_id),
+  CONSTRAINT fk_groups_owner FOREIGN KEY (owner_id) REFERENCES users (id) ON DELETE RESTRICT,
+  CONSTRAINT fk_groups_chat FOREIGN KEY (chat_id) REFERENCES chats (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE group_members (

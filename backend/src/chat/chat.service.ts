@@ -310,6 +310,23 @@ export class ChatService {
     return this.chats.save(chat);
   }
 
+  /** Transfers group-chat ownership to another member (owner only). */
+  async transferChatOwnership(
+    actorId: string,
+    chatId: string,
+    targetUserId: string,
+  ): Promise<void> {
+    const actor = await this.getParticipant(chatId, actorId);
+    if (!actor || actor.role !== 'owner') {
+      throw new ForbiddenException('Only the owner can transfer ownership.');
+    }
+    const target = await this.getParticipant(chatId, targetUserId);
+    if (!target) throw new NotFoundException('That user is not in this chat.');
+    actor.role = 'admin';
+    target.role = 'owner';
+    await this.participants.save([actor, target]);
+  }
+
   /** Owner/admin check. */
   async assertManager(chatId: string, userId: string): Promise<ChatParticipantEntity> {
     const participant = await this.assertMember(chatId, userId);

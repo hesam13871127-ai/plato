@@ -24,6 +24,13 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('VibeTable'),
         actions: [
+          // Friends & groups hub.
+          IconButton(
+            icon: const Icon(Icons.people_alt_rounded, size: 26),
+            color: AppColors.softCyan,
+            onPressed: () => context.push(AppRoutes.friends),
+            tooltip: 'Friends',
+          ),
           // Real-time chat inbox.
           IconButton(
             icon: const Icon(Icons.forum_rounded, size: 26),

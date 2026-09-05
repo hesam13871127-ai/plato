@@ -16,6 +16,7 @@ import { CompetitiveModule } from './competitive/competitive.module';
 import { EconomyModule } from './economy/economy.module';
 import { ShopModule } from './shop/shop.module';
 import { QuestsModule } from './quests/quests.module';
+import { SocialModule } from './social/social.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { QuestsModule } from './quests/quests.module';
     ChatModule,
     GameModule,
     CompetitiveModule,
+    SocialModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
