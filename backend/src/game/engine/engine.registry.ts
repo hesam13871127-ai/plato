@@ -11,6 +11,12 @@ import { WerewolfEngine } from './werewolf.engine';
 import { SketchEngine } from './sketch.engine';
 import { PoolEngine } from './pool.engine';
 import { CarromEngine } from './carrom.engine';
+import { TriviaEngine } from './trivia.engine';
+import { EmojiCharadesEngine } from './emoji-charades.engine';
+import { WordChainEngine } from './word-chain.engine';
+import { MemoryRaceEngine } from './memory-race.engine';
+import { ImpostorLightEngine } from './impostor-light.engine';
+import { QuickChallengesEngine } from './quick-challenges.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -32,6 +38,12 @@ export class EngineRegistry {
     sketch: SketchEngine,
     pool: PoolEngine,
     carrom: CarromEngine,
+    trivia: TriviaEngine,
+    emojiCharades: EmojiCharadesEngine,
+    wordChain: WordChainEngine,
+    memoryRace: MemoryRaceEngine,
+    impostorLight: ImpostorLightEngine,
+    quickChallenges: QuickChallengesEngine,
   ) {
     this.register(dominoes);
     this.register(connect4);
@@ -44,6 +56,12 @@ export class EngineRegistry {
     this.register(sketch);
     this.register(pool);
     this.register(carrom);
+    this.register(trivia);
+    this.register(emojiCharades);
+    this.register(wordChain);
+    this.register(memoryRace);
+    this.register(impostorLight);
+    this.register(quickChallenges);
   }
 
   register(engine: BaseGameEngine): void {

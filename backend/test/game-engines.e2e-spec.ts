@@ -9,6 +9,12 @@ import { OchoEngine } from '../src/game/engine/ocho.engine';
 import { PoolEngine } from '../src/game/engine/pool.engine';
 import { SketchEngine } from '../src/game/engine/sketch.engine';
 import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
+import { TriviaEngine } from '../src/game/engine/trivia.engine';
+import { EmojiCharadesEngine } from '../src/game/engine/emoji-charades.engine';
+import { WordChainEngine } from '../src/game/engine/word-chain.engine';
+import { MemoryRaceEngine } from '../src/game/engine/memory-race.engine';
+import { ImpostorLightEngine } from '../src/game/engine/impostor-light.engine';
+import { QuickChallengesEngine } from '../src/game/engine/quick-challenges.engine';
 import type { BaseGameEngine } from '../src/game/engine/base-game.engine';
 import type { GameState, MatchConfig, SeatInfo } from '../src/game/engine/types';
 
@@ -93,6 +99,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'ocho', build: () => new OchoEngine() },
   { name: 'ludo', build: () => new LudoEngine() },
   { name: 'chess', build: () => new ChessEngine(), players: 2 },
+  { name: 'word_chain', build: () => new WordChainEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -128,6 +135,11 @@ const LIVE: Array<{ name: string; build: () => BaseGameEngine; players?: number;
   { name: 'carrom', build: () => new CarromEngine(), players: 2 },
   { name: 'werewolf', build: () => new WerewolfEngine() },
   { name: 'sketch_guess', build: () => new SketchEngine(), humanSeat: 1 },
+  { name: 'trivia', build: () => new TriviaEngine() },
+  { name: 'emoji_charades', build: () => new EmojiCharadesEngine(), players: 4 },
+  { name: 'memory_race', build: () => new MemoryRaceEngine() },
+  { name: 'impostor_light', build: () => new ImpostorLightEngine() },
+  { name: 'quick_challenges', build: () => new QuickChallengesEngine() },
 ];
 
 describe('live game engines — full bot play-through via tick', () => {
@@ -194,5 +206,127 @@ describe('hidden information is never leaked to other seats or spectators', () =
       else expect(p.role).toBeNull();
     }
     expect(vBoard.myRole).toBe('villager');
+  });
+
+  test('new engines never leak server-only bot state or secret answers', () => {
+    // Drive each new engine a few ticks so it enters active rounds, then assert
+    // the spectator view (seat -1) and a player view contain none of the
+    // server-only keys (bot timers/AI memory) and — where a secret exists
+    // (trivia answer, charade answer, impostor location) — never reveal it to
+    // a seat that should not see it.
+    // Internal secret keys that must never appear in any serialized view.
+    // ('answer' is intentionally NOT listed: trivia players legitimately carry a
+    // boolean `correct` row; the real answer index is checked separately below.)
+    const forbidden = [
+      'botSeats',
+      'botDifficulty',
+      'botKnown',
+      'botFlipAt',
+      'botGuessAt',
+      'botActAt',
+      'botVoteAt',
+      'answerIndex',
+    ];
+
+    const cases: Array<{ name: string; engine: BaseGameEngine; players?: number }> = [
+      { name: 'trivia', engine: new TriviaEngine() },
+      { name: 'emoji_charades', engine: new EmojiCharadesEngine(), players: 4 },
+      { name: 'memory_race', engine: new MemoryRaceEngine() },
+      { name: 'impostor_light', engine: new ImpostorLightEngine() },
+      { name: 'quick_challenges', engine: new QuickChallengesEngine() },
+    ];
+
+    for (const { name, engine, players } of cases) {
+      const config = makeConfig(engine, players);
+      let state = engine.createInitialState(config);
+      for (let i = 0; i < 12 && state.phase === 'in_progress'; i++) {
+        virtualNow += 4000;
+        const next = engine.tick(state, new Date());
+        if (next !== state) state = next;
+      }
+
+      const views: GameState[] = [engine.spectatorView(state) as GameState];
+      for (let seat = 0; seat < config.seats.length; seat++) {
+        views.push(engine.playerView(state, seat) as GameState);
+      }
+
+      for (const view of views) {
+        const json = JSON.stringify(view.board);
+        for (const key of forbidden) {
+          expect(json).not.toContain(`"${key}":`);
+        }
+        // Bot memory arrays are never serialized under any alias either.
+        expect(json).not.toMatch(/"bot[A-Z]/);
+      }
+    }
+
+    // Memory race: a down card's emoji must be null in every view.
+    {
+      const engine = new MemoryRaceEngine();
+      const state = engine.createInitialState(makeConfig(engine));
+      const view = engine.spectatorView(state) as GameState;
+      const emojis = (view.board as { emojis: unknown[] }).emojis;
+      expect(emojis.every((e) => e === null)).toBe(true);
+    }
+
+    // Impostor: a crew seat (not the impostor) sees the location, spectators
+    // never do; and the impostor's identity is never in any view's board.
+    {
+      const engine = new ImpostorLightEngine();
+      const state = engine.createInitialState(makeConfig(engine));
+      const full = state.board as { impostorSeat: number; location: string };
+      const spectator = engine.spectatorView(state) as GameState;
+      const sBoard = spectator.board as { location: string | null };
+      expect(sBoard.location).toBeNull();
+      const crewSeat = full.impostorSeat === 0 ? 1 : 0;
+      const crewView = engine.playerView(state, crewSeat) as GameState;
+      const cBoard = crewView.board as { location: string | null; players: Array<Record<string, unknown>> };
+      expect(cBoard.location).toBe(full.location);
+      expect(JSON.stringify(cBoard.players)).not.toContain('isImpostor');
+    }
+
+    // Trivia: while the answer window is open, correctIndex must be null even
+    // though bots have already answered; after reveal it is published as
+    // correctIndex (never the internal answerIndex key).
+    {
+      const engine = new TriviaEngine();
+      let state = engine.createInitialState(makeConfig(engine));
+      virtualNow += 3000;
+      state = engine.tick(state, new Date()) ?? state;
+      const openView = JSON.stringify(engine.spectatorView(state).board as Record<string, unknown>);
+      expect(openView).toContain('"correctIndex":null');
+      expect(openView).not.toContain('"answerIndex"');
+      // Fast-forward past answer + reveal windows.
+      for (let i = 0; i < 6 && state.phase === 'in_progress'; i++) {
+        virtualNow += 4000;
+        const next = engine.tick(state, new Date());
+        if (next !== state) state = next;
+        const json = JSON.stringify((engine.spectatorView(state) as GameState).board);
+        if (json.includes('"reveal":true')) {
+          expect(json).not.toContain('"answerIndex"');
+        }
+      }
+    }
+
+    // Emoji charades: the secret answer word must never appear in any view
+    // until the round is over (winnerWord is set).
+    {
+      const engine = new EmojiCharadesEngine();
+      const state = engine.createInitialState(makeConfig(engine, 4));
+      const full = state.board as { answer: string; winnerSeat: number | null };
+      for (let i = 0; i < 30 && full.winnerSeat == null && state.phase === 'in_progress'; i++) {
+        virtualNow += 3000;
+        const next = engine.tick(state, new Date());
+        if (next !== state) {
+          Object.assign(state, next);
+          Object.assign(state.board, next.board);
+        }
+        const json = JSON.stringify((engine.spectatorView(state) as GameState).board);
+        if (full.winnerSeat == null) {
+          expect(json.toLowerCase()).not.toContain(full.answer.toLowerCase());
+          expect(json).not.toContain('"answer"');
+        }
+      }
+    }
   });
 });

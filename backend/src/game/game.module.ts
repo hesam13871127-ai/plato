@@ -32,6 +32,12 @@ import { WerewolfEngine } from './engine/werewolf.engine';
 import { SketchEngine } from './engine/sketch.engine';
 import { PoolEngine } from './engine/pool.engine';
 import { CarromEngine } from './engine/carrom.engine';
+import { TriviaEngine } from './engine/trivia.engine';
+import { EmojiCharadesEngine } from './engine/emoji-charades.engine';
+import { WordChainEngine } from './engine/word-chain.engine';
+import { MemoryRaceEngine } from './engine/memory-race.engine';
+import { ImpostorLightEngine } from './engine/impostor-light.engine';
+import { QuickChallengesEngine } from './engine/quick-challenges.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -68,6 +74,12 @@ const ENTITIES = [
     SketchEngine,
     PoolEngine,
     CarromEngine,
+    TriviaEngine,
+    EmojiCharadesEngine,
+    WordChainEngine,
+    MemoryRaceEngine,
+    ImpostorLightEngine,
+    QuickChallengesEngine,
     EngineRegistry,
     // Services
     BotService,
