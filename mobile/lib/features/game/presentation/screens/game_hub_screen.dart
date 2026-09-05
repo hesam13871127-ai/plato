@@ -1,0 +1,316 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/gradient_button.dart';
+import '../../domain/entities/game_entities.dart';
+import '../providers/game_providers.dart';
+
+/// Landing screen for the game subsystem: catalogue, quick play (smart
+/// matchmaking with invisible bot fallback), private tables and open lobbies.
+class GameHubScreen extends ConsumerWidget {
+  const GameHubScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catalogAsync = ref.watch(gameCatalogProvider);
+    final roomsAsync = ref.watch(openRoomsProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.deepNavy,
+      body: SafeArea(
+        child: RefreshIndicator(
+          color: AppColors.softCyan,
+          backgroundColor: AppColors.surfaceDark,
+          onRefresh: () async {
+            ref.invalidate(gameCatalogProvider);
+            ref.invalidate(openRoomsProvider);
+          },
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+            children: [
+              const _HubHeader(),
+              const SizedBox(height: 24),
+              Text('Choose a game',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      )),
+              const SizedBox(height: 14),
+              catalogAsync.when(
+                loading: () => const _CatalogLoader(),
+                error: (e, _) => _ErrorTile(message: e.toString()),
+                data: (games) => Column(
+                  children: games
+                      .map((g) => Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _GameCard(game: g),
+                          ))
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Text('Open tables',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          )),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => context.push('/rooms'),
+                    icon: const Icon(Icons.public, size: 18, color: AppColors.softCyan),
+                    label: const Text('Browse all',
+                        style: TextStyle(color: AppColors.softCyan)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              roomsAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (rooms) {
+                  final open = rooms.where((r) => r.gameSlug == 'dominoes').take(4).toList();
+                  if (open.isEmpty) {
+                    return GlassCard(
+                      child: Row(
+                        children: const [
+                          Icon(Icons.bedtime, color: AppColors.textMuted),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'No open tables right now. Start one — invisible '
+                              'opponents join in seconds if it is quiet.',
+                              style: TextStyle(color: AppColors.textSecondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return Column(
+                    children: open
+                        .map((r) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _RoomTile(room: r),
+                            ))
+                        .toList(),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HubHeader extends StatelessWidget {
+  const _HubHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.electricPurple, AppColors.softCyan],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.casino, color: Colors.white, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('VibeTable',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        )),
+                const Text('Play. Match. Win.',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _GameCard extends ConsumerWidget {
+  const _GameCard({required this.game});
+  final GameCatalogEntry game;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playable = game.isPlayable;
+    return GlassCard(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: playable
+            ? [AppColors.electricPurple.withOpacity(0.22), AppColors.softCyan.withOpacity(0.08)]
+            : [AppColors.surfaceElevated.withOpacity(0.6), AppColors.surfaceDark.withOpacity(0.6)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.softCyan.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  game.isLive ? Icons.bolt : Icons.extension,
+                  color: AppColors.softCyan,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(game.name,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        )),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${game.minPlayers}–${game.maxPlayers} players · ~${game.avgDurationMinutes} min'
+                      '${game.isLive ? ' · Live' : ' · Turn-based'}',
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              if (!playable)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.glassFill,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text('SOON',
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 1)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(game.description,
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4)),
+          const SizedBox(height: 16),
+          if (playable)
+            Row(
+              children: [
+                Expanded(
+                  child: GradientButton(
+                    label: 'Quick play',
+                    icon: Icons.play_arrow_rounded,
+                    onPressed: () => context.push('/matchmaking/${game.slug}'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.push('/rooms/create/${game.slug}'),
+                    icon: const Icon(Icons.group_add, size: 18),
+                    label: const Text('Create table'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.softCyan,
+                      side: const BorderSide(color: AppColors.glassStroke),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoomTile extends StatelessWidget {
+  const _RoomTile({required this.room});
+  final GameRoom room;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: const EdgeInsets.all(14),
+      borderRadius: 18,
+      onTap: () => context.push('/rooms/${room.id}'),
+      child: Row(
+        children: [
+          const Icon(Icons.meeting_room, color: AppColors.electricPurple),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(room.name ?? room.gameName,
+                    style: const TextStyle(
+                        color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                Text('${room.humanCount}/${room.maxPlayers} seated · ${room.gameName}',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: AppColors.textMuted),
+        ],
+      ),
+    );
+  }
+}
+
+class _CatalogLoader extends StatelessWidget {
+  const _CatalogLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 40),
+      child: Center(child: CircularProgressIndicator(color: AppColors.softCyan)),
+    );
+  }
+}
+
+class _ErrorTile extends StatelessWidget {
+  const _ErrorTile({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      child: Row(
+        children: [
+          const Icon(Icons.cloud_off, color: AppColors.danger),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text('Could not load games.\n$message',
+                style: const TextStyle(color: AppColors.textSecondary)),
+          ),
+        ],
+      ),
+    );
+  }
+}

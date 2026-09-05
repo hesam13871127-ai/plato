@@ -20,10 +20,8 @@ import {
   EmailLoginDto,
   EmailRegisterDto,
   PhoneOtpVerifyDto,
-  SocialLoginDto,
 } from './dto/auth.dto';
 import { OtpService } from './otp.service';
-import { SocialIdentity, SocialProviderService } from './social/social-provider.service';
 import { TokenPair, TokenService } from './token.service';
 
 export interface AuthResult {
@@ -49,7 +47,6 @@ export class AuthService {
     private readonly dataSource: DataSource,
     private readonly otpService: OtpService,
     private readonly tokenService: TokenService,
-    private readonly socialProviderService: SocialProviderService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService<AppConfig, true>,
   ) {}
@@ -89,64 +86,7 @@ export class AuthService {
   }
 
   // ------------------------------------------------------------------
-  // Social (Google / Apple)
-  // ------------------------------------------------------------------
-
-  async googleLogin(dto: SocialLoginDto, meta: RequestMeta): Promise<AuthResult> {
-    const identity = await this.socialProviderService.verifyGoogleIdToken(dto.idToken);
-    return this.socialSignIn(identity, dto.displayName, meta);
-  }
-
-  async appleLogin(dto: SocialLoginDto, meta: RequestMeta): Promise<AuthResult> {
-    const identity = await this.socialProviderService.verifyAppleIdToken(dto.idToken);
-    return this.socialSignIn(identity, dto.displayName, meta);
-  }
-
-  private async socialSignIn(
-    identity: SocialIdentity,
-    displayName: string | undefined,
-    meta: RequestMeta,
-  ): Promise<AuthResult> {
-    const subjectColumn = identity.provider === 'google' ? 'googleSub' : 'appleSub';
-
-    let user = await this.users.findOne({
-      where: { [subjectColumn]: identity.subject },
-      relations: { profile: true },
-    });
-
-    // Link to an existing same-email account if present.
-    if (!user && identity.email) {
-      const byEmail = await this.users.findOne({
-        where: { email: identity.email.toLowerCase() },
-        relations: { profile: true },
-      });
-      if (byEmail) {
-        byEmail[subjectColumn] = identity.subject;
-        byEmail.isVerified = true;
-        await this.users.save(byEmail);
-        user = byEmail;
-      }
-    }
-
-    let isNewUser = false;
-    if (!user) {
-      user = await this.createUser({
-        email: identity.email ? identity.email.toLowerCase() : null,
-        isVerified: true,
-        primaryProvider: identity.provider,
-        displayName: displayName ?? identity.displayName ?? `${identity.provider} Player`,
-        [subjectColumn]: identity.subject,
-      });
-      isNewUser = true;
-    }
-
-    this.assertCanAuthenticate(user);
-    const tokens = await this.tokenService.issueTokens(user, meta);
-    return { user: (await this.toDto(user.id)).user, tokens, isNewUser };
-  }
-
-  // ------------------------------------------------------------------
-  // Email / password (supplementary provider used in development/tests)
+  // Email / password
   // ------------------------------------------------------------------
 
   async registerEmail(dto: EmailRegisterDto, meta: RequestMeta): Promise<AuthResult> {
@@ -227,8 +167,6 @@ export class AuthService {
     phone?: string | null;
     email?: string | null;
     passwordHash?: string | null;
-    googleSub?: string | null;
-    appleSub?: string | null;
     primaryProvider: UserEntity['primaryProvider'];
     isVerified: boolean;
     displayName: string;
@@ -243,8 +181,6 @@ export class AuthService {
         phoneNormalized: params.phone ? normalizePhone(params.phone) : null,
         email: params.email ?? null,
         passwordHash: params.passwordHash ?? null,
-        googleSub: params.googleSub ?? null,
-        appleSub: params.appleSub ?? null,
         primaryProvider: params.primaryProvider,
         status: 'active',
         isVerified: params.isVerified,

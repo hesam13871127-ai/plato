@@ -25,9 +25,7 @@ CREATE TABLE users (
   phone_normalized    VARCHAR(255)  NULL,
   email               VARCHAR(255)  NULL,
   password_hash       VARCHAR(255)  NULL,
-  google_sub          VARCHAR(255)  NULL,
-  apple_sub           VARCHAR(255)  NULL,
-  primary_provider    ENUM('phone','google','apple','email') NOT NULL DEFAULT 'phone',
+  primary_provider    ENUM('phone','email') NOT NULL DEFAULT 'phone',
   status              ENUM('active','suspended','banned','deleted') NOT NULL DEFAULT 'active',
   is_verified         TINYINT(1)    NOT NULL DEFAULT 0,
   is_bot              TINYINT(1)    NOT NULL DEFAULT 0,  -- INTERNAL: never exposed to clients
@@ -43,13 +41,11 @@ CREATE TABLE users (
   UNIQUE KEY uq_users_phone (phone),
   UNIQUE KEY uq_users_phone_normalized (phone_normalized),
   UNIQUE KEY uq_users_email (email),
-  UNIQUE KEY uq_users_google_sub (google_sub),
-  UNIQUE KEY uq_users_apple_sub (apple_sub),
   KEY idx_users_status (status),
   KEY idx_users_is_bot (is_bot),
   KEY idx_users_presence (presence),
   CONSTRAINT chk_users_phone_or_identity CHECK (
-    phone IS NOT NULL OR email IS NOT NULL OR google_sub IS NOT NULL OR apple_sub IS NOT NULL
+    phone IS NOT NULL OR email IS NOT NULL
   )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -344,6 +340,8 @@ CREATE TABLE rankings (
   draws           INT         NOT NULL DEFAULT 0,
   matches_played  INT         NOT NULL DEFAULT 0,
   rank_position   INT         NULL,
+  final_tier      VARCHAR(16) NULL,
+  rewards_granted TINYINT(1)  NOT NULL DEFAULT 0,
   created_at      DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   updated_at      DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (id),
@@ -353,6 +351,31 @@ CREATE TABLE rankings (
   CONSTRAINT fk_rankings_season FOREIGN KEY (season_id) REFERENCES seasons (id) ON DELETE CASCADE,
   CONSTRAINT fk_rankings_game FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE,
   CONSTRAINT fk_rankings_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- season_reward_claims — idempotent record of granted season rewards
+-- (one tier claim per player per season; one game claim per season+game)
+-- ----------------------------------------------------------------------------
+CREATE TABLE season_reward_claims (
+  id             CHAR(36)    NOT NULL,
+  season_id      CHAR(36)    NOT NULL,
+  user_id        CHAR(36)    NOT NULL,
+  kind           ENUM('tier','game') NOT NULL DEFAULT 'tier',
+  game_id        CHAR(36)    NULL,
+  rank_achieved  INT         NOT NULL DEFAULT 0,
+  tier           VARCHAR(16) NOT NULL DEFAULT 'bronze',
+  coins_granted  BIGINT      NOT NULL DEFAULT 0,
+  pips_granted   BIGINT      NOT NULL DEFAULT 0,
+  xp_granted     BIGINT      NOT NULL DEFAULT 0,
+  granted_at     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_season_claim (season_id, user_id, kind, game_id),
+  KEY idx_season_claim_season (season_id),
+  KEY idx_season_claim_user (user_id),
+  CONSTRAINT fk_season_claim_season FOREIGN KEY (season_id) REFERENCES seasons (id) ON DELETE CASCADE,
+  CONSTRAINT fk_season_claim_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_season_claim_game FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
@@ -417,7 +440,7 @@ CREATE TABLE user_inventory (
 CREATE TABLE transactions (
   id              CHAR(36)     NOT NULL,
   user_id         CHAR(36)     NOT NULL,
-  type            ENUM('purchase','reward','gift','gift_purchase','refund','admin_adjustment','match_payout','daily_reward','quest_reward') NOT NULL,
+  type            ENUM('purchase','reward','gift','gift_purchase','refund','admin_adjustment','match_payout','daily_reward','quest_reward','season_reward') NOT NULL,
   currency        ENUM('coins','pips') NOT NULL,
   amount          BIGINT       NOT NULL,
   balance_after   BIGINT       NOT NULL DEFAULT 0,
@@ -436,18 +459,23 @@ CREATE TABLE transactions (
 -- chats / chat_participants / messages / message_reads
 -- ----------------------------------------------------------------------------
 CREATE TABLE chats (
-  id              CHAR(36)     NOT NULL,
-  type            ENUM('direct','group','room','system') NOT NULL,
-  title           VARCHAR(128) NULL,
-  avatar_url      VARCHAR(512) NULL,
-  context_id      CHAR(36)     NULL,  -- groups.id or rooms.id
-  last_message_id CHAR(36)     NULL,
-  last_message_at DATETIME(6)  NULL,
-  created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  updated_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  id                CHAR(36)     NOT NULL,
+  type              ENUM('direct','group','room','lounge','system') NOT NULL,
+  title             VARCHAR(128) NULL,
+  avatar_url        VARCHAR(512) NULL,
+  context_id        CHAR(36)     NULL,  -- groups.id or rooms.id
+  access_pass       VARCHAR(64)  NULL,  -- Chat Pass code (NULL = open)
+  theme_key         VARCHAR(32)  NULL,  -- per-chat bubble/theme style
+  is_public         TINYINT(1)   NOT NULL DEFAULT 0,
+  last_message_id   CHAR(36)     NULL,
+  pinned_message_id CHAR(36)     NULL,
+  last_message_at   DATETIME(6)  NULL,
+  created_at        DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at        DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (id),
   KEY idx_chats_type (type),
   KEY idx_chats_context (context_id),
+  KEY idx_chats_public (is_public),
   KEY idx_chats_last_message (last_message_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -455,6 +483,7 @@ CREATE TABLE chat_participants (
   id           CHAR(36)     NOT NULL,
   chat_id      CHAR(36)     NOT NULL,
   user_id      CHAR(36)     NOT NULL,
+  role         ENUM('owner','admin','member') NOT NULL DEFAULT 'member',
   is_muted     TINYINT(1)   NOT NULL DEFAULT 0,
   last_read_at DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   joined_at    DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -467,25 +496,67 @@ CREATE TABLE chat_participants (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE messages (
-  id          CHAR(36)     NOT NULL,
-  chat_id     CHAR(36)     NOT NULL,
-  sender_id   CHAR(36)     NOT NULL,
-  type        ENUM('text','image','system','game_invite','emote') NOT NULL DEFAULT 'text',
-  body        TEXT         NOT NULL,
-  metadata    JSON         NULL,
-  edited_at   DATETIME(6)  NULL,
-  deleted_at  DATETIME(6)  NULL,
-  created_at  DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  id           CHAR(36)     NOT NULL,
+  chat_id      CHAR(36)     NOT NULL,
+  sender_id    CHAR(36)     NOT NULL,
+  type         ENUM('text','image','system','game_invite','emote','voice','pinned') NOT NULL DEFAULT 'text',
+  body         TEXT         NOT NULL,
+  metadata     JSON         NULL,
+  reply_to_id  CHAR(36)     NULL,
+  is_pinned    TINYINT(1)   NOT NULL DEFAULT 0,
+  pinned_at    DATETIME(6)  NULL,
+  pinned_by    CHAR(36)     NULL,
+  edited_at    DATETIME(6)  NULL,
+  deleted_at   DATETIME(6)  NULL,
+  created_at   DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   PRIMARY KEY (id),
   KEY idx_messages_chat_created (chat_id, created_at),
   KEY idx_messages_sender (sender_id),
+  KEY idx_messages_reply (reply_to_id),
+  KEY idx_messages_pinned (chat_id, is_pinned),
   CONSTRAINT fk_messages_chat FOREIGN KEY (chat_id) REFERENCES chats (id) ON DELETE CASCADE,
-  CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE
+  CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_messages_reply FOREIGN KEY (reply_to_id) REFERENCES messages (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- last_message self-reference after both tables exist
+-- last_message / pinned self-references after both tables exist
 ALTER TABLE chats
-  ADD CONSTRAINT fk_chats_last_message FOREIGN KEY (last_message_id) REFERENCES messages (id) ON DELETE SET NULL;
+  ADD CONSTRAINT fk_chats_last_message FOREIGN KEY (last_message_id) REFERENCES messages (id) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_chats_pinned_message FOREIGN KEY (pinned_message_id) REFERENCES messages (id) ON DELETE SET NULL;
+
+-- Reactions on messages (one row per user + emoji)
+CREATE TABLE message_reactions (
+  id          CHAR(36)    NOT NULL,
+  message_id  CHAR(36)    NOT NULL,
+  user_id     CHAR(36)    NOT NULL,
+  emoji       VARCHAR(16) NOT NULL,
+  created_at  DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_reaction (message_id, user_id, emoji),
+  KEY idx_reactions_message (message_id),
+  KEY idx_reactions_user (user_id),
+  CONSTRAINT fk_reactions_message FOREIGN KEY (message_id) REFERENCES messages (id) ON DELETE CASCADE,
+  CONSTRAINT fk_reactions_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Active voice-channel sessions (LiveKit roster); room name = voice:{chat_id}
+CREATE TABLE voice_sessions (
+  id             CHAR(36)    NOT NULL,
+  chat_id        CHAR(36)    NOT NULL,
+  user_id        CHAR(36)    NOT NULL,
+  identity       VARCHAR(64) NOT NULL,
+  is_muted       TINYINT(1)  NOT NULL DEFAULT 0,
+  is_deafened    TINYINT(1)  NOT NULL DEFAULT 0,
+  is_speaking    TINYINT(1)  NOT NULL DEFAULT 0,
+  is_broadcasting TINYINT(1) NOT NULL DEFAULT 0,
+  joined_at      DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_voice_session (chat_id, user_id),
+  KEY idx_voice_sessions_chat (chat_id),
+  KEY idx_voice_sessions_user (user_id),
+  CONSTRAINT fk_voice_sessions_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE message_reads (
   id          CHAR(36)     NOT NULL,
@@ -506,7 +577,7 @@ CREATE TABLE message_reads (
 CREATE TABLE reports (
   id              CHAR(36)     NOT NULL,
   reporter_id     CHAR(36)     NOT NULL,
-  target_type     ENUM('user','message','room','group') NOT NULL,
+  target_type     ENUM('user','message','room','group','chat','voice') NOT NULL,
   target_id       CHAR(36)     NOT NULL,
   reason          VARCHAR(128) NOT NULL,
   details         TEXT         NULL,

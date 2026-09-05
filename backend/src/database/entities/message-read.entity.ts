@@ -11,8 +11,8 @@ import { MessageEntity } from './message.entity';
 import { UserEntity } from './user.entity';
 
 /**
- * Per-user read receipts for messages (chat-level cursors live on
- * chat_participants; this table powers "seen by" lists).
+ * Per-user read receipts for messages. Chat-level cursors live on
+ * chat_participants (`last_read_at`); this table powers "seen by" lists.
  */
 @Entity('message_reads')
 @Index('idx_message_read_pair', ['messageId', 'userId'], { unique: true })
@@ -21,7 +21,7 @@ export class MessageReadEntity {
   id: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ name: 'message_id', type: 'varchar', length: 36 })
   messageId: string;
 
   @ManyToOne(() => MessageEntity, { onDelete: 'CASCADE' })
@@ -29,13 +29,13 @@ export class MessageReadEntity {
   message: MessageEntity;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ name: 'user_id', type: 'varchar', length: 36 })
   userId: string;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @CreateDateColumn({ type: 'datetime', precision: 6 })
+  @CreateDateColumn({ name: 'read_at', type: 'datetime', precision: 6 })
   readAt: Date;
 }

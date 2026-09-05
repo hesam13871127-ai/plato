@@ -11,8 +11,8 @@
 export type AccountStatus = 'active' | 'suspended' | 'banned' | 'deleted';
 export const ACCOUNT_STATUSES: AccountStatus[] = ['active', 'suspended', 'banned', 'deleted'];
 
-export type AuthProvider = 'phone' | 'google' | 'apple' | 'email';
-export const AUTH_PROVIDERS: AuthProvider[] = ['phone', 'google', 'apple', 'email'];
+export type AuthProvider = 'phone' | 'email';
+export const AUTH_PROVIDERS: AuthProvider[] = ['phone', 'email'];
 
 export type Gender = 'male' | 'female' | 'other' | 'unspecified';
 export const GENDERS: Gender[] = ['male', 'female', 'other', 'unspecified'];
@@ -91,7 +91,8 @@ export type TransactionType =
   | 'admin_adjustment'
   | 'match_payout'
   | 'daily_reward'
-  | 'quest_reward';
+  | 'quest_reward'
+  | 'season_reward';
 export const TRANSACTION_TYPES: TransactionType[] = [
   'purchase',
   'reward',
@@ -102,6 +103,7 @@ export const TRANSACTION_TYPES: TransactionType[] = [
   'match_payout',
   'daily_reward',
   'quest_reward',
+  'season_reward',
 ];
 
 /** Daily quest goal categories (progress is counted by the backend). */
@@ -122,20 +124,70 @@ export const QUEST_GOAL_TYPES: QuestGoalType[] = [
 export type QuestStatus = 'in_progress' | 'claimable' | 'claimed' | 'expired';
 export const QUEST_STATUSES: QuestStatus[] = ['in_progress', 'claimable', 'claimed', 'expired'];
 
-export type ChatType = 'direct' | 'group' | 'room' | 'system';
-export const CHAT_TYPES: ChatType[] = ['direct', 'group', 'room', 'system'];
+export type ChatType = 'direct' | 'group' | 'room' | 'lounge' | 'system';
+export const CHAT_TYPES: ChatType[] = ['direct', 'group', 'room', 'lounge', 'system'];
 
-export type MessageType = 'text' | 'image' | 'system' | 'game_invite' | 'emote';
-export const MESSAGE_TYPES: MessageType[] = ['text', 'image', 'system', 'game_invite', 'emote'];
+export type MessageType = 'text' | 'image' | 'system' | 'game_invite' | 'emote' | 'voice' | 'pinned';
+export const MESSAGE_TYPES: MessageType[] = [
+  'text',
+  'image',
+  'system',
+  'game_invite',
+  'emote',
+  'voice',
+  'pinned',
+];
 
-export type ReportTargetType = 'user' | 'message' | 'room' | 'group';
-export const REPORT_TARGET_TYPES: ReportTargetType[] = ['user', 'message', 'room', 'group'];
+/** A user's role within a chat (owner/admin only apply to groups). */
+export type ChatMemberRole = 'owner' | 'admin' | 'member';
+export const CHAT_MEMBER_ROLES: ChatMemberRole[] = ['owner', 'admin', 'member'];
+
+export type ReportTargetType = 'user' | 'message' | 'room' | 'group' | 'chat' | 'voice';
+export const REPORT_TARGET_TYPES: ReportTargetType[] = [
+  'user',
+  'message',
+  'room',
+  'group',
+  'chat',
+  'voice',
+];
+
+/** Pre-set moderation reasons used by the report flow. */
+export type ReportReason =
+  | 'spam'
+  | 'harassment'
+  | 'hate_speech'
+  | 'sexual_content'
+  | 'underage'
+  | 'cheating'
+  | 'impersonation'
+  | 'other';
+export const REPORT_REASONS: ReportReason[] = [
+  'spam',
+  'harassment',
+  'hate_speech',
+  'sexual_content',
+  'underage',
+  'cheating',
+  'impersonation',
+  'other',
+];
 
 export type ReportStatus = 'open' | 'reviewing' | 'resolved' | 'dismissed';
 export const REPORT_STATUSES: ReportStatus[] = ['open', 'reviewing', 'resolved', 'dismissed'];
 
 export type BanType = 'chat' | 'login' | 'matchmaking' | 'permanent';
 export const BAN_TYPES: BanType[] = ['chat', 'login', 'matchmaking', 'permanent'];
+
+/** Voice-channel participant states surfaced to clients over Socket.io. */
+export type VoiceParticipantState = 'joined' | 'left' | 'speaking' | 'muted' | 'unmuted';
+export const VOICE_PARTICIPANT_STATES: VoiceParticipantState[] = [
+  'joined',
+  'left',
+  'speaking',
+  'muted',
+  'unmuted',
+];
 
 export type BotDifficulty = 'easy' | 'medium' | 'hard' | 'expert';
 export const BOT_DIFFICULTIES: BotDifficulty[] = ['easy', 'medium', 'hard', 'expert'];

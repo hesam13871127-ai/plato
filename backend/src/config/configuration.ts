@@ -39,9 +39,31 @@ export interface OtpConfig {
   twilioVerifyServiceSid: string;
 }
 
-export interface SocialConfig {
-  googleClientIds: string[];
-  appleClientId: string;
+export interface VoiceConfig {
+  /** 'livekit' when credentials are configured, otherwise 'dev' (mock tokens). */
+  provider: 'livekit' | 'dev';
+  apiKey: string;
+  apiSecret: string;
+  /** LiveKit server ws:// host clients connect to. */
+  wsUrl: string;
+  /** Token lifetime in seconds. */
+  tokenTtlSeconds: number;
+}
+
+export interface GameConfig {
+  /** Number of invisible bot players kept warm in the pool. */
+  botPoolSize: number;
+  /** Seconds a human waits in matchmaking before an invisible bot fills the seat. */
+  botFallbackSeconds: number;
+  /** Maximum skill-rating gap acceptable for an instant human match. */
+  maxRatingGap: number;
+  /** Disconnect grace period (seconds) before a seat is treated as abandoned. */
+  reconnectGraceSeconds: number;
+  /**
+   * Divisor applied to bot "thinking" delays. 1 = realistic human pacing;
+   * higher values make bots act faster (used by tests and fast-mode lobbies).
+   */
+  botThinkDivisor: number;
 }
 
 export interface AppConfig {
@@ -54,7 +76,8 @@ export interface AppConfig {
   database: DatabaseConfig;
   jwt: JwtConfig;
   otp: OtpConfig;
-  social: SocialConfig;
+  voice: VoiceConfig;
+  game: GameConfig;
 }
 
 const toBool = (value: string | undefined, fallback: boolean): boolean => {
@@ -70,6 +93,8 @@ const toList = (value: string | undefined): string[] =>
 
 export default (): AppConfig => {
   const nodeEnv = (process.env.NODE_ENV ?? 'development') as NodeEnv;
+  const livekitKey = process.env.LIVEKIT_API_KEY ?? '';
+  const livekitSecret = process.env.LIVEKIT_API_SECRET ?? '';
 
   return {
     nodeEnv,
@@ -111,9 +136,20 @@ export default (): AppConfig => {
       twilioVerifyServiceSid: process.env.TWILIO_VERIFY_SERVICE_SID ?? '',
     },
 
-    social: {
-      googleClientIds: toList(process.env.GOOGLE_CLIENT_IDS),
-      appleClientId: process.env.APPLE_CLIENT_ID ?? '',
+    voice: {
+      provider: livekitKey && livekitSecret ? 'livekit' : 'dev',
+      apiKey: livekitKey,
+      apiSecret: livekitSecret,
+      wsUrl: process.env.LIVEKIT_WS_URL ?? 'wss://localhost:7880',
+      tokenTtlSeconds: parseInt(process.env.VOICE_TOKEN_TTL_SECONDS ?? '14400', 10),
+    },
+
+    game: {
+      botPoolSize: parseInt(process.env.BOT_POOL_SIZE ?? '40', 10),
+      botFallbackSeconds: parseInt(process.env.MATCHMAKING_BOT_FALLBACK_SECONDS ?? '30', 10),
+      maxRatingGap: parseInt(process.env.MATCHMAKING_MAX_RATING_GAP ?? '200', 10),
+      reconnectGraceSeconds: parseInt(process.env.GAME_RECONNECT_GRACE_SECONDS ?? '45', 10),
+      botThinkDivisor: parseFloat(process.env.BOT_THINK_DIVISOR ?? '1'),
     },
   };
 };

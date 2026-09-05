@@ -37,6 +37,16 @@ export const validationSchema = Joi.object({
   TWILIO_AUTH_TOKEN: Joi.string().allow('').default(''),
   TWILIO_VERIFY_SERVICE_SID: Joi.string().allow('').default(''),
 
-  GOOGLE_CLIENT_IDS: Joi.string().allow('').default(''),
-  APPLE_CLIENT_ID: Joi.string().allow('').default(''),
+  // Voice (LiveKit) — optional; the server falls back to a dev token mode.
+  LIVEKIT_API_KEY: Joi.string().allow('').default(''),
+  LIVEKIT_API_SECRET: Joi.string().allow('').default(''),
+  LIVEKIT_WS_URL: Joi.string().allow('').default('wss://localhost:7880'),
+  VOICE_TOKEN_TTL_SECONDS: Joi.number().integer().min(60).default(14400),
+
+  // Games & matchmaking
+  BOT_POOL_SIZE: Joi.number().integer().min(0).default(40),
+  MATCHMAKING_BOT_FALLBACK_SECONDS: Joi.number().integer().min(1).default(30),
+  MATCHMAKING_MAX_RATING_GAP: Joi.number().integer().min(0).default(200),
+  GAME_RECONNECT_GRACE_SECONDS: Joi.number().integer().min(5).default(45),
+  BOT_THINK_DIVISOR: Joi.number().min(0.01).default(1),
 });

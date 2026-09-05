@@ -38,19 +38,6 @@ export class PhoneOtpVerifyDto {
   displayName?: string;
 }
 
-export class SocialLoginDto {
-  @ApiProperty({ description: 'ID token issued by Google / Apple after client sign-in' })
-  @IsString()
-  @IsNotEmpty()
-  idToken!: string;
-
-  @ApiPropertyOptional({ example: 'Jane', description: 'Display name for first-time sign-ups' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(64)
-  displayName?: string;
-}
-
 export class RefreshTokenDto {
   @ApiProperty({ description: 'The refresh token previously issued by the API' })
   @IsString()

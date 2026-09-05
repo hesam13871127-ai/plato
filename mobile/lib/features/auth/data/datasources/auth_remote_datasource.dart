@@ -33,21 +33,6 @@ class AuthRemoteDataSource {
     return AuthResponseModel.fromEnvelope(response.data ?? const {});
   }
 
-  Future<AuthResponseModel> socialLogin({
-    required String path,
-    required String idToken,
-    String? displayName,
-  }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      path,
-      data: {
-        'idToken': idToken,
-        if (displayName != null) 'displayName': displayName,
-      },
-    );
-    return AuthResponseModel.fromEnvelope(response.data ?? const {});
-  }
-
   Future<AuthResponseModel> registerWithEmail({
     required String email,
     required String password,

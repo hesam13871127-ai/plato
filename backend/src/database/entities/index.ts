@@ -14,6 +14,7 @@ import { GameEntity } from './game.entity';
 import { RoomEntity } from './room.entity';
 import { RoomPlayerEntity } from './room-player.entity';
 import { SeasonEntity } from './season.entity';
+import { SeasonRewardClaimEntity } from './season-reward-claim.entity';
 import { MatchEntity } from './match.entity';
 import { MatchPlayerEntity } from './match-player.entity';
 import { RankingEntity } from './ranking.entity';
@@ -24,6 +25,8 @@ import { ChatEntity } from './chat.entity';
 import { ChatParticipantEntity } from './chat-participant.entity';
 import { MessageEntity } from './message.entity';
 import { MessageReadEntity } from './message-read.entity';
+import { MessageReactionEntity } from './message-reaction.entity';
+import { VoiceSessionEntity } from './voice-session.entity';
 import { ReportEntity } from './report.entity';
 import { BanEntity } from './ban.entity';
 import { QuestEntity } from './quest.entity';
@@ -42,6 +45,7 @@ export * from './game.entity';
 export * from './room.entity';
 export * from './room-player.entity';
 export * from './season.entity';
+export * from './season-reward-claim.entity';
 export * from './match.entity';
 export * from './match-player.entity';
 export * from './ranking.entity';
@@ -52,6 +56,8 @@ export * from './chat.entity';
 export * from './chat-participant.entity';
 export * from './message.entity';
 export * from './message-read.entity';
+export * from './message-reaction.entity';
+export * from './voice-session.entity';
 export * from './report.entity';
 export * from './ban.entity';
 export * from './quest.entity';
@@ -71,6 +77,7 @@ export const entities = [
   RoomEntity,
   RoomPlayerEntity,
   SeasonEntity,
+  SeasonRewardClaimEntity,
   MatchEntity,
   MatchPlayerEntity,
   RankingEntity,
@@ -81,6 +88,8 @@ export const entities = [
   ChatParticipantEntity,
   MessageEntity,
   MessageReadEntity,
+  MessageReactionEntity,
+  VoiceSessionEntity,
   ReportEntity,
   BanEntity,
   QuestEntity,

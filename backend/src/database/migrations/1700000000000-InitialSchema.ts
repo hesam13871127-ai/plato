@@ -30,6 +30,8 @@ export class InitialSchema1700000000000 implements MigrationInterface {
       'bots',
       'bans',
       'reports',
+      'voice_sessions',
+      'message_reactions',
       'message_reads',
       'messages',
       'chat_participants',

@@ -12,7 +12,6 @@ import { AuthService } from './auth.service';
 import { OtpService } from './otp.service';
 import { ConsoleSmsService } from './sms/sms.service';
 import { TwilioSmsService } from './sms/twilio-sms.service';
-import { SocialProviderService } from './social/social-provider.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TokenService } from './token.service';
 
@@ -28,7 +27,6 @@ import { TokenService } from './token.service';
     AuthService,
     TokenService,
     OtpService,
-    SocialProviderService,
     ConsoleSmsService,
     TwilioSmsService,
     JwtStrategy,

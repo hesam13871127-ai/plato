@@ -30,10 +30,22 @@ export class ChatEntity {
   @Column({ type: 'varchar', length: 512, nullable: true })
   avatarUrl: string | null;
 
-  /** Set for group / room chats: references groups.id or rooms.id. */
+  /** Set for group / room / lounge chats: references groups.id or rooms.id. */
   @Index()
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'context_id', type: 'varchar', length: 36, nullable: true })
   contextId: string | null;
+
+  /** Join code for pass-gated groups/lounges (null = open). */
+  @Column({ name: 'access_pass', type: 'varchar', length: 64, nullable: true })
+  accessPass: string | null;
+
+  /** Per-chat visual theme key (overrides the default bubble styling). */
+  @Column({ name: 'theme_key', type: 'varchar', length: 32, nullable: true })
+  themeKey: string | null;
+
+  /** True for the public Lounge chat (single global room). */
+  @Column({ name: 'is_public', type: 'boolean', default: false })
+  isPublic: boolean;
 
   @OneToMany(() => ChatParticipantEntity, (participant) => participant.chat, { cascade: true })
   participants: ChatParticipantEntity[];
@@ -41,11 +53,15 @@ export class ChatEntity {
   @OneToMany(() => MessageEntity, (message) => message.chat)
   messages: MessageEntity[];
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'last_message_id', type: 'varchar', length: 36, nullable: true })
   lastMessageId: string | null;
 
-  @Column({ type: 'datetime', precision: 6, nullable: true })
+  @Column({ name: 'last_message_at', type: 'datetime', precision: 6, nullable: true })
   lastMessageAt: Date | null;
+
+  /** Denormalised pointer to the currently pinned message. */
+  @Column({ name: 'pinned_message_id', type: 'varchar', length: 36, nullable: true })
+  pinnedMessageId: string | null;
 
   @CreateDateColumn({ type: 'datetime', precision: 6 })
   createdAt: Date;

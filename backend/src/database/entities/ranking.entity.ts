@@ -66,6 +66,14 @@ export class RankingEntity {
   @Column({ type: 'int', nullable: true })
   rankPosition: number | null;
 
+  /** Snapshot of the tier reached by the end of the season (null while active). */
+  @Column({ type: 'varchar', length: 16, nullable: true })
+  finalTier: string | null;
+
+  /** True once season-end rewards for this (season, game) row have been paid. */
+  @Column({ type: 'boolean', default: false })
+  rewardsGranted: boolean;
+
   @CreateDateColumn({ type: 'datetime', precision: 6 })
   createdAt: Date;
 

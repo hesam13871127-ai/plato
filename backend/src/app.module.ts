@@ -10,7 +10,9 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { HealthModule } from './health/health.module';
-import { RealtimeModule } from './realtime/realtime.module';
+import { ChatModule } from './chat/chat.module';
+import { GameModule } from './game/game.module';
+import { CompetitiveModule } from './competitive/competitive.module';
 import { EconomyModule } from './economy/economy.module';
 import { ShopModule } from './shop/shop.module';
 import { QuestsModule } from './quests/quests.module';
@@ -30,7 +32,9 @@ import { QuestsModule } from './quests/quests.module';
     ShopModule,
     QuestsModule,
     HealthModule,
-    RealtimeModule,
+    ChatModule,
+    GameModule,
+    CompetitiveModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

@@ -4,13 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../providers/auth_notifier.dart';
-import '../widgets/auth_social_buttons.dart';
 import '../widgets/email_auth_form.dart';
 import '../widgets/otp_form.dart';
 import '../widgets/phone_otp_form.dart';
 
-/// Authentication entry screen. Hosts the phone-OTP flow (primary), social
-/// sign-in and email/password (secondary) in a glassmorphism panel.
+/// Authentication entry screen. Hosts the phone-OTP flow (primary) and
+/// email/password (secondary) in a glassmorphism panel.
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
@@ -57,14 +56,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         Expanded(child: Divider(color: AppColors.glassStroke)),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('or continue with',
+                          child: Text('or',
                               style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
                         ),
                         Expanded(child: Divider(color: AppColors.glassStroke)),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    const AuthSocialButtons(),
                     const SizedBox(height: 12),
                     TextButton(
                       onPressed: () => setState(() => _showEmail = !_showEmail),

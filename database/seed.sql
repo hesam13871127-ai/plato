@@ -78,3 +78,8 @@ INSERT INTO bots (user_id, difficulty, personality, config, is_active, created_a
 VALUES ('44444444-0000-4000-8800-000000000001', 'medium', 'friendly',
         JSON_OBJECT('aggression', 0.5, 'bluffRate', 0.2), 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE difficulty = VALUES(difficulty);
+
+-- ── Public Lounge chat (global social room) ────────────────────────────────
+INSERT INTO chats (id, type, title, is_public, created_at, updated_at)
+VALUES ('66666666-0000-4000-9000-000000000001', 'lounge', 'Lounge', 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())
+ON DUPLICATE KEY UPDATE title = VALUES(title);

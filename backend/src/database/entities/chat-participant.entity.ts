@@ -7,9 +7,15 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { ChatMemberRole } from '../enums';
 import { ChatEntity } from './chat.entity';
 import { UserEntity } from './user.entity';
 
+/**
+ * A user's membership of a chat thread. Direct chats have exactly two
+ * participants; group/lounge/room chats can have many (groups capped at 100).
+ * `role` is only meaningful for group chats (owner/admin/member).
+ */
 @Entity('chat_participants')
 @Index('idx_chat_participant_pair', ['chatId', 'userId'], { unique: true })
 export class ChatParticipantEntity {
@@ -17,7 +23,7 @@ export class ChatParticipantEntity {
   id: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ name: 'chat_id', type: 'varchar', length: 36 })
   chatId: string;
 
   @ManyToOne(() => ChatEntity, (chat) => chat.participants, { onDelete: 'CASCADE' })
@@ -25,19 +31,25 @@ export class ChatParticipantEntity {
   chat: ChatEntity;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ name: 'user_id', type: 'varchar', length: 36 })
   userId: string;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @Column({ type: 'boolean', default: false })
+  /** owner/admin/member — defaults to member; set for group chats. */
+  @Column({ name: 'role', type: 'varchar', length: 16, default: 'member' })
+  role: ChatMemberRole;
+
+  /** Per-user notification mute for this chat. */
+  @Column({ name: 'is_muted', type: 'boolean', default: false })
   isMuted: boolean;
 
-  @Column({ type: 'datetime', precision: 6 })
+  /** High-water mark for unread-count calculation. */
+  @Column({ name: 'last_read_at', type: 'datetime', precision: 6 })
   lastReadAt: Date;
 
-  @CreateDateColumn({ type: 'datetime', precision: 6 })
+  @CreateDateColumn({ name: 'joined_at', type: 'datetime', precision: 6 })
   joinedAt: Date;
 }

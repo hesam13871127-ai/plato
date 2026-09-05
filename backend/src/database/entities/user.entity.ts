@@ -39,12 +39,6 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 255, nullable: true, select: false })
   passwordHash: string | null;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  googleSub: string | null;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  appleSub: string | null;
-
   @Column({ type: 'varchar', length: 64, default: 'phone' })
   primaryProvider: AuthProvider;
 

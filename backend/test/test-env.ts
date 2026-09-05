@@ -14,3 +14,7 @@ process.env.JWT_ACCESS_TTL = '900s';
 process.env.JWT_REFRESH_TTL = '1d';
 process.env.SMS_PROVIDER = 'development';
 process.env.OTP_RATE_LIMIT_SECONDS = '0';
+// Games: speed up bot pacing and the matchmaking fallback for deterministic tests.
+process.env.BOT_THINK_DIVISOR = '250';
+process.env.MATCHMAKING_BOT_FALLBACK_SECONDS = '1';
+process.env.BOT_POOL_SIZE = '12';

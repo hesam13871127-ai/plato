@@ -59,16 +59,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
   }
 
-  Future<bool> signInWithGoogle() {
-    state = state.copyWith(isLoading: true, clearError: true);
-    return _completeAuth(_repository.signInWithGoogle());
-  }
-
-  Future<bool> signInWithApple() {
-    state = state.copyWith(isLoading: true, clearError: true);
-    return _completeAuth(_repository.signInWithApple());
-  }
-
   Future<bool> registerWithEmail({
     required String email,
     required String password,

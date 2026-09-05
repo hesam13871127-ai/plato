@@ -3,26 +3,21 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/error/failures.dart';
-import '../../../../core/network/api_endpoints.dart';
 import '../../../../core/storage/secure_token_storage.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
-import '../datasources/auth_social_datasource.dart';
 import '../models/auth_response_model.dart';
 import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required AuthRemoteDataSource remoteDataSource,
-    required AuthSocialDataSource socialDataSource,
     required SecureTokenStorage tokenStorage,
   })  : _remote = remoteDataSource,
-        _social = socialDataSource,
         _tokenStorage = tokenStorage;
 
   final AuthRemoteDataSource _remote;
-  final AuthSocialDataSource _social;
   final SecureTokenStorage _tokenStorage;
 
   @override
@@ -46,34 +41,6 @@ class AuthRepositoryImpl implements AuthRepository {
           code: code,
           displayName: displayName,
         ));
-  }
-
-  @override
-  Future<Either<Failure, AuthResponse>> signInWithGoogle() async {
-    try {
-      final idToken = await _social.googleIdToken();
-      return _guard(() => _remote.socialLogin(path: ApiEndpoints.googleLogin, idToken: idToken));
-    } on SocialSignInCancelledException {
-      return Left(const AuthFailure('Google sign-in was cancelled.'));
-    } on Object catch (error) {
-      return Left(mapErrorToFailure(error));
-    }
-  }
-
-  @override
-  Future<Either<Failure, AuthResponse>> signInWithApple() async {
-    try {
-      final credential = await _social.appleIdToken();
-      return _guard(() => _remote.socialLogin(
-            path: ApiEndpoints.appleLogin,
-            idToken: credential.idToken,
-            displayName: credential.displayName,
-          ));
-    } on SocialSignInCancelledException {
-      return Left(const AuthFailure('Apple sign-in was cancelled.'));
-    } on Object catch (error) {
-      return Left(mapErrorToFailure(error));
-    }
   }
 
   @override

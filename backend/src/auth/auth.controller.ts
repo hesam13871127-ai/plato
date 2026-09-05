@@ -17,7 +17,6 @@ import {
   PhoneOtpRequestDto,
   PhoneOtpVerifyDto,
   RefreshTokenDto,
-  SocialLoginDto,
 } from './dto/auth.dto';
 import { TokenPair } from './token.service';
 
@@ -47,22 +46,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify the SMS code and sign in / register' })
   verifyPhoneOtp(@Body() dto: PhoneOtpVerifyDto, @Req() request: Request): Promise<AuthResult> {
     return this.authService.verifyPhoneOtp(dto, this.meta(request));
-  }
-
-  @Public()
-  @Post('google')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Sign in with a Google ID token' })
-  googleLogin(@Body() dto: SocialLoginDto, @Req() request: Request): Promise<AuthResult> {
-    return this.authService.googleLogin(dto, this.meta(request));
-  }
-
-  @Public()
-  @Post('apple')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Sign in with an Apple ID token' })
-  appleLogin(@Body() dto: SocialLoginDto, @Req() request: Request): Promise<AuthResult> {
-    return this.authService.appleLogin(dto, this.meta(request));
   }
 
   @Public()

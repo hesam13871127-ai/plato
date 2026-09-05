@@ -16,12 +16,6 @@ abstract interface class AuthRepository {
     String? displayName,
   });
 
-  /// Sign in with a Google ID token.
-  Future<Either<Failure, AuthResponse>> signInWithGoogle();
-
-  /// Sign in with an Apple ID token.
-  Future<Either<Failure, AuthResponse>> signInWithApple();
-
   /// Register with email + password.
   Future<Either<Failure, AuthResponse>> registerWithEmail({
     required String email,

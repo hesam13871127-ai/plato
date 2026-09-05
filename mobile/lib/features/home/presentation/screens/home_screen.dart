@@ -24,6 +24,13 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('VibeTable'),
         actions: [
+          // Real-time chat inbox.
+          IconButton(
+            icon: const Icon(Icons.forum_rounded, size: 26),
+            color: AppColors.softCyan,
+            onPressed: () => context.push(AppRoutes.chat),
+            tooltip: 'Messages',
+          ),
           // Daily reward shortcut — pulses/highlights when unclaimed.
           IconButton(
             icon: Badge(
@@ -99,6 +106,18 @@ class HomeScreen extends ConsumerWidget {
               childAspectRatio: 1.5,
               children: const [
                 _HubTile(
+                  title: 'Play',
+                  subtitle: 'Games & matchmaking',
+                  icon: Icons.casino_rounded,
+                  route: AppRoutes.games,
+                ),
+                _HubTile(
+                  title: 'Ranked Season',
+                  subtitle: 'Tiers, rewards & leaderboard',
+                  icon: Icons.emoji_events_rounded,
+                  route: AppRoutes.season,
+                ),
+                _HubTile(
                   title: 'Shop',
                   subtitle: 'Cosmetics & gifts',
                   icon: Icons.storefront_rounded,
@@ -122,15 +141,30 @@ class HomeScreen extends ConsumerWidget {
                   icon: Icons.account_balance_wallet_rounded,
                   route: AppRoutes.wallet,
                 ),
+                _HubTile(
+                  title: 'Messages',
+                  subtitle: 'Chat, voice & Lounge',
+                  icon: Icons.forum_rounded,
+                  route: AppRoutes.chat,
+                ),
               ],
             ),
             const SizedBox(height: 20),
             const Text('Popular Tables',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             const SizedBox(height: 12),
-            const _GameTile(title: 'Backgammon', subtitle: 'Classic · 2 players', icon: Icons.grid_on_rounded),
-            const _GameTile(title: 'Dominoes', subtitle: 'Fast · 2–4 players', icon: Icons.view_module_rounded),
-            const _GameTile(title: 'Ludo', subtitle: 'Party · 2–4 players', icon: Icons.sports_esports_rounded),
+            _GameTile(
+              title: 'Dominoes',
+              subtitle: 'Draw Dominoes · 2–4 players · play now',
+              icon: Icons.view_module_rounded,
+              route: AppRoutes.matchmaking('dominoes'),
+            ),
+            const _GameTile(
+              title: 'More games',
+              subtitle: 'Browse the full catalogue',
+              icon: Icons.sports_esports_rounded,
+              route: AppRoutes.games,
+            ),
           ],
         ),
       ),
@@ -191,17 +225,18 @@ class _HubTile extends StatelessWidget {
 }
 
 class _GameTile extends StatelessWidget {
-  const _GameTile({required this.title, required this.subtitle, required this.icon});
+  const _GameTile({required this.title, required this.subtitle, required this.icon, required this.route});
   final String title;
   final String subtitle;
   final IconData icon;
+  final String route;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassCard(
-        onTap: () {},
+        onTap: () => context.push(route),
         child: Row(
           children: [
             Container(
