@@ -1,29 +1,28 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import '../constants/app_constants.dart';
+import 'kv_storage.dart';
+import 'platform_kv_storage.dart';
 
-/// Persists JWT access + refresh tokens in the platform secure/keychain
-/// storage (encrypted at rest on both Android and iOS).
+/// Persists JWT access + refresh tokens.
+///
+/// On native platforms this uses encrypted secure storage (Keychain /
+/// EncryptedSharedPreferences); on web it falls back to browser `localStorage`.
+/// The platform difference is handled by the injected [KvStorage].
 class SecureTokenStorage {
-  SecureTokenStorage({FlutterSecureStorage? storage})
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            );
+  SecureTokenStorage({KvStorage? storage}) : _storage = storage ?? createKvStorage();
 
-  final FlutterSecureStorage _storage;
+  final KvStorage _storage;
 
   Future<void> saveTokens({required String accessToken, required String refreshToken}) async {
-    await _storage.write(key: AppConstants.kAccessToken, value: accessToken);
-    await _storage.write(key: AppConstants.kRefreshToken, value: refreshToken);
+    await _storage.write(AppConstants.kAccessToken, accessToken);
+    await _storage.write(AppConstants.kRefreshToken, refreshToken);
   }
 
-  Future<String?> get accessToken => _storage.read(key: AppConstants.kAccessToken);
+  Future<String?> get accessToken => _storage.read(AppConstants.kAccessToken);
 
-  Future<String?> get refreshToken => _storage.read(key: AppConstants.kRefreshToken);
+  Future<String?> get refreshToken => _storage.read(AppConstants.kRefreshToken);
 
   Future<void> clearTokens() async {
-    await _storage.delete(key: AppConstants.kAccessToken);
-    await _storage.delete(key: AppConstants.kRefreshToken);
+    await _storage.delete(AppConstants.kAccessToken);
+    await _storage.delete(AppConstants.kRefreshToken);
   }
 }

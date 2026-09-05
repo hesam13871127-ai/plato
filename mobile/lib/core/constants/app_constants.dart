@@ -1,12 +1,22 @@
-/// Compile-time environment constants. Override with
+import '../platform/default_api_host.dart';
+
+/// Environment constants. Override the backend origin with
 /// `flutter run --dart-define=API_BASE_URL=https://api.example.com`.
+///
+/// When not overridden, the default origin is resolved per platform at runtime
+/// (localhost for web/desktop, the 10.0.2.2 emulator alias on Android), so the
+/// app connects to a locally-running backend with zero extra configuration.
 class AppConstants {
   AppConstants._();
 
-  static const String apiBaseUrl = String.fromEnvironment(
+  static const String _envApiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3000', // Android emulator → host machine
+    defaultValue: '',
   );
+
+  /// Backend origin (scheme + host + port), without the `/api` prefix.
+  static String get apiBaseUrl =>
+      _envApiBaseUrl.isNotEmpty ? _envApiBaseUrl : defaultApiHost;
 
   static const String apiPrefix = '/api';
 

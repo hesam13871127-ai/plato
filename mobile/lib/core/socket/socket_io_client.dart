@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../constants/app_constants.dart';
 import '../storage/secure_token_storage.dart';
@@ -23,7 +24,9 @@ class SocketIoClient {
 
   final SecureTokenStorage? _storage;
 
-  WebSocket? _socket;
+  WebSocketChannel? _channel;
+  bool _socketReady = false;
+  StreamSubscription<dynamic>? _socketSub;
   Timer? _reconnectTimer;
   bool _disposed = false;
   bool _intentionalClose = false;
@@ -40,7 +43,7 @@ class SocketIoClient {
 
   /// Connects to the root Socket.IO namespace.
   Future<void> connect() async {
-    if (_socket != null || _connecting) return;
+    if (_channel != null || _connecting) return;
     _connecting = true;
     _intentionalClose = false;
 
@@ -68,12 +71,16 @@ class SocketIoClient {
     ).toString();
 
     try {
-      final socket = await WebSocket.connect(wsUrl, headers: const {});
-      _socket = socket;
+      final channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+      _channel = channel;
+
+      // Wait for the transport to be ready; a failure here triggers reconnect.
+      await channel.ready;
+      _socketReady = true;
       _connecting = false;
       _reconnectAttempts = 0;
 
-      socket.listen(
+      _socketSub = channel.stream.listen(
         _onRawData,
         onDone: _onDone,
         onError: (Object error) => _onDone(),
@@ -84,6 +91,8 @@ class SocketIoClient {
       // (see _onRawData, packet type '0').
     } on Object {
       _connecting = false;
+      _socketReady = false;
+      _channel = null;
       _scheduleReconnect();
     }
   }
@@ -103,7 +112,7 @@ class SocketIoClient {
     _pendingAcks.clear();
   }
 
-  bool get isConnected => _socket != null;
+  bool get isConnected => _channel != null && _socketReady;
 
   /// Registers a handler for a server-emitted event (e.g. `chat:message`).
   /// True once the server has accepted the handshake JWT (`authenticated`).
@@ -132,8 +141,8 @@ class SocketIoClient {
   /// completes with the server's acknowledgement payload.
   Future<dynamic> emit(String event, Map<String, dynamic> payload,
       {bool withAck = false}) {
-    final socket = _socket;
-    if (socket == null) {
+    final channel = _channel;
+    if (channel == null || !_socketReady) {
       return Future<dynamic>.error(StateError('Socket not connected.'));
     }
     if (!withAck) {
@@ -156,8 +165,18 @@ class SocketIoClient {
   // ── internals ────────────────────────────────────────────────────────────
 
   void _onRawData(dynamic raw) {
-    if (raw is! String) return;
-    final packetType = raw.substring(0, 1);
+    // Socket.IO text frames arrive as String; defensively decode the rare
+    // binary (List<int>/ByteBuffer) frame so nothing is dropped on any client.
+    if (raw is! String) {
+      if (raw is List<int>) {
+        raw = utf8.decode(raw);
+      } else {
+        return;
+      }
+    }
+    final packet = raw as String;
+    if (packet.isEmpty) return;
+    final packetType = packet.substring(0, 1);
     switch (packetType) {
       case '0': // Engine.IO OPEN → send the Socket.IO CONNECT (with auth)
         // Engine.IO v4 pings then originate from the server; we answer each
@@ -168,7 +187,7 @@ class SocketIoClient {
         _sendRaw('3');
         break;
       case '4': // Socket.IO packet
-        _onSocketPacket(raw.substring(1));
+        _onSocketPacket(packet.substring(1));
         break;
       default:
         break;
@@ -231,9 +250,9 @@ class SocketIoClient {
   }
 
   void _sendRaw(String frame) {
-    final socket = _socket;
-    if (socket != null && socket.readyState == WebSocket.open) {
-      socket.add(frame);
+    final channel = _channel;
+    if (channel != null && _socketReady) {
+      channel.sink.add(frame);
     }
   }
 
@@ -245,11 +264,15 @@ class SocketIoClient {
   void _teardown({bool keepReconnect = false}) {
     isAuthenticated = false;
     _connecting = false;
-    final socket = _socket;
-    _socket = null;
-    if (socket != null) {
+    _socketReady = false;
+    final channel = _channel;
+    _channel = null;
+    final sub = _socketSub;
+    _socketSub = null;
+    if (channel != null) {
       try {
-        socket.close();
+        sub?.cancel();
+        channel.sink.close();
       } on Object {
         // already closed
       }
