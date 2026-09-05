@@ -47,7 +47,12 @@ class AppRoutes {
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final notifier = ValueNotifier<AuthState>(const AuthState());
+  // Seed with the current auth state: main() awaits checkAuthStatus() before
+  // runApp(), so the status is already resolved when the router is first built.
+  // ref.listen only fires on *future* changes, so without this seed the
+  // notifier would stay `unknown` forever and the redirect would keep the app
+  // stuck on the splash/loading screen.
+  final notifier = ValueNotifier<AuthState>(ref.read(authNotifierProvider));
 
   ref
     ..listen(authNotifierProvider, (previous, next) {
