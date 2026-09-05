@@ -193,8 +193,8 @@ class _PlayerCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(alive ? Icons.person : Icons.skull,
-                  size: 26, color: alive ? AppColors.softCyan : AppColors.textMuted),
+              Icon(alive ? Icons.person : Icons.person_off_rounded,
+                  size: 26, color: alive ? AppColors.softCyan : AppColors.danger),
               const SizedBox(height: 4),
               Text(name,
                   maxLines: 1,

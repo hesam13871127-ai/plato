@@ -40,8 +40,9 @@ class _RoomLobbyScreenState extends ConsumerState<RoomLobbyScreen> {
         if (room.id == widget.roomId && mounted) setState(() => _room = room);
       }));
       _subs.add(socket.roomStarted.listen((event) {
-        if (event.sessionId.isNotEmpty && mounted) {
-          context.pushReplacement('/game/${event.sessionId}');
+        final sessionId = event['sessionId'] ?? '';
+        if (sessionId.isNotEmpty && mounted) {
+          context.pushReplacement('/game/$sessionId');
         }
       }));
     });

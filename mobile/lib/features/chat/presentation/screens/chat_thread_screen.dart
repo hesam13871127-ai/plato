@@ -45,7 +45,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   final ScrollController _scrollController = ScrollController();
   ChatMessage? _replyTo;
   late bool _online = widget.otherOnline;
-  DateTime? _lastSeen = widget.otherLastSeenAt;
+  late DateTime? _lastSeen = widget.otherLastSeenAt;
   StreamSubscription<dynamic>? _presenceSub;
 
   @override

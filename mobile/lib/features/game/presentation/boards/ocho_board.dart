@@ -119,7 +119,7 @@ class _OchoBoardState extends State<OchoBoard> {
                             widget.onAction('draw', {});
                           }
                         : null,
-                    child: const _Deck(size: 92, count: drawCount),
+                    child: _Deck(size: 92, count: drawCount),
                   ),
                   const SizedBox(width: 14),
                   Container(

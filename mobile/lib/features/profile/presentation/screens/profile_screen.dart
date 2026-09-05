@@ -138,7 +138,8 @@ class _IdentityCard extends StatelessWidget {
     );
   }
 
-  static List<Color>? _bannerColor(Map<String, dynamic> meta) {
+  static List<Color>? _bannerColor(Map<String, dynamic>? meta) {
+    if (meta == null) return null;
     final base = meta['color'] ?? meta['gradientFrom'];
     if (base is String && base.startsWith('#') && base.length >= 7) {
       final c = _hexToColor(base);
@@ -190,7 +191,8 @@ class _FramedAvatar extends StatelessWidget {
     );
   }
 
-  static List<Color>? _frameColor(Map<String, dynamic> meta) {
+  static List<Color>? _frameColor(Map<String, dynamic>? meta) {
+    if (meta == null) return null;
     final base = meta['color'] ?? meta['frameColor'];
     if (base is String && base.startsWith('#') && base.length >= 7) {
       final c = _hexToColor(base);

@@ -287,7 +287,7 @@ class _ConversationTile extends StatelessWidget {
         case ChatType.room:
           return 'In-game chat';
         case ChatType.direct:
-          return online ? 'Online' : 'Say hi 👋';
+          return (chat.other?.online ?? false) ? 'Online' : 'Say hi 👋';
       }
     }
     return chat.lastMessageBody!;

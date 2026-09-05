@@ -133,8 +133,8 @@ class _Controls extends ConsumerWidget {
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith(
                       (states) => states.contains(WidgetState.selected)
-                          ? const WidgetStatePropertyAll<Color>(AppColors.electricPurple)
-                          : const WidgetStatePropertyAll<Color>(AppColors.surfaceElevated),
+                          ? AppColors.electricPurple
+                          : AppColors.surfaceElevated,
                     ),
                     foregroundColor: WidgetStatePropertyAll(AppColors.textPrimary),
                     visualDensity: VisualDensity.compact,

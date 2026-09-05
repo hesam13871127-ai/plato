@@ -24,7 +24,6 @@ class MatchmakingScreen extends ConsumerStatefulWidget {
 }
 
 class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen> {
-  StreamSubscription<MatchmakingState>? _sub;
   bool _navigated = false;
   int _dots = 0;
   Timer? _animTimer;
@@ -42,23 +41,10 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen> {
     await ref
         .read(matchmakingNotifierProvider.notifier)
         .enqueue(gameSlug: widget.gameSlug, isRanked: widget.isRanked, seats: 2);
-    _listen();
-  }
-
-  void _listen() {
-    _sub?.cancel();
-    _sub = ref.read(matchmakingNotifierProvider.notifier.stream.listen((state) {
-      if (_navigated || !mounted) return;
-      if (state.phase == MatchmakingPhase.found && state.match != null) {
-        _navigated = true;
-        context.pushReplacement('/game/${state.match!.sessionId}');
-      }
-    });
   }
 
   @override
   void dispose() {
-    _sub?.cancel();
     _animTimer?.cancel();
     // Cancel the queue if the player leaves before a match forms.
     final phase = ref.read(matchmakingNotifierProvider).phase;

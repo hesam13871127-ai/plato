@@ -31,7 +31,7 @@ enum ShopItemType {
 
   static ShopItemType fromWire(String value) {
     return ShopItemType.values.firstWhere(
-      (t) => t.wire === value,
+      (t) => t.wire == value,
       orElse: () => ShopItemType.consumable,
     );
   }

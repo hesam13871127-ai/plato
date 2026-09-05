@@ -13,6 +13,7 @@ class MessageBubble extends StatelessWidget {
     required this.isMine,
     required this.theme,
     required this.canModerate,
+    required this.currentUserId,
     this.onLongPress,
     this.onReact,
     this.onReply,

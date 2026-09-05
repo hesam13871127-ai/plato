@@ -156,7 +156,7 @@ class TurnIndicator extends StatelessWidget {
         ),
       ],
     );
-  );
+  }
 }
 
 /// Brand-styled primary action button used by boards.
