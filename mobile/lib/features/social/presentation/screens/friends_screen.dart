@@ -6,6 +6,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../chat/presentation/screens/chat_thread_screen.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../domain/entities/social_entities.dart';
+import 'groups_screen.dart';
 import '../providers/social_providers.dart';
 import '../widgets/social_avatar.dart';
 
