@@ -243,6 +243,7 @@ export type AuditAction =
   | 'game_created'
   | 'game_updated'
   | 'game_status'
+  | 'game_deleted'
   | 'season_rollover'
   | 'currency_adjusted'
   | 'user_updated';
@@ -264,6 +265,7 @@ export const AUDIT_ACTIONS: AuditAction[] = [
   'game_created',
   'game_updated',
   'game_status',
+  'game_deleted',
   'season_rollover',
   'currency_adjusted',
   'user_updated',

@@ -1,6 +1,8 @@
+import { join } from 'path';
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import configuration, { AppConfig } from './config/configuration';
 import { validationSchema } from './config/validation.schema';
@@ -29,6 +31,14 @@ import { AdminModule } from './admin/admin.module';
       load: [configuration],
       validationSchema,
       validationOptions: { abortEarly: false },
+    }),
+    // Serves the browser-based admin panel (public/panel) at /panel. It is
+    // a pure static SPA; every action goes through the JWT-protected /api
+    // routes, which enforce the admin role server-side.
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public', 'panel'),
+      serveRoot: '/panel',
+      exclude: ['/api/{*splat}', '/docs/{*splat}', '/health'],
     }),
     // Global HTTP rate limiting: 120 requests / 15s / IP by default. Auth and
     // chat endpoints declare stricter named throttlers. The ThrottlerGuard runs

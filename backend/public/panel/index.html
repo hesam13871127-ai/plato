@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VibeTable · Admin Panel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ── Login ─────────────────────────────────────────────── -->
+  <div class="login-wrap" id="loginView">
+    <div class="login-card">
+      <div class="brand">
+        <div class="logo">🎲</div>
+        <h1>VibeTable Admin</h1>
+      </div>
+      <p class="sub">Staff sign-in. Every action is audited server-side.</p>
+      <label class="field">Email
+        <input type="email" id="loginEmail" value="admin@vibetable.local" autocomplete="username" />
+      </label>
+      <label class="field">Password
+        <input type="password" id="loginPassword" value="Admin123!" autocomplete="current-password" />
+      </label>
+      <button class="btn btn-cyan btn-block" id="loginBtn">Sign in</button>
+      <div class="error" id="loginError"></div>
+      <div class="dev-hint">
+        <b>Local development account:</b><br />
+        email <code>admin@vibetable.local</code> · password <code>Admin123!</code><br />
+        In production this demo account does not exist; use a real staff email.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── App shell ─────────────────────────────────────────── -->
+  <div class="shell" id="appView" style="display:none">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">🎲</div>
+        <h1>Admin</h1>
+      </div>
+      <button class="nav-item active" data-page="overview"><span class="ico">📊</span><span class="lbl">Overview</span></button>
+      <button class="nav-item" data-page="users"><span class="ico">👥</span><span class="lbl">Users</span></button>
+      <button class="nav-item" data-page="shop"><span class="ico">🛍️</span><span class="lbl">Shop</span></button>
+      <button class="nav-item" data-page="games"><span class="ico">🎮</span><span class="lbl">Games</span></button>
+      <button class="nav-item" data-page="seasons"><span class="ico">🏆</span><span class="lbl">Seasons</span></button>
+      <button class="nav-item" data-page="moderation"><span class="ico">🛡️</span><span class="lbl">Reports &amp; Chat</span></button>
+      <div class="spacer"></div>
+      <div class="who">Signed in as <b id="whoami">admin</b><br /><br />
+        <button class="btn btn-ghost btn-sm btn-block" id="logoutBtn">Log out</button>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <!-- pages rendered by app.js -->
+    </main>
+  </div>
+
+  <!-- ── Modal & toast ─────────────────────────────────────── -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="modalBox"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -160,6 +160,28 @@ describe('VibeTable admin panel (e2e)', () => {
     expect(tryActivate.status).toBe(400);
   });
 
+  it('deletes a game that has no recorded matches and 404s afterwards', async () => {
+    const admin = await signUp('+15559000020', 'AdminGameDelete');
+    await userRepo.update({ id: admin.userId }, { role: 'admin' });
+
+    const add = await request(httpServer)
+      .post('/api/admin/games')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ slug: 'disposable_game', name: 'Disposable Game' });
+    expect(add.status).toBe(201);
+
+    const del = await request(httpServer)
+      .delete('/api/admin/games/disposable_game')
+      .set('Authorization', `Bearer ${admin.token}`);
+    expect(del.status).toBe(200);
+    expect(del.body.data.deleted).toBe(true);
+
+    const again = await request(httpServer)
+      .delete('/api/admin/games/disposable_game')
+      .set('Authorization', `Bearer ${admin.token}`);
+    expect(again.status).toBe(404);
+  });
+
   it('auto-promotes an account listed in MODERATION_ADMIN_PHONES at first login', async () => {
     const previous = process.env.MODERATION_ADMIN_PHONES;
     process.env.MODERATION_ADMIN_PHONES = '+15559000011';

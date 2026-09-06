@@ -135,6 +135,12 @@ export class AdminController {
     return this.admin.updateGame(adminId, slug, dto);
   }
 
+  @Delete('games/:slug')
+  @ApiOperation({ summary: 'Delete a game (only when it has no recorded matches).' })
+  deleteGame(@CurrentUser('id') adminId: string, @Param('slug') slug: string) {
+    return this.admin.deleteGame(adminId, slug);
+  }
+
   @Post('games/status')
   @ApiOperation({ summary: 'Enable/disable/maintenance a game.' })
   setGameStatus(@CurrentUser('id') adminId: string, @Body() dto: AdminGameStatusDto) {

@@ -7,6 +7,7 @@ RUN npm ci --no-audit --no-fund
 
 COPY tsconfig*.json nest-cli.json ./
 COPY src ./src
+COPY public ./public
 RUN npm run build
 
 # Prune dev dependencies for the runtime image.

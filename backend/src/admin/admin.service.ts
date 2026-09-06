@@ -295,6 +295,26 @@ export class AdminService {
     return saved;
   }
 
+  /**
+   * Removes a game from the catalogue. Games that already have recorded
+   * matches cannot be hard-deleted (their history must stay intact); those
+   * should be disabled with `coming_soon` instead, which the caller is told.
+   */
+  async deleteGame(adminId: string, slug: string): Promise<{ deleted: true }> {
+    const game = await this.games.findOne({ where: { slug } });
+    if (!game) throw new NotFoundException('Game not found.');
+    const matchCount = await this.matches.count({ where: { gameId: game.id } });
+    if (matchCount > 0) {
+      throw new BadRequestException(
+        `This game has ${matchCount} recorded match(es) and cannot be deleted. ` +
+          'Set it to "maintenance" or "coming_soon" instead to remove it from the lobby.',
+      );
+    }
+    await this.games.remove(game);
+    await this.audit(adminId, 'game_deleted', 'game', slug, game.name);
+    return { deleted: true };
+  }
+
   async updateGame(adminId: string, slug: string, dto: AdminUpsertGameDto): Promise<GameEntity> {
     const game = await this.games.findOne({ where: { slug } });
     if (!game) throw new NotFoundException('Game not found.');
