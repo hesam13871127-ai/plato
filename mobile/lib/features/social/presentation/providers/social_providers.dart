@@ -156,14 +156,13 @@ class SocialActions {
 
   Future<String?> _run(Future<dynamic> Function() call) async {
     final result = await call();
-    // return (result as dynamic).fold(
-    //   (failure) => failure.message as String?,
-    //   (_) {
-    //     _refreshFriends();
-    //     return null;
-    //   },
-    // );
-    return result.toString();
+    return (result as dynamic).fold(
+      (failure) => failure.message as String?,
+      (_) {
+        _refreshFriends();
+        return null;
+      },
+    );
   }
 }
 

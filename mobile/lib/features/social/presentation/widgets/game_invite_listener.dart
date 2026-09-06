@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../game/domain/repositories/game_repository.dart';
-import '../../../game/presentation/providers/game_providers.dart';
 import '../../domain/entities/social_entities.dart';
 import '../providers/social_providers.dart';
 

@@ -160,6 +160,22 @@ describe('VibeTable admin panel (e2e)', () => {
     expect(tryActivate.status).toBe(400);
   });
 
+  it('auto-promotes an account listed in MODERATION_ADMIN_PHONES at first login', async () => {
+    const previous = process.env.MODERATION_ADMIN_PHONES;
+    process.env.MODERATION_ADMIN_PHONES = '+15559000011';
+    try {
+      const staff = await signUp('+15559000011', 'EnvAdmin');
+      // The account can reach admin endpoints without any manual role update.
+      const res = await request(httpServer).get('/api/admin/overview').set('Authorization', `Bearer ${staff.token}`);
+      expect(res.status).toBe(200);
+      const dbUser = await userRepo.findOne({ where: { id: staff.userId } });
+      expect(dbUser?.role).toBe('admin');
+    } finally {
+      if (previous === undefined) delete process.env.MODERATION_ADMIN_PHONES;
+      else process.env.MODERATION_ADMIN_PHONES = previous;
+    }
+  });
+
   it('returns the seasons list including an active season', async () => {
     const admin = await signUp('+15559000010', 'AdminSeason');
     await userRepo.update({ id: admin.userId }, { role: 'admin' });

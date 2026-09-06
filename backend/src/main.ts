@@ -45,8 +45,7 @@ async function bootstrap(): Promise<void> {
   });
 
   app.enableCors({
-    // origin: corsOrigins.length > 0 ? corsOrigins : true,
-    origin: corsOrigins.length > 0 ? ["http://localhost:56627"] : true,
+    origin: corsOrigins.length > 0 ? corsOrigins : true,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });

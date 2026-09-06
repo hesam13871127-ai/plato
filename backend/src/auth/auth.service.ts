@@ -24,6 +24,7 @@ import {
 import { OtpService } from './otp.service';
 import { TokenPair, TokenService } from './token.service';
 import { ModerationService } from '../moderation/moderation.service';
+import { ModerationAdminSeeder } from '../moderation/moderation-admin.seeder';
 
 export interface AuthResult {
   user: UserDto;
@@ -51,6 +52,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService<AppConfig, true>,
     private readonly moderation: ModerationService,
+    private readonly staffSeeder: ModerationAdminSeeder,
   ) {}
 
   // ------------------------------------------------------------------
@@ -83,6 +85,10 @@ export class AuthService {
     }
 
     await this.assertCanAuthenticate(user);
+    // Promote immediately if this identifier is configured as staff.
+    if (await this.staffSeeder.applyStaffRole(user)) {
+      user = await this.users.findOne({ where: { id: user.id }, relations: { profile: true } }) ?? user;
+    }
     const tokens = await this.tokenService.issueTokens(user, meta);
     return { user: (await this.toDto(user.id)).user, tokens, isNewUser };
   }
@@ -115,6 +121,8 @@ export class AuthService {
       username: dto.username,
     });
 
+    // Promote immediately if this email is configured as staff.
+    await this.staffSeeder.applyStaffRole(user);
     const tokens = await this.tokenService.issueTokens(user, meta);
     return { user: (await this.toDto(user.id)).user, tokens, isNewUser: true };
   }
@@ -138,6 +146,8 @@ export class AuthService {
     }
 
     await this.assertCanAuthenticate(user);
+    // Promote on login too (covers accounts created before staff config).
+    await this.staffSeeder.applyStaffRole(user);
     const tokens = await this.tokenService.issueTokens(user, meta);
     return { user: (await this.toDto(user.id)).user, tokens, isNewUser: false };
   }

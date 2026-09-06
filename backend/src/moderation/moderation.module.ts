@@ -51,6 +51,7 @@ import { TextFilterService } from './text-filter.service';
     TextFilterService,
     RateLimitService,
     ErrorTrackingService,
+    ModerationAdminSeeder,
   ],
 })
 export class ModerationModule {}

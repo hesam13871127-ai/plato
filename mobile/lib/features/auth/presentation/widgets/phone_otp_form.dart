@@ -65,7 +65,6 @@ class _PhoneOtpFormState extends ConsumerState<PhoneOtpForm> {
             label: 'Send verification code',
             icon: Icons.send_rounded,
             isLoading: isLoading,
-            
             onPressed: _submit,
           ),
         ],

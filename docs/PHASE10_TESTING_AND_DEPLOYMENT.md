@@ -82,6 +82,11 @@ npx tsc --noEmit -p tsconfig.build.json   # exits 0
 Run against the local API (`docker compose up`) or a staging server.
 
 ### Access control
+- [ ] **Creating the first admin**: set `MODERATION_ADMIN_EMAILS` (or
+      `MODERATION_ADMIN_PHONES`) to *your* account, then **register or log
+      in once** — you are promoted immediately (no restart needed; the
+      startup seeder also promotes already-existing accounts). The mobile
+      profile screen then shows the **Admin panel** button.
 - [ ] A normal player profile screen shows **no** Admin/Moderation entry;
       deep-linking `/admin` is blocked server-side (403 → friendly error).
 - [ ] A moderator sees only **Moderation dashboard**, not Admin panel.

@@ -149,12 +149,12 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                 for (final reason in kReportReasons)
                   ChoiceChip(
                     label: Text(kReportReasonLabels[reason] ?? reason),
-                    selected: _reason == reason,
+                    selected: _reason === reason,
                     onSelected: (_) => setState(() => _reason = reason),
                     selectedColor: AppColors.electricPurple.withValues(alpha: 0.4),
                     backgroundColor: AppColors.glassFill,
                     labelStyle: TextStyle(
-                      color: _reason == reason ? AppColors.textPrimary : AppColors.textSecondary,
+                      color: _reason === reason ? AppColors.textPrimary : AppColors.textSecondary,
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                     ),
