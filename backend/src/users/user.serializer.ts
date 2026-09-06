@@ -44,8 +44,9 @@ export function toUserDto(user: UserEntity, profile?: ProfileEntity | null): Use
     chatBubble: null,
     theme: null,
     idColor: null,
-    // Role is private to the account; the compact/public serializer omits it.
-    role: null,
+    // The caller's own platform role is included (auth flow); public profiles
+    // are stripped of it by the caller (ProfileViewService / getPublicProfile).
+    role: user.role ?? null,
     createdAt: user.createdAt,
   };
 }
