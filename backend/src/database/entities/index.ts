@@ -32,6 +32,10 @@ import { BanEntity } from './ban.entity';
 import { QuestEntity } from './quest.entity';
 import { UserQuestEntity } from './user-quest.entity';
 import { DailyRewardClaimEntity } from './daily-reward.entity';
+import { ModerationFlagEntity } from './moderation-flag.entity';
+import { ModerationAuditEntity } from './moderation-audit.entity';
+import { UserStrikeEntity } from './user-strike.entity';
+import { ErrorEventEntity } from './error-event.entity';
 
 export * from './user.entity';
 export * from './profile.entity';
@@ -63,6 +67,10 @@ export * from './ban.entity';
 export * from './quest.entity';
 export * from './user-quest.entity';
 export * from './daily-reward.entity';
+export * from './moderation-flag.entity';
+export * from './moderation-audit.entity';
+export * from './user-strike.entity';
+export * from './error-event.entity';
 
 export const entities = [
   UserEntity,
@@ -95,4 +103,8 @@ export const entities = [
   QuestEntity,
   UserQuestEntity,
   DailyRewardClaimEntity,
+  ModerationFlagEntity,
+  ModerationAuditEntity,
+  UserStrikeEntity,
+  ErrorEventEntity,
 ];

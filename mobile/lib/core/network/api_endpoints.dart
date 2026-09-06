@@ -58,6 +58,18 @@ class ApiEndpoints {
   static const String chatVoiceToken = '/chat/voice/token';
   static String chatVoiceParticipants(String chatId) => '/chat/$chatId/voice/participants';
 
+  // Moderation & reporting (Phase 9)
+  static const String moderationReport = '/moderation/reports';
+  static const String moderationQueue = '/moderation/reports';
+  static String moderationResolve(String reportId) => '/moderation/reports/$reportId/resolve';
+  static const String moderationFlags = '/moderation/flags';
+  static const String moderationBans = '/moderation/bans';
+  static const String moderationLiftBan = '/moderation/bans/lift';
+  static const String moderationDeleteMessage = '/moderation/messages/delete';
+  static const String moderationAudit = '/moderation/audit';
+  static const String moderationErrors = '/moderation/errors';
+  static const String moderationSetRole = '/moderation/roles';
+
   // Games / matchmaking / rooms
   static const String gamesCatalog = '/games';
   static const String gamesOpenRooms = '/games/rooms';

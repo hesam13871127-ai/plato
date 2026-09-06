@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/cached_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,6 +9,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../moderation/data/moderation_remote_data_source.dart';
 
 /// Full player profile: avatar with equipped frame/banner, level/XP, titles,
 /// badges and aggregate statistics. All cosmetics are purely visual.
@@ -57,6 +59,8 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 10),
               _TitlesCard(user: user),
             ],
+            const SizedBox(height: 16),
+            const _ModerationEntry(),
             const SizedBox(height: 24),
             GradientButton(
               label: 'Log out',
@@ -66,6 +70,38 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Only rendered for moderator/admin accounts (role is read from the server,
+/// which is also the authoritative enforcer via the role guard).
+class _ModerationEntry extends ConsumerWidget {
+  const _ModerationEntry();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ds = ref.watch(moderationRemoteDataSourceProvider);
+    return FutureBuilder<String>(
+      future: ds.myRole(),
+      builder: (context, snapshot) {
+        final role = snapshot.data;
+        if (role != 'moderator' && role != 'admin') {
+          return const SizedBox.shrink();
+        }
+        return OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.softCyan,
+            side: const BorderSide(color: AppColors.glassStroke),
+            minimumSize: const Size.fromHeight(48),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          icon: const Icon(Icons.shield_outlined, size: 20),
+          label: const Text('Moderation dashboard',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          onPressed: () => context.push(AppRoutes.moderation),
+        );
+      },
     );
   }
 }
@@ -156,17 +192,7 @@ class _FramedAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final frameColor = _frameColor(user.frame?.metadata);
-    final avatar = CircleAvatar(
-      radius: 40,
-      backgroundColor: AppColors.surfaceElevated,
-      backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-      child: user.avatarUrl == null
-          ? Text(
-              user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
-            )
-          : null,
-    );
+    final avatar = CachedAvatar(name: user.displayName, imageUrl: user.avatarUrl, radius: 40);
 
     return Container(
       padding: const EdgeInsets.all(4),

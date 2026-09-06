@@ -210,9 +210,16 @@ class ChatRemoteDataSource {
     required String reason,
     String? details,
   }) async {
+    // Unified moderation endpoint (Phase 9). Valid reasons are enforced by the
+    // backend `REPORT_REASONS` enum; the report sheet only offers those.
     await _dio.post<Map<String, dynamic>>(
-      ApiEndpoints.chatReportMessage(messageId),
-      data: {'reason': reason, if (details != null) 'details': details},
+      ApiEndpoints.moderationReport,
+      data: {
+        'targetType': 'message',
+        'targetId': messageId,
+        'reason': reason,
+        if (details != null) 'details': details,
+      },
     );
   }
 
@@ -222,8 +229,13 @@ class ChatRemoteDataSource {
     String? details,
   }) async {
     await _dio.post<Map<String, dynamic>>(
-      ApiEndpoints.chatReportUser,
-      data: {'userId': userId, 'reason': reason, if (details != null) 'details': details},
+      ApiEndpoints.moderationReport,
+      data: {
+        'targetType': 'user',
+        'targetId': userId,
+        'reason': reason,
+        if (details != null) 'details': details,
+      },
     );
   }
 

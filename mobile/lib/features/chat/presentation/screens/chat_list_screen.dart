@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../domain/entities/chat_entities.dart';
 import '../providers/chat_providers.dart';
@@ -183,17 +184,10 @@ class _ConversationTile extends StatelessWidget {
           children: [
             Stack(
               children: [
-                CircleAvatar(
+                CachedAvatar(
+                  name: chat.title,
+                  imageUrl: chat.avatarUrl,
                   radius: 26,
-                  backgroundColor: theme.accent.withValues(alpha: 0.25),
-                  backgroundImage: chat.avatarUrl != null ? NetworkImage(chat.avatarUrl!) : null,
-                  child: chat.avatarUrl == null
-                      ? Text(
-                          chat.title.isNotEmpty ? chat.title[0].toUpperCase() : '?',
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w700),
-                        )
-                      : null,
                 ),
                 if (online)
                   Positioned(

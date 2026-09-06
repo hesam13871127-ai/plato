@@ -72,6 +72,7 @@ export class ProfileViewService {
       chatBubble,
       theme,
       idColor,
+      role: user.role ?? 'player',
       createdAt: user.createdAt,
     };
 

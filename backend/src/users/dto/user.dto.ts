@@ -103,6 +103,9 @@ export class UserDto {
   @ApiProperty({ nullable: true, description: 'Equipped ID color item details.' })
   idColor: EquippedCosmeticDto | null;
 
+  @ApiProperty({ example: 'player', enum: ['player', 'moderator', 'admin'], description: 'Platform moderation role (null for other users’ public profiles).' })
+  role: 'player' | 'moderator' | 'admin' | null;
+
   @ApiProperty()
   createdAt: Date;
 }

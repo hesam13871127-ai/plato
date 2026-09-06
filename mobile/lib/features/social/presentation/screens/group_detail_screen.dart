@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/cached_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -273,11 +274,11 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       child: Row(
         children: [
-          CircleAvatar(
+          CachedAvatar(
+            name: group.name,
+            imageUrl: group.avatarUrl,
             radius: 30,
-            backgroundColor: AppColors.electricPurple,
-            backgroundImage: group.avatarUrl != null ? NetworkImage(group.avatarUrl!) : null,
-            child: group.avatarUrl == null ? const Icon(Icons.groups_2, color: Colors.white, size: 30) : null,
+            fallbackIcon: Icons.groups_2,
           ),
           const SizedBox(width: 16),
           Expanded(

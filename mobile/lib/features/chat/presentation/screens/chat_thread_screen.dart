@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/report_sheet.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../data/datasources/chat_socket_service.dart';
 import '../../domain/entities/chat_entities.dart';
@@ -180,48 +181,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 title: const Text('Report'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  _reportMessage(message);
+                  showReportSheet(context, targetType: 'message', targetId: message.id);
                 },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _reportMessage(ChatMessage message) async {
-    final reason = await _showReportDialog();
-    if (reason == null) return;
-    final result = await ref
-        .read(chatRepositoryProvider)
-        .reportMessage(messageId: message.id, reason: reason);
-    if (!mounted) return;
-    result.fold(
-      (failure) => _showSnack(failure.message),
-      (_) => _showSnack('Report submitted. Thank you.'),
-    );
-  }
-
-  Future<String?> _showReportDialog() {
-    const reasons = ['spam', 'harassment', 'abuse', 'other'];
-    return showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
-        margin: const EdgeInsets.all(12),
-        borderRadius: 20,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Report reason',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            ),
-            for (final reason in reasons)
-              ListTile(
-                title: Text(reason[0].toUpperCase() + reason.substring(1)),
-                onTap: () => Navigator.of(context).pop(reason),
               ),
           ],
         ),
@@ -359,18 +320,25 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                         controller: _scrollController,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         itemCount: thread.messages.length,
+                        // Keep a small over-render buffer so fast scrolling
+                        // never shows blank bubbles, without wasting memory.
+                        cacheExtent: 600,
                         itemBuilder: (context, index) {
                           final message = thread.messages[index];
                           final isMine = message.senderId == currentUserId;
-                          return MessageBubble(
-                            message: message,
-                            isMine: isMine,
-                            theme: theme,
-                            canModerate: true,
-                            currentUserId: currentUserId,
-                            onReact: (emoji) => notifier.toggleReaction(message, emoji),
-                            onReply: () => setState(() => _replyTo = message),
-                            onLongPress: () => _showMessageActions(message, isMine, true),
+                          // Isolate each bubble's layer so an animation/avatar
+                          // decode in one row never repaints the whole list.
+                          return RepaintBoundary(
+                            child: MessageBubble(
+                              message: message,
+                              isMine: isMine,
+                              theme: theme,
+                              canModerate: true,
+                              currentUserId: currentUserId,
+                              onReact: (emoji) => notifier.toggleReaction(message, emoji),
+                              onReply: () => setState(() => _replyTo = message),
+                              onLongPress: () => _showMessageActions(message, isMine, true),
+                            ),
                           );
                         },
                       ),

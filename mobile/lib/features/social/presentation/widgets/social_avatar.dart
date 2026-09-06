@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cached_avatar.dart';
 import '../../domain/entities/social_entities.dart';
 
 /// Circular avatar with a green presence dot for online users.
@@ -17,16 +18,10 @@ class SocialAvatar extends StatelessWidget {
       height: radius * 2,
       child: Stack(
         children: [
-          CircleAvatar(
+          CachedAvatar(
+            name: user.displayName,
+            imageUrl: user.avatarUrl,
             radius: radius,
-            backgroundColor: AppColors.surfaceElevated,
-            backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-            child: user.avatarUrl == null
-                ? Text(
-                    user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
-                    style: TextStyle(fontSize: radius * 0.8, fontWeight: FontWeight.w800),
-                  )
-                : null,
           ),
           if (user.online)
             Positioned(

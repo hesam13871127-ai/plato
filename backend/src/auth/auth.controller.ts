@@ -7,6 +7,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { Public } from '../common/decorators/public.decorator';
 import { AuthService, AuthResult } from './auth.service';
@@ -23,6 +24,16 @@ import { TokenPair } from './token.service';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
+  // Tests create many accounts from one host; the limiter stays strict in
+  // production but is effectively disabled under NODE_ENV=test.
+  private static readonly strict = process.env.NODE_ENV === 'test'
+    ? { ttl: 60_000, limit: 100_000 }
+    : { ttl: 60_000, limit: 5 };
+
+  private static readonly normal = process.env.NODE_ENV === 'test'
+    ? { ttl: 60_000, limit: 100_000 }
+    : { ttl: 60_000, limit: 8 };
+
   constructor(private readonly authService: AuthService) {}
 
   private meta(request: Request) {
@@ -33,6 +44,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: AuthController.strict })
   @Post('phone/request-otp')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request an SMS one-time code for phone sign-in' })
@@ -41,6 +53,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: AuthController.normal })
   @Post('phone/verify')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify the SMS code and sign in / register' })
@@ -49,6 +62,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: AuthController.strict })
   @Post('email/register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register with email and password' })
@@ -57,6 +71,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: AuthController.normal })
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Sign in with email and password' })

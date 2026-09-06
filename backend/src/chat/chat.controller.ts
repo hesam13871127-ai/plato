@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -13,7 +14,9 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { ModerationService } from './moderation.service';
+import { ModerationService } from '../moderation/moderation.service';
+import { AutoModerationService } from '../moderation/auto-moderation.service';
+import { RateLimitService } from '../common/security/rate-limit.service';
 import { VoiceService } from './voice.service';
 import { ChatService } from './chat.service';
 import { PresenceService } from './presence.service';
@@ -43,9 +46,27 @@ export class ChatController {
   constructor(
     private readonly chats: ChatService,
     private readonly moderation: ModerationService,
+    private readonly autoModeration: AutoModerationService,
+    private readonly rateLimiter: RateLimitService,
     private readonly voice: VoiceService,
     private readonly presence: PresenceService,
   ) {}
+
+  /**
+   * Enforces per-user message rate limits and runs the content filter.
+   * Returns the safe (possibly censored) body, or throws ForbiddenException.
+   */
+  private async screenMessage(userId: string, body: string): Promise<string> {
+    const allowed = this.rateLimiter.consume(`chat:send:${userId}`, 20, 10_000);
+    if (!allowed) {
+      throw new ForbiddenException('You are sending messages too quickly. Please slow down.');
+    }
+    const result = this.autoModeration.screenMessage(userId, body);
+    if (!result.allowed) {
+      throw new ForbiddenException(result.reason ?? 'Message rejected by content filter.');
+    }
+    return result.body;
+  }
 
   // ── Conversations ───────────────────────────────────────────────────────
 
@@ -223,10 +244,11 @@ export class ChatController {
     await this.moderation.assertCanChat(userId);
     await this.chats.assertMember(chatId, userId);
     await this.moderation.assertNotMutedInChat(chatId, userId);
+    const safeBody = await this.screenMessage(userId, dto.body);
     const entity = await this.chats.createMessage({
       chatId,
       senderId: userId,
-      body: dto.body,
+      body: safeBody,
       type: dto.type,
       replyToId: dto.replyToId,
       metadata: dto.metadata,
@@ -276,10 +298,11 @@ export class ChatController {
     await this.moderation.assertCanChat(userId);
     await this.chats.assertMember(parent.chatId, userId);
     await this.moderation.assertNotMutedInChat(parent.chatId, userId);
+    const safeBody = await this.screenMessage(userId, dto.body);
     const entity = await this.chats.createMessage({
       chatId: parent.chatId,
       senderId: userId,
-      body: dto.body,
+      body: safeBody,
       replyToId: messageId,
       metadata: dto.metadata,
     });

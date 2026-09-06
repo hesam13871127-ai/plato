@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/cached_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -178,13 +179,11 @@ class _GroupTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       child: Row(
         children: [
-          CircleAvatar(
+          CachedAvatar(
+            name: group.name,
+            imageUrl: group.avatarUrl,
             radius: 24,
-            backgroundColor: AppColors.electricPurple,
-            backgroundImage: group.avatarUrl != null ? NetworkImage(group.avatarUrl!) : null,
-            child: group.avatarUrl == null
-                ? const Icon(Icons.groups_2, color: Colors.white)
-                : null,
+            fallbackIcon: Icons.groups_2,
           ),
           const SizedBox(width: 14),
           Expanded(

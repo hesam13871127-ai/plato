@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { QueryFailedError } from 'typeorm';
+import { ErrorTrackingService } from '../observability/error-tracking.service';
 
 interface ErrorResponseBody {
   statusCode: number;
@@ -18,17 +19,21 @@ interface ErrorResponseBody {
 }
 
 /**
- * Global exception filter producing a consistent JSON error envelope for
- * every failure, including unexpected TypeORM/driver errors.
+ * Global exception filter producing a consistent JSON error envelope for every
+ * failure. Server errors (5xx) and database failures are also persisted through
+ * the error-tracking service (with secrets redacted) for the admin dashboard,
+ * while 4xx client errors are returned without being tracked as incidents.
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
+  constructor(private readonly errorTracking?: ErrorTrackingService) {}
+
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<Request & { user?: { id?: string } }>();
 
     const { status, message, error } = this.normalize(exception);
 
@@ -37,6 +42,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
         `${request.method} ${request.url} -> ${status}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
+      void this.errorTracking?.track({
+        level: status >= 500 ? 'error' : 'warning',
+        source: 'http',
+        message: exception instanceof Error ? exception.message : String(exception),
+        stack: exception instanceof Error ? exception.stack ?? null : null,
+        method: request.method,
+        path: request.url,
+        statusCode: status,
+        userId: request.user?.id ?? null,
+        context: {
+          query: request.query,
+          headers: { ...request.headers },
+        },
+      });
     }
 
     const body: ErrorResponseBody = {
@@ -79,6 +98,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
           error: 'Conflict',
         };
       }
+      // Never leak raw SQL/driver details to clients; log them server-side.
+      this.logger.error(
+        `Database query failed: ${exception.message}`,
+        exception.stack,
+      );
       return {
         status: HttpStatus.BAD_REQUEST,
         message: 'Database request failed.',

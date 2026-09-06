@@ -12,6 +12,7 @@ import {
   AuthProvider,
   Gender,
   UserPresence,
+  UserRole,
 } from '../enums';
 import { ProfileEntity } from './profile.entity';
 import { BotEntity } from './bot.entity';
@@ -44,6 +45,10 @@ export class UserEntity {
 
   @Column({ type: 'varchar', length: 64, default: 'active' })
   status: AccountStatus;
+
+  /** Platform role for moderation access. Defaults to a regular player. */
+  @Column({ type: 'varchar', length: 16, default: 'player' })
+  role: UserRole;
 
   @Column({ type: 'boolean', default: false })
   isVerified: boolean;

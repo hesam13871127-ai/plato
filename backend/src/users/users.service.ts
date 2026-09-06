@@ -50,7 +50,10 @@ export class UsersService {
     if (!profile || !profile.user) {
       throw new NotFoundException('User not found.');
     }
-    return this.profileView.toUserDto(profile.user);
+    const dto = await this.profileView.toUserDto(profile.user);
+    // Never reveal another user's platform role on their public profile.
+    dto.role = null;
+    return dto;
   }
 
   async updateProfile(id: string, dto: UpdateProfileDto): Promise<UserDto> {

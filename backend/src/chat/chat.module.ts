@@ -11,17 +11,18 @@ import { ProfileEntity } from '../database/entities/profile.entity';
 import { ReportEntity } from '../database/entities/report.entity';
 import { UserEntity } from '../database/entities/user.entity';
 import { VoiceSessionEntity } from '../database/entities/voice-session.entity';
+import { ModerationModule } from '../moderation/moderation.module';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { LoungeSeeder } from './lounge-seeder';
-import { ModerationService } from './moderation.service';
 import { PresenceService } from './presence.service';
 import { VoiceService } from './voice.service';
 
 @Module({
   imports: [
     JwtModule.register({}),
+    ModerationModule,
     TypeOrmModule.forFeature([
       ChatEntity,
       ChatParticipantEntity,
@@ -36,14 +37,7 @@ import { VoiceService } from './voice.service';
     ]),
   ],
   controllers: [ChatController],
-  providers: [
-    ChatGateway,
-    ChatService,
-    PresenceService,
-    ModerationService,
-    VoiceService,
-    LoungeSeeder,
-  ],
-  exports: [ChatService, PresenceService, ModerationService, VoiceService, ChatGateway],
+  providers: [ChatGateway, ChatService, PresenceService, VoiceService, LoungeSeeder],
+  exports: [ChatService, PresenceService, VoiceService, ChatGateway],
 })
 export class ChatModule {}

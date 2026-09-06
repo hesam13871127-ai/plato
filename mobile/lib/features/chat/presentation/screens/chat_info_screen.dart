@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/report_sheet.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../domain/entities/chat_entities.dart';
 import '../providers/chat_providers.dart';
@@ -180,19 +182,10 @@ class _MemberRow extends ConsumerWidget {
           children: [
             Stack(
               children: [
-                CircleAvatar(
+                CachedAvatar(
+                  name: member.displayName,
+                  imageUrl: member.avatarUrl,
                   radius: 22,
-                  backgroundColor: AppColors.electricPurple.withValues(alpha: 0.3),
-                  backgroundImage:
-                      member.avatarUrl != null ? NetworkImage(member.avatarUrl!) : null,
-                  child: member.avatarUrl == null
-                      ? Text(
-                          member.displayName.isNotEmpty
-                              ? member.displayName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        )
-                      : null,
                 ),
                 if (member.online)
                   Positioned(
@@ -243,23 +236,24 @@ class _MemberRow extends ConsumerWidget {
                 ],
               ),
             ),
-            if (canModerate)
+            if (!isMe)
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
                 onSelected: (action) => _handleAction(context, ref, action),
                 itemBuilder: (context) => [
-                  if (!isOwner)
+                  if (canModerate && !isOwner)
                     PopupMenuItem(
                       value: member.role == ChatRole.admin ? 'demote' : 'promote',
                       child: Text(member.role == ChatRole.admin ? 'Remove admin' : 'Make admin'),
                     ),
-                  PopupMenuItem(
-                    value: member.isMuted ? 'unmute' : 'mute',
-                    child: Text(member.isMuted ? 'Unmute' : 'Mute'),
-                  ),
-                  const PopupMenuItem(value: 'report', child: Text('Report')),
-                  if (!isOwner) const PopupMenuItem(value: 'kick', child: Text('Kick')),
-                  if (!isOwner)
+                  if (canModerate)
+                    PopupMenuItem(
+                      value: member.isMuted ? 'unmute' : 'mute',
+                      child: Text(member.isMuted ? 'Unmute' : 'Mute'),
+                    ),
+                  const PopupMenuItem(value: 'report', child: Text('Report user')),
+                  if (canModerate && !isOwner) const PopupMenuItem(value: 'kick', child: Text('Kick')),
+                  if (canModerate && !isOwner)
                     const PopupMenuItem(value: 'ban', child: Text('Ban from chat')),
                 ],
               ),
@@ -288,7 +282,8 @@ class _MemberRow extends ConsumerWidget {
             'They will be blocked from this chat.');
         if (confirmed) await repo.banUser(chatId: chatId, userId: member.userId);
       case 'report':
-        await repo.reportUser(userId: member.userId, reason: 'abuse');
+        await showReportSheet(context, targetType: 'user', targetId: member.userId);
+        return;
     }
     ref.invalidate(chatMembersProvider(chatId));
   }

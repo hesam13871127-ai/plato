@@ -66,6 +66,13 @@ export interface GameConfig {
   botThinkDivisor: number;
 }
 
+export interface RateLimitConfig {
+  /** Throttler window in milliseconds. */
+  ttl: number;
+  /** Maximum requests per window per key. */
+  limit: number;
+}
+
 export interface AppConfig {
   nodeEnv: NodeEnv;
   port: number;
@@ -78,6 +85,7 @@ export interface AppConfig {
   otp: OtpConfig;
   voice: VoiceConfig;
   game: GameConfig;
+  rateLimit: RateLimitConfig;
 }
 
 const toBool = (value: string | undefined, fallback: boolean): boolean => {
@@ -150,6 +158,11 @@ export default (): AppConfig => {
       maxRatingGap: parseInt(process.env.MATCHMAKING_MAX_RATING_GAP ?? '200', 10),
       reconnectGraceSeconds: parseInt(process.env.GAME_RECONNECT_GRACE_SECONDS ?? '45', 10),
       botThinkDivisor: parseFloat(process.env.BOT_THINK_DIVISOR ?? '1'),
+    },
+
+    rateLimit: {
+      ttl: parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '15000', 10),
+      limit: parseInt(process.env.RATE_LIMIT_MAX ?? '120', 10),
     },
   };
 };

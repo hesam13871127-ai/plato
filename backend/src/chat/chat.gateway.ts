@@ -17,7 +17,10 @@ import { MessageReactionEntity } from '../database/entities/message-reaction.ent
 import { MessageEntity } from '../database/entities/message.entity';
 import { ChatService } from './chat.service';
 import { toMessageDto } from './chat.serializer';
-import { ModerationService } from './moderation.service';
+import { ModerationService } from '../moderation/moderation.service';
+import { AutoModerationService } from '../moderation/auto-moderation.service';
+import { RateLimitService } from '../common/security/rate-limit.service';
+import { ErrorTrackingService } from '../common/observability/error-tracking.service';
 import { PresenceService } from './presence.service';
 import { VoiceService } from './voice.service';
 
@@ -90,7 +93,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly chats: ChatService,
     private readonly presence: PresenceService,
     private readonly moderation: ModerationService,
+    private readonly autoModeration: AutoModerationService,
+    private readonly rateLimiter: RateLimitService,
     private readonly voice: VoiceService,
+    private readonly errorTracking: ErrorTrackingService,
   ) {}
 
   afterInit(): void {
@@ -122,8 +128,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       // Notify users who share a chat with this user that they came online.
       this.broadcastPresence(client.userId, 'online');
       this.logger.log(`Socket connected: user=${client.userId}`);
-    } catch {
+    } catch (error) {
       client.emit('unauthorized', { message: 'Invalid or expired access token.' });
+      void this.errorTracking?.track({
+        level: 'warning',
+        source: 'ws',
+        message: `Socket handshake rejected: ${error instanceof Error ? error.message : 'invalid token'}`,
+        path: 'ws:/chat',
+        context: { socketId: client.id },
+      });
       client.disconnect(true);
     }
   }
@@ -183,13 +196,25 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     try {
       // Global chat/login ban takes precedence over membership checks.
       await this.moderation.assertCanChat(client.userId);
+
+      // Realtime rate limit: at most 20 messages per 10s per user.
+      if (!this.rateLimiter.consume(`ws:chat:${client.userId}`, 20, 10_000)) {
+        return { ok: false, error: 'You are sending messages too quickly. Please slow down.' };
+      }
+
+      // Auto-moderation: block severe toxicity/spam, censor mild profanity.
+      const screened = this.autoModeration.screenMessage(client.userId, payload.body ?? '');
+      if (!screened.allowed) {
+        return { ok: false, error: screened.reason ?? 'Message rejected by the content filter.' };
+      }
+
       await this.chats.assertMember(payload.chatId, client.userId);
       await this.moderation.assertNotMutedInChat(payload.chatId, client.userId);
 
       const entity = await this.chats.createMessage({
         chatId: payload.chatId,
         senderId: client.userId,
-        body: payload.body,
+        body: screened.body,
         type: payload.type,
         replyToId: payload.replyToId,
         metadata: payload.metadata,
@@ -223,7 +248,12 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   ): Promise<{ ok: boolean; error?: string }> {
     if (!client.userId) return { ok: false, error: 'unauthenticated' };
     try {
-      const updated = await this.chats.editMessage(client.userId, payload.messageId, payload.body);
+      await this.moderation.assertCanChat(client.userId);
+      const screened = this.autoModeration.screenMessage(client.userId, payload.body ?? '');
+      if (!screened.allowed) {
+        return { ok: false, error: screened.reason ?? 'Message rejected by the content filter.' };
+      }
+      const updated = await this.chats.editMessage(client.userId, payload.messageId, screened.body);
       this.server.to(CHAT_ROOM(updated.chatId)).emit('message:edited', {
         id: updated.id,
         chatId: updated.chatId,

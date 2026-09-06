@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/cached_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -71,17 +72,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.electricPurple,
-                    backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-                    child: user.avatarUrl == null
-                        ? Text(
-                            user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-                          )
-                        : null,
-                  ),
+                  CachedAvatar(name: user.displayName, imageUrl: user.avatarUrl, radius: 28),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(

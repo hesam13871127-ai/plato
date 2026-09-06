@@ -194,3 +194,65 @@ export const BOT_DIFFICULTIES: BotDifficulty[] = ['easy', 'medium', 'hard', 'exp
 
 export type OtpPurpose = 'login' | 'verify_phone' | 'reset';
 export const OTP_PURPOSES: OtpPurpose[] = ['login', 'verify_phone', 'reset'];
+
+// ── Phase 9: platform moderation, security & observability ─────────────────
+
+/** Platform-wide account role. Moderators/admins can act on reports & bans. */
+export type UserRole = 'player' | 'moderator' | 'admin';
+export const USER_ROLES: UserRole[] = ['player', 'moderator', 'admin'];
+
+/** Verdict returned by the automated content filter. */
+export type ContentVerdict = 'clean' | 'filtered' | 'blocked' | 'spam';
+export const CONTENT_VERDICTS: ContentVerdict[] = ['clean', 'filtered', 'blocked', 'spam'];
+
+/** Outcome of an automatic moderation pass, stored for moderator review. */
+export type ModerationFlagReason =
+  | 'toxic_language'
+  | 'hate_slur'
+  | 'sexual_content'
+  | 'threat'
+  | 'spam'
+  | 'ban_evasion'
+  | 'manual';
+export const MODERATION_FLAG_REASONS: ModerationFlagReason[] = [
+  'toxic_language',
+  'hate_slur',
+  'sexual_content',
+  'threat',
+  'spam',
+  'ban_evasion',
+  'manual',
+];
+
+/** Types of enforcement / moderation actions recorded in the audit trail. */
+export type AuditAction =
+  | 'report_filed'
+  | 'report_auto_flagged'
+  | 'report_resolved'
+  | 'report_dismissed'
+  | 'ban_created'
+  | 'ban_lifted'
+  | 'content_blocked'
+  | 'content_censored'
+  | 'user_warned'
+  | 'message_deleted'
+  | 'role_changed'
+  | 'rate_limited';
+export const AUDIT_ACTIONS: AuditAction[] = [
+  'report_filed',
+  'report_auto_flagged',
+  'report_resolved',
+  'report_dismissed',
+  'ban_created',
+  'ban_lifted',
+  'content_blocked',
+  'content_censored',
+  'user_warned',
+  'message_deleted',
+  'role_changed',
+  'rate_limited',
+];
+
+/** Severity levels for the error/event tracking table. */
+export type ErrorLevel = 'debug' | 'info' | 'warning' | 'error' | 'critical';
+export const ERROR_LEVELS: ErrorLevel[] = ['debug', 'info', 'warning', 'error', 'critical'];

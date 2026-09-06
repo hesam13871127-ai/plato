@@ -23,6 +23,7 @@ import {
 } from './dto/auth.dto';
 import { OtpService } from './otp.service';
 import { TokenPair, TokenService } from './token.service';
+import { ModerationService } from '../moderation/moderation.service';
 
 export interface AuthResult {
   user: UserDto;
@@ -49,6 +50,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService<AppConfig, true>,
+    private readonly moderation: ModerationService,
   ) {}
 
   // ------------------------------------------------------------------
@@ -80,7 +82,7 @@ export class AuthService {
       isNewUser = true;
     }
 
-    this.assertCanAuthenticate(user);
+    await this.assertCanAuthenticate(user);
     const tokens = await this.tokenService.issueTokens(user, meta);
     return { user: (await this.toDto(user.id)).user, tokens, isNewUser };
   }
@@ -135,7 +137,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
-    this.assertCanAuthenticate(user);
+    await this.assertCanAuthenticate(user);
     const tokens = await this.tokenService.issueTokens(user, meta);
     return { user: (await this.toDto(user.id)).user, tokens, isNewUser: false };
   }
@@ -157,10 +159,12 @@ export class AuthService {
   // Helpers
   // ------------------------------------------------------------------
 
-  private assertCanAuthenticate(user: UserEntity): void {
-    if (user.status === 'banned' || user.status === 'deleted') {
+  private async assertCanAuthenticate(user: UserEntity): Promise<void> {
+    if (user.status === 'banned' || user.status === 'deleted' || user.status === 'suspended') {
       throw new ForbiddenException('This account is not permitted to sign in.');
     }
+    // Enforce time-boxed / permanent suspension bans issued by moderation.
+    await this.moderation.assertNotSuspended(user.id);
   }
 
   private async createUser(params: {

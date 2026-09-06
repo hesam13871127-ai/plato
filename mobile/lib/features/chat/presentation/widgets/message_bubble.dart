@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cached_avatar.dart';
 import '../../domain/entities/chat_entities.dart';
 import 'chat_theme.dart';
 
@@ -179,19 +180,11 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _avatar() {
-    final url = message.author?.avatarUrl;
-    return CircleAvatar(
+    final author = message.author;
+    return CachedAvatar(
+      name: author?.displayName ?? '?',
+      imageUrl: author?.avatarUrl,
       radius: 14,
-      backgroundColor: theme.accent.withValues(alpha: 0.3),
-      backgroundImage: url != null ? NetworkImage(url) : null,
-      child: url == null
-          ? Text(
-              (message.author?.displayName.isNotEmpty ?? false)
-                  ? message.author!.displayName[0].toUpperCase()
-                  : '?',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-            )
-          : null,
     );
   }
 
