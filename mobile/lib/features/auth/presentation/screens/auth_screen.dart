@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../providers/auth_notifier.dart';
+import '../widgets/admin_login_sheet.dart';
 import '../widgets/email_auth_form.dart';
 import '../widgets/otp_form.dart';
 import '../widgets/phone_otp_form.dart';
@@ -36,10 +37,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.navyGradient),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
+          child: Stack(
+            children: [
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const _BrandHeader(),
@@ -73,8 +76,30 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ],
                   ],
                 ],
+                  ),
+                ),
               ),
-            ),
+              // Discreet staff sign-in entry (top-right corner).
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  tooltip: 'Staff sign-in',
+                  icon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.textMuted),
+                  onPressed: () async {
+                    final loggedIn = await AdminLoginSheet.show(context);
+                    if (loggedIn == true && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Signed in. Open Profile → Admin panel.'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),

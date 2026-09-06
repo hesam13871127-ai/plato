@@ -9,6 +9,7 @@ import { UserEntity } from '../database/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { DevAdminSeeder } from './dev-admin.seeder';
 import { OtpService } from './otp.service';
 import { ConsoleSmsService } from './sms/sms.service';
 import { TwilioSmsService } from './sms/twilio-sms.service';
@@ -30,6 +31,7 @@ import { TokenService } from './token.service';
     ConsoleSmsService,
     TwilioSmsService,
     JwtStrategy,
+    DevAdminSeeder,
   ],
   exports: [AuthService, TokenService],
 })
