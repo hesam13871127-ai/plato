@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/error/failures.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
@@ -154,10 +156,10 @@ class SocialActions {
 
   Future<String?> unblock(String userId) => _run(() => _repo.unblockUser(userId));
 
-  Future<String?> _run(Future<dynamic> Function() call) async {
+  Future<String?> _run<T>(Future<Either<Failure, T>> Function() call) async {
     final result = await call();
-    return (result as dynamic).fold(
-      (failure) => failure.message as String?,
+    return result.fold(
+      (failure) => failure.message,
       (_) {
         _refreshFriends();
         return null;
