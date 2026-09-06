@@ -70,6 +70,21 @@ class ApiEndpoints {
   static const String moderationErrors = '/moderation/errors';
   static const String moderationSetRole = '/moderation/roles';
 
+  // Admin panel (Phase 10)
+  static const String adminOverview = '/admin/overview';
+  static const String adminUsers = '/admin/users';
+  static String adminUser(String id) => '/admin/users/$id';
+  static const String adminBanUser = '/admin/users/ban';
+  static const String adminLiftBan = '/admin/users/lift-ban';
+  static const String adminGrantCurrency = '/admin/users/grant-currency';
+  static const String adminShopItems = '/admin/shop/items';
+  static String adminShopItem(String id) => '/admin/shop/items/$id';
+  static const String adminGames = '/admin/games';
+  static String adminGame(String slug) => '/admin/games/$slug';
+  static const String adminGameStatus = '/admin/games/status';
+  static const String adminSeasons = '/admin/seasons';
+  static const String adminSeasonRollover = '/admin/seasons/rollover';
+
   // Games / matchmaking / rooms
   static const String gamesCatalog = '/games';
   static const String gamesOpenRooms = '/games/rooms';

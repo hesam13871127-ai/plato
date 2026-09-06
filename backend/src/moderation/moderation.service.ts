@@ -297,6 +297,18 @@ export class ModerationService {
     return this.auditLog.find({ order: { createdAt: 'DESC' }, take: Math.min(limit, 500) });
   }
 
+  /** Public audit entry point used by other modules (admin actions, etc.). */
+  async writeAudit(entry: {
+    actorId: string;
+    action: ModerationAuditEntity['action'];
+    targetType?: string | null;
+    targetId?: string | null;
+    reason?: string | null;
+    metadata?: Record<string, unknown> | null;
+  }): Promise<void> {
+    await this.recordAudit(entry);
+  }
+
   /** Opportunistic cleanup hook for expired bans (called on schedule). */
   async purgeExpired(): Promise<number> {
     const now = new Date();

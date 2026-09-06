@@ -14,6 +14,7 @@ import '../../features/game/presentation/screens/open_rooms_screen.dart';
 import '../../features/game/presentation/screens/room_lobby_screen.dart';
 import '../../features/game/presentation/providers/game_providers.dart';
 import '../../features/competitive/presentation/screens/season_screen.dart';
+import '../../features/admin/presentation/screens/admin_panel_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/moderation/presentation/screens/moderation_dashboard_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const String season = '/season';
   static const String friends = '/friends';
   static const String moderation = '/moderation';
+  static const String admin = '/admin';
 
   // Games
   static const String games = '/games';
@@ -99,6 +101,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.chat, builder: (_, __) => const ChatListScreen()),
       GoRoute(path: AppRoutes.friends, builder: (_, __) => const FriendsScreen()),
       GoRoute(path: AppRoutes.moderation, builder: (_, __) => const ModerationDashboardScreen()),
+      GoRoute(path: AppRoutes.admin, builder: (_, __) => const AdminPanelScreen()),
 
       // Games
       GoRoute(path: AppRoutes.games, builder: (_, __) => const GameHubScreen()),

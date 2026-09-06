@@ -75,7 +75,9 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 /// Only rendered for moderator/admin accounts (role is read from the server,
-/// which is also the authoritative enforcer via the role guard).
+/// which is also the authoritative enforcer via the role guard). Moderators
+/// see the reports/moderation dashboard; admins additionally get the full
+/// admin panel (users, shop, games, seasons, analytics).
 class _ModerationEntry extends ConsumerWidget {
   const _ModerationEntry();
 
@@ -89,17 +91,34 @@ class _ModerationEntry extends ConsumerWidget {
         if (role != 'moderator' && role != 'admin') {
           return const SizedBox.shrink();
         }
-        return OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.softCyan,
-            side: const BorderSide(color: AppColors.glassStroke),
-            minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          ),
-          icon: const Icon(Icons.shield_outlined, size: 20),
-          label: const Text('Moderation dashboard',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          onPressed: () => context.push(AppRoutes.moderation),
+        final isAdmin = role == 'admin';
+        return Column(
+          children: [
+            if (isAdmin)
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.electricPurple,
+                  side: BorderSide(color: AppColors.electricPurple.withValues(alpha: 0.6)),
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: const Icon(Icons.admin_panel_settings_rounded, size: 20),
+                label: const Text('Admin panel', style: TextStyle(fontWeight: FontWeight.w800)),
+                onPressed: () => context.push(AppRoutes.admin),
+              ),
+            if (isAdmin) const SizedBox(height: 10),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.softCyan,
+                side: const BorderSide(color: AppColors.glassStroke),
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              icon: const Icon(Icons.shield_outlined, size: 20),
+              label: const Text('Moderation dashboard', style: TextStyle(fontWeight: FontWeight.w700)),
+              onPressed: () => context.push(AppRoutes.moderation),
+            ),
+          ],
         );
       },
     );

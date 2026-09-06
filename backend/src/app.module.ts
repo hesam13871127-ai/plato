@@ -20,6 +20,7 @@ import { ShopModule } from './shop/shop.module';
 import { QuestsModule } from './quests/quests.module';
 import { SocialModule } from './social/social.module';
 import { ModerationModule } from './moderation/moderation.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { ModerationModule } from './moderation/moderation.module';
     GameModule,
     CompetitiveModule,
     SocialModule,
+    AdminModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

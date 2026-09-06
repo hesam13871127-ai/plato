@@ -237,7 +237,15 @@ export type AuditAction =
   | 'user_warned'
   | 'message_deleted'
   | 'role_changed'
-  | 'rate_limited';
+  | 'rate_limited'
+  | 'shop_item_saved'
+  | 'shop_item_deleted'
+  | 'game_created'
+  | 'game_updated'
+  | 'game_status'
+  | 'season_rollover'
+  | 'currency_adjusted'
+  | 'user_updated';
 export const AUDIT_ACTIONS: AuditAction[] = [
   'report_filed',
   'report_auto_flagged',
@@ -251,6 +259,14 @@ export const AUDIT_ACTIONS: AuditAction[] = [
   'message_deleted',
   'role_changed',
   'rate_limited',
+  'shop_item_saved',
+  'shop_item_deleted',
+  'game_created',
+  'game_updated',
+  'game_status',
+  'season_rollover',
+  'currency_adjusted',
+  'user_updated',
 ];
 
 /** Severity levels for the error/event tracking table. */
