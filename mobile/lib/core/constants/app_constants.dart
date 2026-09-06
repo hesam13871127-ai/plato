@@ -11,7 +11,7 @@ class AppConstants {
 
   static const String _envApiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: '',
+    defaultValue: 'http://localhost:3000',
   );
 
   /// Backend origin (scheme + host + port), without the `/api` prefix.
