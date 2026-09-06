@@ -122,7 +122,7 @@ class GroupDetailScreen extends ConsumerWidget {
     final candidates = friends.where((f) => !existing.contains(f.id)).toList();
     final selected = <String>{};
 
-    showModalBottomSheet<void>(
+    showModalBottomSheet<List<String>>(
       context: context,
       backgroundColor: AppColors.surfaceDark,
       isScrollControlled: true,

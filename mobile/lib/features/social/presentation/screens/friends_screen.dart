@@ -88,7 +88,7 @@ class FriendsScreen extends ConsumerWidget {
 
   void _showAddFriend(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
-    showModalBottomSheet<void>(
+    showModalBottomSheet<String>(
       context: context,
       backgroundColor: AppColors.surfaceDark,
       isScrollControlled: true,
