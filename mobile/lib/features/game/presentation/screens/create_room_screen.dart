@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/i18n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/game_logo.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../providers/game_providers.dart';
+import '../widgets/tutorial_sheet.dart';
 
 /// Create-a-table sheet/screen: privacy toggle, ranked mode, seat count and
 /// auto-fill (invisible bots so the host can start immediately).
@@ -76,6 +79,43 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            Row(
+              children: [
+                GameLogo(slug: widget.gameSlug, size: 58, radius: 16),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.gameSlug
+                            .replaceAll('_', ' ')
+                            .split(' ')
+                            .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+                            .join(' '),
+                        style: const TextStyle(
+                            color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w800),
+                      ),
+                      Text(context.l10n.t('create_room'),
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: context.l10n.t('how_to_play'),
+                  onPressed: () {
+                    final name = widget.gameSlug.replaceAll('_', ' ');
+                    TutorialSheet.show(
+                      context,
+                      slug: widget.gameSlug,
+                      name: name[0].toUpperCase() + name.substring(1),
+                    );
+                  },
+                  icon: const Icon(Icons.help_outline_rounded, color: AppColors.softCyan),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
             GlassCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

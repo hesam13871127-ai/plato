@@ -5,7 +5,7 @@
 'use strict';
 
 const API = '/api';
-const ITEM_TYPES = ['avatar_frame','banner','chat_bubble','theme','game_skin','id_color','dice_set','emote','bundle','consumable'];
+const ITEM_TYPES = ['avatar_frame','banner','chat_bubble','theme','game_skin','game_piece','board_theme','id_color','dice_set','emote','bundle','consumable'];
 const RARITIES = ['common','rare','epic','legendary'];
 const GAME_STATUSES = ['active','maintenance','inactive','coming_soon'];
 const RESOLVE_ACTIONS = ['dismiss','warn','mute','ban','delete'];

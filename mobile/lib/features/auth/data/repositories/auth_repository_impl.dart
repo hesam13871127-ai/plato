@@ -67,6 +67,48 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, AuthResponse>> loginWithIdentifier({
+    required String identifier,
+    required String password,
+  }) {
+    return _guard(() =>
+        _remote.loginWithIdentifier(identifier: identifier, password: password));
+  }
+
+  @override
+  Future<Either<Failure, String?>> requestPasswordReset({required String phone}) async {
+    try {
+      final devCode = await _remote.requestPasswordReset(phone: phone);
+      return Right(devCode);
+    } on Object catch (error) {
+      return Left(mapErrorToFailure(error));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AuthResponse>> resetPassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  }) {
+    return _guard(() => _remote.resetPassword(
+          phone: phone,
+          code: code,
+          newPassword: newPassword,
+        ));
+  }
+
+  @override
+  Future<Either<Failure, void>> setPassword({required String newPassword}) async {
+    try {
+      await _remote.setPassword(newPassword: newPassword);
+      return const Right(null);
+    } on Object catch (error) {
+      return Left(mapErrorToFailure(error));
+    }
+  }
+
+  @override
   Future<Either<Failure, AuthUser>> getCurrentUser() async {
     try {
       final accessToken = await _tokenStorage.accessToken;

@@ -24,6 +24,7 @@ import '../../features/shop/presentation/screens/shop_screen.dart';
 import '../../features/shop/presentation/screens/wallet_screen.dart';
 import '../../features/social/presentation/screens/friends_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../../core/widgets/settings_screen.dart';
 
 /// Named routes.
 class AppRoutes {
@@ -41,6 +42,7 @@ class AppRoutes {
   static const String friends = '/friends';
   static const String moderation = '/moderation';
   static const String admin = '/admin';
+  static const String settings = '/settings';
 
   // Games
   static const String games = '/games';
@@ -81,16 +83,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final onSplash = location == AppRoutes.splash;
       final onAuth = location == AppRoutes.auth;
 
+      // Settings is reachable from the login screen (language, sound…) too.
+      final onSettings = location == AppRoutes.settings;
+
       if (onSplash) {
         return loggedIn ? AppRoutes.home : AppRoutes.auth;
       }
-      if (!loggedIn && !onAuth) return AppRoutes.auth;
+      if (!loggedIn && !onAuth && !onSettings) return AppRoutes.auth;
       if (loggedIn && onAuth) return AppRoutes.home;
       return null;
     },
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
       GoRoute(path: AppRoutes.auth, builder: (_, __) => const AuthScreen()),
+      GoRoute(path: AppRoutes.settings, builder: (_, __) => const SettingsScreen()),
       GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
       GoRoute(path: AppRoutes.profile, builder: (_, __) => const ProfileScreen()),
       GoRoute(path: AppRoutes.shop, builder: (_, __) => const ShopScreen()),

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/i18n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/game_logo.dart';
 import '../../domain/entities/game_entities.dart';
 import '../boards/game_board_dispatcher.dart';
 import '../providers/game_table_notifier.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
+import '../widgets/tutorial_sheet.dart';
 
 /// The live, game-agnostic table. It renders the shared shell (seat strip,
 /// in-table chat, finish banner) and dispatches to the per-game board widget
@@ -46,20 +49,37 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
     final session = table.session;
     final slug = session?.gameSlug ?? '';
 
+    final gameName = _titles[slug] ?? 'Game';
+
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          _titles[slug] ?? 'Game',
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (slug.isNotEmpty) GameLogo(slug: slug, size: 34, radius: 10),
+            if (slug.isNotEmpty) const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                gameName,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.go('/games'),
         ),
         actions: [
+          IconButton(
+            tooltip: context.l10n.t('how_to_play'),
+            icon: const Icon(Icons.help_outline_rounded, color: AppColors.softCyan),
+            onPressed: () => TutorialSheet.show(context, slug: slug, name: gameName),
+          ),
           IconButton(
             tooltip: _muted ? 'Unmute' : 'Mute',
             icon: Icon(_muted ? Icons.volume_off : Icons.volume_up,

@@ -74,7 +74,51 @@ class SeatStrip extends StatelessWidget {
         ),
       );
     }
-    return Padding(padding: const EdgeInsets.fromLTRB(10, 8, 10, 2), child: Row(children: seats));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
+      child: Row(children: seats),
+    );
+  }
+}
+
+/// Floating "3D" win/finish banner used at the end of every match.
+class _FinishHeader extends StatelessWidget {
+  const _FinishHeader({required this.won});
+  final bool won;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 76,
+          height: 76,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: won
+                  ? [AppColors.softCyan, AppColors.electricPurple]
+                  : [AppColors.surfaceElevated, AppColors.surfaceDark],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (won ? AppColors.softCyan : AppColors.textMuted).withOpacity(0.45),
+                blurRadius: 28,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Icon(
+            won ? Icons.emoji_events_rounded : Icons.sentiment_neutral_rounded,
+            size: 40,
+            color: won ? const Color(0xFF062033) : AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
   }
 }
 
@@ -103,7 +147,8 @@ class _AvatarDot extends StatelessWidget {
   }
 }
 
-/// Glass container for the playing surface with a felt-like gradient.
+/// Glass container for the playing surface with a glossy 3D felt look:
+/// angled perspective, top light sheen and vignette — shared by every board.
 class TableSurface extends StatelessWidget {
   const TableSurface({super.key, required this.child, this.padding});
 
@@ -112,20 +157,54 @@ class TableSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      padding: padding ?? const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0F1B33), Color(0xFF0B1426)],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.0008)
+          ..rotateX(0.045),
+        child: Container(
+          padding: padding ?? const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF16294D), Color(0xFF0C1730), Color(0xFF08101F)],
+            ),
+            border: Border.all(color: AppColors.glassStroke),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.55), blurRadius: 30, offset: const Offset(0, 16)),
+              BoxShadow(color: AppColors.electricPurple.withOpacity(0.14), blurRadius: 42, spreadRadius: -10),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // Top glossy sheen.
+              Positioned(
+                top: 0,
+                left: 12,
+                right: 12,
+                child: IgnorePointer(
+                  child: Container(
+                    height: 46,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.white.withOpacity(0.08), Colors.white.withOpacity(0.0)],
+                      ),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+                    ),
+                  ),
+                ),
+              ),
+              child,
+            ],
+          ),
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.glassStroke),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 18, offset: const Offset(0, 8))],
       ),
-      child: child,
     );
   }
 }
@@ -218,16 +297,40 @@ class FinishBanner extends StatelessWidget {
                 ? 'The winners prevail!'
                 : '${session.seats[winnerSeats.first].displayName} won';
     if (iWon) GameFeedback.win();
-    return GlassCard(
-      margin: const EdgeInsets.all(12),
-      gradient: LinearGradient(
-        colors: iWon
-            ? [AppColors.softCyan.withOpacity(0.28), AppColors.electricPurple.withOpacity(0.22)]
-            : [AppColors.surfaceElevated, AppColors.surfaceDark],
-      ),
-      child: Column(
-        children: [
-          Text(title,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+      child: Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.001)
+          ..rotateX(-0.08),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: iWon
+                  ? [AppColors.softCyan.withOpacity(0.30), AppColors.electricPurple.withOpacity(0.28)]
+                  : [AppColors.surfaceElevated.withOpacity(0.9), AppColors.surfaceDark.withOpacity(0.9)],
+            ),
+            border: Border.all(
+              color: iWon ? AppColors.softCyan.withOpacity(0.6) : AppColors.glassStroke,
+              width: 1.4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (iWon ? AppColors.softCyan : AppColors.electricPurple).withOpacity(0.35),
+                blurRadius: 40,
+                offset: const Offset(0, 16),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _FinishHeader(won: iWon || winnerSeats.length > 1),
+              Text(title,
               style: TextStyle(
                   color: iWon ? AppColors.softCyan : AppColors.textPrimary,
                   fontSize: 22,
@@ -240,16 +343,21 @@ class FinishBanner extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: () => Navigator.of(context).maybePop(),
+              onPressed: () {
+                GameFeedback.move();
+                Navigator.of(context).maybePop();
+              },
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.electricPurple,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               child: const Text('Back to lobby'),
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }

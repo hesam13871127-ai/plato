@@ -38,6 +38,52 @@ export class PhoneOtpVerifyDto {
   displayName?: string;
 }
 
+export class IdentifierLoginDto {
+  @ApiProperty({ example: 'player@example.com / @username / +14155551234' })
+  @IsString()
+  @IsNotEmpty()
+  identifier!: string;
+
+  @ApiProperty({ example: 'StrongP@ssw0rd' })
+  @IsString()
+  @IsNotEmpty()
+  password!: string;
+}
+
+export class SetPasswordDto {
+  @ApiProperty({ example: 'NewStrongP@ssw0rd', description: 'New password (min 8 characters)' })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(128)
+  newPassword!: string;
+}
+
+export class ForgotPasswordDto {
+  @ApiProperty({ example: '+14155551234', description: 'E.164 phone number on the account' })
+  @IsString()
+  @Matches(PHONE_REGEX, { message: 'phone must be a valid E.164 number (e.g. +14155551234)' })
+  phone!: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ example: '+14155551234' })
+  @IsString()
+  @Matches(PHONE_REGEX, { message: 'phone must be a valid E.164 number' })
+  phone!: string;
+
+  @ApiProperty({ example: '482910', description: 'Numeric OTP code received by SMS' })
+  @IsString()
+  @Length(4, 10)
+  @Matches(/^\d+$/, { message: 'code must contain digits only' })
+  code!: string;
+
+  @ApiProperty({ example: 'NewStrongP@ssw0rd', description: 'New password (min 8 characters)' })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(128)
+  newPassword!: string;
+}
+
 export class RefreshTokenDto {
   @ApiProperty({ description: 'The refresh token previously issued by the API' })
   @IsString()

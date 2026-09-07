@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/piece_3d.dart';
 import '../../domain/entities/game_entities.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
@@ -139,19 +140,31 @@ class _Disc extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = owner == 0
-        ? AppColors.softCyan
-        : owner == 1
-            ? AppColors.danger
-            : AppColors.deepNavy.withOpacity(0.55);
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: owner == -1 ? AppColors.deepNavy.withOpacity(0.6) : color,
-        boxShadow: owner == -1
-            ? [const BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 2))]
-            : [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)],
-        border: Border.all(color: AppColors.glassStroke, width: 1),
+    if (owner == -1) {
+      // Empty slot: a recessed hole in the board.
+      return Padding(
+        padding: const EdgeInsets.all(3),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const RadialGradient(
+              colors: [Color(0xFF060D1C), Color(0xFF0B1426)],
+            ),
+            border: Border.all(color: AppColors.glassStroke),
+            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 3, offset: Offset(0, 2))],
+          ),
+        ),
+      );
+    }
+    // Glossy 3D disc that fills its cell.
+    final palette = owner == 0 ? PiecePalette.cyan : PiecePalette.red;
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final s = constraints.biggest.isFinite ? constraints.maxWidth : 44.0;
+          return SizedBox(width: s, height: s, child: Piece3D(palette: palette, size: s));
+        },
       ),
     );
   }

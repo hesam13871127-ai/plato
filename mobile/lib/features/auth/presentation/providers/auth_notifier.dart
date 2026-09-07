@@ -81,6 +81,61 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return _completeAuth(_repository.loginWithEmail(email: email, password: password));
   }
 
+  Future<bool> loginWithIdentifier({required String identifier, required String password}) {
+    state = state.copyWith(isLoading: true, clearError: true);
+    return _completeAuth(
+      _repository.loginWithIdentifier(identifier: identifier, password: password),
+    );
+  }
+
+  /// Returns the dev OTP code when the backend is in development mode.
+  Future<String?> requestPasswordReset({required String phone}) async {
+    state = state.copyWith(isLoading: true, clearError: true, verificationId: phone);
+    final result = await _repository.requestPasswordReset(phone: phone);
+    return result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        return null;
+      },
+      (devCode) {
+        state = state.copyWith(isLoading: false);
+        return devCode;
+      },
+    );
+  }
+
+  /// Clears the "new user" flag after the post sign-up prompt is dismissed.
+  void dismissNewUserPrompt() {
+    state = state.copyWith(isNewUser: false);
+  }
+
+  Future<bool> resetPassword({required String code, required String newPassword}) async {
+    final phone = state.verificationId;
+    if (phone == null) {
+      state = state.copyWith(errorMessage: 'No phone number found. Please restart.');
+      return false;
+    }
+    state = state.copyWith(isLoading: true, clearError: true);
+    return _completeAuth(
+      _repository.resetPassword(phone: phone, code: code, newPassword: newPassword),
+    );
+  }
+
+  Future<bool> setPassword({required String newPassword}) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    final result = await _repository.setPassword(newPassword: newPassword);
+    return result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        return false;
+      },
+      (_) {
+        state = state.copyWith(isLoading: false);
+        return true;
+      },
+    );
+  }
+
   /// Re-fetches the current user (wallet, cosmetics, stats) after a mutation.
   Future<void> refreshUser() async {
     final result = await _repository.getCurrentUser();
@@ -118,6 +173,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           user: response.user,
           isLoading: false,
           otpSent: false,
+          isNewUser: response.isNewUser,
         );
         return true;
       },

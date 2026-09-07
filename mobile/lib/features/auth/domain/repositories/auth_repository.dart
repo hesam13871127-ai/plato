@@ -30,6 +30,26 @@ abstract interface class AuthRepository {
     required String password,
   });
 
+  /// Sign in with email, username or phone + password.
+  Future<Either<Failure, AuthResponse>> loginWithIdentifier({
+    required String identifier,
+    required String password,
+  });
+
+  /// Request an SMS password-reset code. The returned [String] (non-null only
+  /// in dev mode) is the code itself, shown to the player directly.
+  Future<Either<Failure, String?>> requestPasswordReset({required String phone});
+
+  /// Verify the SMS code, set the new password and sign in.
+  Future<Either<Failure, AuthResponse>> resetPassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  });
+
+  /// Attach a password to the current (freshly phone-verified) account.
+  Future<Either<Failure, void>> setPassword({required String newPassword});
+
   /// Load the currently persisted user (by validating the stored token).
   Future<Either<Failure, AuthUser>> getCurrentUser();
 
