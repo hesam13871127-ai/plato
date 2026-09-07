@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/piece_3d.dart';
 import '../../domain/entities/game_entities.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
@@ -146,15 +147,6 @@ class _Die extends StatelessWidget {
   final int value;
   final Animation<double> anim;
 
-  static const Map<int, List<List<int>>> _pips = {
-    1: [[1, 1]],
-    2: [[0, 0], [2, 2]],
-    3: [[0, 0], [1, 1], [2, 2]],
-    4: [[0, 0], [0, 2], [2, 0], [2, 2]],
-    5: [[0, 0], [0, 2], [1, 1], [2, 0], [2, 2]],
-    6: [[0, 0], [0, 2], [1, 0], [1, 2], [2, 0], [2, 2]],
-  };
-
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -163,38 +155,7 @@ class _Die extends StatelessWidget {
         final wobble = math.sin(anim.value * math.pi * 6) * (1 - anim.value) * 0.6;
         return Transform.rotate(
           angle: wobble,
-          child: Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Colors.white, Color(0xFFD9E2F5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [BoxShadow(color: AppColors.softCyan.withOpacity(0.3), blurRadius: 10)],
-            ),
-            child: GridView.count(
-              crossAxisCount: 3,
-              padding: const EdgeInsets.all(8),
-              physics: const NeverScrollableScrollPhysics(),
-              children: List.generate(9, (i) {
-                final r = i ~/ 3, c = i % 3;
-                final on = (_pips[value] ?? []).any((p) => p[0] == r && p[1] == c);
-                return Center(
-                  child: Container(
-                    width: 9,
-                    height: 9,
-                    decoration: BoxDecoration(
-                      color: on ? AppColors.deepNavy : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
+          child: Dice3D(size: 62, value: value, rolling: anim.value > 0.02),
         );
       },
     );

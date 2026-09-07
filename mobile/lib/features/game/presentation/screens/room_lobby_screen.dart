@@ -5,13 +5,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/i18n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/game_logo.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../social/presentation/widgets/invite_friends_sheet.dart';
 import '../../domain/entities/game_entities.dart';
 import '../providers/game_providers.dart';
+import '../widgets/tutorial_sheet.dart';
 
 /// Lobby for a single table: shows seats, the private invite code, ready-up and
 /// host start. Live seat changes arrive over the socket; the source of truth
@@ -89,6 +92,18 @@ class _RoomLobbyScreenState extends ConsumerState<RoomLobbyScreen> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.go('/games'),
         ),
+        actions: [
+          if (room?.gameSlug.isNotEmpty == true)
+            IconButton(
+              tooltip: context.l10n.t('how_to_play'),
+              icon: const Icon(Icons.help_outline_rounded, color: AppColors.softCyan),
+              onPressed: () => TutorialSheet.show(
+                context,
+                slug: room!.gameSlug,
+                name: room.gameName ?? room.gameSlug,
+              ),
+            ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.softCyan))

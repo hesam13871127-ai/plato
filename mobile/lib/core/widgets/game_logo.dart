@@ -19,16 +19,8 @@ class GameLogo extends StatelessWidget {
   final double radius;
   final String emoji;
 
-  static const _missing = {
-    // Logos not bundled yet — fallback tile is shown for these.
-    'memory_race',
-    'ocho',
-    'pool_8ball',
-  };
-
   @override
   Widget build(BuildContext context) {
-    final hasArt = !_missing.contains(slug);
     final assetPath = 'assets/game_logos/$slug.png';
 
     return Container(
@@ -46,13 +38,11 @@ class GameLogo extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: hasArt
-            ? Image.asset(
-                assetPath,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _fallback(),
-              )
-            : _fallback(),
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallback(),
+        ),
       ),
     );
   }
