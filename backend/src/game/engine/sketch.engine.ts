@@ -31,6 +31,8 @@ interface SketchBoard extends Record<string, unknown> {
   // Secret words per drawer round (simple pool).
   guesses: Array<{ seat: number; text: string; correct: boolean }>,
   botDifficulty: Array<SeatInfo['botDifficulty']>;
+  // Letter hints handed out this round (revealed progressively as time runs out).
+  hintsGiven: number;
 }
 
 const WORD_POOL = [
@@ -66,10 +68,11 @@ export class SketchEngine extends BaseGameEngine {
       strokes: [],
       currentStroke: null,
       phase: 'draw',
-      phaseEndsAt: new Date(Date.now() + 30000).toISOString(),
-      roundMs: 30000,
+      phaseEndsAt: new Date(Date.now() + 45000).toISOString(),
+      roundMs: 45000,
       guesses: [],
       botDifficulty: seats.map((s) => s.botDifficulty ?? 'medium'),
+      hintsGiven: 0,
     };
     board.revealed = this.mask(board.word);
     const state: GameState = {
@@ -139,21 +142,29 @@ export class SketchEngine extends BaseGameEngine {
       const payload = action.payload as {
         stroke?: SketchStroke;
         point?: [number, number];
+        points?: Array<[number, number]>;
         color?: string;
         width?: number;
         end?: boolean;
       };
+      const incoming: Array<[number, number]> = [];
+      if (Array.isArray(payload.points)) {
+        for (const pt of payload.points.slice(0, 64)) {
+          if (Array.isArray(pt) && pt.length >= 2) incoming.push([Number(pt[0]), Number(pt[1])]);
+        }
+      }
+      if (payload.point) incoming.push([Number(payload.point[0]), Number(payload.point[1])]);
       if (payload.stroke) {
         board.strokes.push(payload.stroke);
-      } else if (payload.point) {
+      } else if (incoming.length > 0) {
         if (!board.currentStroke) {
           board.currentStroke = {
             color: payload.color ?? '#00E5FF',
             width: payload.width ?? 4,
-            points: [payload.point],
+            points: incoming,
           };
         } else {
-          board.currentStroke.points.push(payload.point);
+          board.currentStroke.points.push(...incoming);
         }
         if (payload.end) {
           board.strokes.push(board.currentStroke);
@@ -215,24 +226,56 @@ export class SketchEngine extends BaseGameEngine {
     }
     // Bots: drawer scribbles; guessers "solve" after a skill-scaled delay.
     this.botsAct(state, board, now);
+    this.giveHints(state, board, now);
     if (board.phaseEndsAt && now.getTime() >= new Date(board.phaseEndsAt).getTime()) {
       this.endRound(state, board);
     }
     return state;
   }
 
+  /** Reveal one letter at 45% and another at 75% of the round (never the last
+   * hidden letter) so long rounds stay guessable, like the classic party game. */
+  private giveHints(state: GameState, board: SketchBoard, now: Date): void {
+    if (!board.phaseEndsAt) return;
+    const elapsed = board.roundMs - (new Date(board.phaseEndsAt).getTime() - now.getTime());
+    const due = elapsed > board.roundMs * 0.75 ? 2 : elapsed > board.roundMs * 0.45 ? 1 : 0;
+    while (board.hintsGiven < due) {
+      board.hintsGiven += 1;
+      const hidden = board.revealed.map((c, i) => (c === '_' ? i : -1)).filter((i) => i >= 0);
+      if (hidden.length <= 1) return;
+      const idx = hidden[(board.round * 31 + board.hintsGiven * 17) % hidden.length];
+      board.revealed[idx] = board.word[idx];
+      state.version += 1;
+    }
+  }
+
   private botsAct(state: GameState, board: SketchBoard, now: Date): void {
     const drawer = board.players[board.drawerSeat];
     // Bot drawer scribbles a few strokes early on (purely cosmetic).
-    if (drawer.isBot && board.strokes.length < 3 && Math.random() < 0.15) {
-      const cx = 0.3 + Math.random() * 0.4;
-      const cy = 0.3 + Math.random() * 0.4;
+    if (drawer.isBot && board.strokes.length < 7 && Math.random() < 0.18) {
+      const palette = ['#1B1B2F', '#E63946', '#2A9D8F', '#F4A261', '#457B9D', '#8A6CFF'];
+      const color = palette[board.strokes.length % palette.length];
+      const cx = 0.25 + Math.random() * 0.5;
+      const cy = 0.25 + Math.random() * 0.5;
       const points: Array<[number, number]> = [];
-      const radius = 0.1 + Math.random() * 0.15;
-      for (let a = 0; a <= Math.PI; a += Math.PI / 8) {
-        points.push([cx + Math.cos(a) * radius, cy + Math.sin(a) * radius]);
+      const kind = board.strokes.length % 3;
+      if (kind === 0) {
+        const radius = 0.08 + Math.random() * 0.14;
+        for (let a = 0; a <= Math.PI * 2 + 0.01; a += Math.PI / 10) {
+          points.push([cx + Math.cos(a) * radius, cy + Math.sin(a) * radius * (0.7 + Math.random() * 0.1)]);
+        }
+      } else if (kind === 1) {
+        const len = 0.15 + Math.random() * 0.3;
+        const ang = Math.random() * Math.PI;
+        for (let t = 0; t <= 1.001; t += 0.1) {
+          points.push([cx + Math.cos(ang) * len * (t - 0.5), cy + Math.sin(ang) * len * (t - 0.5)]);
+        }
+      } else {
+        for (let t = 0; t <= 1.001; t += 0.05) {
+          points.push([cx - 0.15 + 0.3 * t, cy + Math.sin(t * Math.PI * 3) * 0.05]);
+        }
       }
-      board.strokes.push({ color: '#7B5CFF', width: 4, points });
+      board.strokes.push({ color, width: kind === 1 ? 6 : 4, points });
       state.version += 1;
     }
     // Bot guessers: each solves once, later for weaker bots and never instantly.
@@ -241,8 +284,8 @@ export class SketchEngine extends BaseGameEngine {
       const p = board.players[i];
       if (!p.isBot || p.guessed) continue;
       const difficulty = board.botDifficulty[i] ?? 'medium';
-      const solveMs = difficulty === 'easy' ? 26000 : difficulty === 'medium' ? 20000 : difficulty === 'hard' ? 14000 : 9000;
-      const roundMs = 30000;
+      const solveMs = difficulty === 'easy' ? 34000 : difficulty === 'medium' ? 26000 : difficulty === 'hard' ? 18000 : 12000;
+      const roundMs = board.roundMs;
       const elapsed = roundMs - (new Date(board.phaseEndsAt!).getTime() - now.getTime());
       if (elapsed > solveMs && Math.random() < 0.2) {
         board.guesses.push({ seat: i, text: board.word, correct: true });
@@ -263,7 +306,7 @@ export class SketchEngine extends BaseGameEngine {
   private endRound(state: GameState, board: SketchBoard): void {
     board.phase = 'reveal';
     this.reveal(board, board.word);
-    board.phaseEndsAt = new Date(Date.now() + 3000).toISOString();
+    board.phaseEndsAt = new Date(Date.now() + 4500).toISOString();
     state.version += 1;
   }
 
@@ -287,6 +330,7 @@ export class SketchEngine extends BaseGameEngine {
     board.strokes = [];
     board.currentStroke = null;
     board.guesses = [];
+    board.hintsGiven = 0;
     board.players.forEach((p) => (p.guessed = false));
     board.phase = 'draw';
     board.phaseEndsAt = new Date(Date.now() + board.roundMs).toISOString();
@@ -320,6 +364,8 @@ export class SketchEngine extends BaseGameEngine {
       drawerSeat: board.drawerSeat,
       phase: board.phase,
       phaseEndsAt: board.phaseEndsAt,
+      roundMs: board.roundMs,
+      names: board.players.map((p) => p.name),
       strokes: board.strokes,
       currentStroke: board.currentStroke,
       // Word is secret to guessers; the drawer sees it.

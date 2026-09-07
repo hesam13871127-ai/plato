@@ -545,6 +545,82 @@ class GameTutorials {
         bodyFa: 'صفحه را هرچه سریع‌تر کامل کن؛ اشتباه کمتر یعنی امتیاز بیشتر.',
       ),
     ],
+    'werewolf': [
+      TutorialStep(
+        emoji: '🐺',
+        titleEn: 'Secret roles',
+        titleFa: 'نقش‌های مخفی',
+        bodyEn: 'Everyone gets a hidden role: werewolf, villager or seer. Wolves know each other; nobody else knows anything.',
+        bodyFa: 'هر کس یک نقش مخفی می‌گیرد: گرگینه، روستایی یا پیشگو. گرگ‌ها همدیگر را می‌شناسند؛ بقیه چیزی نمی‌دانند.',
+      ),
+      TutorialStep(
+        emoji: '🌙',
+        titleEn: 'Night',
+        titleFa: 'شب',
+        bodyEn: 'Wolves tap a villager to attack. The seer taps one player to learn whether they are a wolf.',
+        bodyFa: 'گرگ‌ها روی یک روستایی می‌زنند تا حمله کنند. پیشگو یک نفر را انتخاب می‌کند تا بفهمد گرگ است یا نه.',
+      ),
+      TutorialStep(
+        emoji: '☀️',
+        titleEn: 'Day & vote',
+        titleFa: 'روز و رای‌گیری',
+        bodyEn: 'Discuss in chat, then tap a player to vote. The most-voted player is lynched and their role revealed.',
+        bodyFa: 'در چت بحث کنید و بعد روی یک بازیکن بزنید تا رای بدهید. کسی که بیشترین رای را دارد حذف می‌شود و نقشش فاش می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Winning',
+        titleFa: 'برنده شدن',
+        bodyEn: 'Village wins when all wolves are gone; wolves win when they equal the villagers.',
+        bodyFa: 'روستا وقتی می‌برد که همه گرگ‌ها حذف شوند؛ گرگ‌ها وقتی می‌برند که تعدادشان با روستایی‌ها برابر شود.',
+      ),
+    ],
+    'sketch_guess': [
+      TutorialStep(
+        emoji: '✏️',
+        titleEn: 'Draw the word',
+        titleFa: 'کلمه را بکش',
+        bodyEn: 'When it is your turn you see a secret word. Draw it with the colour palette, brush sizes and eraser — no letters!',
+        bodyFa: 'وقتی نوبت توست یک کلمه مخفی می‌بینی. با پالت رنگ، اندازه قلم و پاک‌کن آن را بکش — بدون نوشتن حرف!',
+      ),
+      TutorialStep(
+        emoji: '💡',
+        titleEn: 'Guess fast',
+        titleFa: 'سریع حدس بزن',
+        bodyEn: 'Everyone else types guesses. Faster correct guesses earn more points, and the drawer scores too.',
+        bodyFa: 'بقیه حدس‌شان را تایپ می‌کنند. حدس درستِ سریع‌تر امتیاز بیشتری دارد و نقاش هم امتیاز می‌گیرد.',
+      ),
+      TutorialStep(
+        emoji: '🔤',
+        titleEn: 'Letter hints',
+        titleFa: 'راهنمای حروف',
+        bodyEn: 'As the timer runs down, letters of the word are revealed to keep the round guessable.',
+        bodyFa: 'با پایین آمدن زمان، حروفی از کلمه فاش می‌شود تا حدس زدن ممکن بماند.',
+      ),
+    ],
+    'quick_challenges': [
+      TutorialStep(
+        emoji: '⚡',
+        titleEn: 'Six mini-rounds',
+        titleFa: 'شش دور کوتاه',
+        bodyEn: 'Each round is an 8-second arcade challenge: Tap Frenzy, Reaction, Target Number or Direction.',
+        bodyFa: 'هر دور یک چالش ۸ ثانیه‌ای است: ضربه سریع، واکنش، عدد هدف یا جهت.',
+      ),
+      TutorialStep(
+        emoji: '🚦',
+        titleEn: 'Watch for GO',
+        titleFa: 'منتظر GO باش',
+        bodyEn: 'In Reaction rounds, tap only after the light turns green — tapping early knocks you out of the round.',
+        bodyFa: 'در دور واکنش فقط بعد از سبز شدن چراغ بزن — زدن زودهنگام تو را از دور حذف می‌کند.',
+      ),
+      TutorialStep(
+        emoji: '🏅',
+        titleEn: 'Podium points',
+        titleFa: 'امتیاز سکو',
+        bodyEn: 'Finish first for 100 points, second for 60, third for 40. Highest total after six rounds wins.',
+        bodyFa: 'اول شدن ۱۰۰ امتیاز، دوم ۶۰ و سوم ۴۰ امتیاز دارد. بیشترین مجموع بعد از شش دور برنده است.',
+      ),
+    ],
     'impostor_light': [
       TutorialStep(
         emoji: '🕵️',
@@ -566,6 +642,13 @@ class GameTutorials {
         titleFa: 'رای‌گیری',
         bodyEn: 'Vote out the suspect. Find the impostor to win, or the impostor wins!',
         bodyFa: 'به مظنون رای بدهید؛ خائن را پیدا کنید برنده‌اید، وگرنه خائن می‌برد!',
+      ),
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'Impostor\'s gamble',
+        titleFa: 'قمار خائن',
+        bodyEn: 'The impostor can tap a location from the grid at any time as a final guess — right and they win, wrong and the crew wins.',
+        bodyFa: 'خائن هر زمان می‌تواند یک مکان را از جدول به‌عنوان حدس نهایی انتخاب کند — درست باشد می‌برد، اشتباه باشد خدمه می‌برند.',
       ),
     ],
   };

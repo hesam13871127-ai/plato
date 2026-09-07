@@ -247,7 +247,19 @@ class ActionButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
-    return expanded ? Expanded(child: btn) : btn;
+    if (!expanded) return btn;
+    // `Expanded` is only legal as a *direct* child of a Row/Column, and inside a
+    // Column whose height is unbounded (boards live in a scroll view) it would
+    // throw — so flex only when the direct parent is a horizontal Flex (Row);
+    // everywhere else simply fill the available width.
+    Widget? parent;
+    context.visitAncestorElements((element) {
+      parent = element.widget;
+      return false;
+    });
+    final p = parent;
+    if (p is Flex && p.direction == Axis.horizontal) return Expanded(child: btn);
+    return SizedBox(width: double.infinity, child: btn);
   }
 }
 

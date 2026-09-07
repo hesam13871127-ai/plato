@@ -231,11 +231,12 @@ describe('hidden information is never leaked to other seats or spectators', () =
     const view = engine.playerView(state, otherSeat) as GameState;
     const vBoard = view.board as { players: Array<{ role: string | null }>; myRole: string | null };
     // A villager sees their own role but never the wolves'.
+    const ownRole = board.players[otherSeat].role; // villager or seer — never a wolf
     for (const [i, p] of vBoard.players.entries()) {
-      if (i === otherSeat) expect(p.role).toBe('villager');
+      if (i === otherSeat) expect(p.role).toBe(ownRole);
       else expect(p.role).toBeNull();
     }
-    expect(vBoard.myRole).toBe('villager');
+    expect(vBoard.myRole).toBe(ownRole);
   });
 
   test('new engines never leak server-only bot state or secret answers', () => {

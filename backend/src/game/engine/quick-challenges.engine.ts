@@ -32,6 +32,8 @@ interface QcBoard extends Record<string, unknown> {
   readyMs: number;
   activeMs: number;
   revealMs: number;
+  // Filled when the round settles: finishing order and points gained this round.
+  lastResult: { order: number[]; gained: number[] } | null;
   // server-only
   botSeats: boolean[];
   botActAt: number[];
@@ -111,6 +113,7 @@ export class QuickChallengesEngine extends BaseGameEngine {
       readyMs: QuickChallengesEngine.READY_MS,
       activeMs: QuickChallengesEngine.ACTIVE_MS,
       revealMs: QuickChallengesEngine.REVEAL_MS,
+      lastResult: null,
       botSeats: config.seats.map((s) => s.isBot),
       botActAt: config.seats.map((s, i) =>
         s.isBot ? start + QuickChallengesEngine.READY_MS + 500 + ((i * 853 + round * 449) % 4000) : Number.POSITIVE_INFINITY,
@@ -353,9 +356,12 @@ export class QuickChallengesEngine extends BaseGameEngine {
     }
 
     const points = [100, 60, 40, 20, 10, 10];
+    const gained = board.players.map(() => 0);
     ordered.forEach((seat, rank) => {
-      board.players[seat].score += points[rank] ?? 10;
+      gained[seat] = points[rank] ?? 10;
+      board.players[seat].score += gained[seat];
     });
+    board.lastResult = { order: ordered, gained };
 
     board.phase = 'reveal';
     board.phaseEndsAt = new Date(Date.now() + QuickChallengesEngine.REVEAL_MS).toISOString();
@@ -426,10 +432,15 @@ export class QuickChallengesEngine extends BaseGameEngine {
       phaseEndsAt: board.phaseEndsAt,
       activeMs: board.activeMs,
       readyMs: board.readyMs,
+      revealMs: board.revealMs,
+      lastResult: board.phase === 'reveal' ? board.lastResult : null,
       players: board.players.map((p) => ({
         score: p.score,
         finished: p.finished,
         value: board.type === 'tap' ? (p.value ?? 0) : null,
+        // Reaction: publish the ms once the round is over (false start → null).
+        reactionMs: board.type === 'reaction' && board.phase === 'reveal' && p.value != null && p.value !== Number.MAX_SAFE_INTEGER - 1 ? p.value : null,
+        falseStart: board.type === 'reaction' && p.value === Number.MAX_SAFE_INTEGER - 1,
       })),
     };
     return { ...state, board: safe };

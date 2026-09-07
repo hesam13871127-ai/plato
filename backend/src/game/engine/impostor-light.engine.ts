@@ -19,6 +19,12 @@ interface ImpostorBoard extends Record<string, unknown> {
   phaseEndsAt: string;
   results: Array<{ seat: number; votes: number }>;
   message: string;
+  // Candidate locations shown to everyone (the real one is among them) so the
+  // impostor can bluff and try a final guess, Spyfall-style.
+  options: string[];
+  ejectedSeat: number | null;
+  outcome: 'crew' | 'impostor' | null;
+  impostorGuess: string | null;
   // server-only
   botSeats: boolean[];
   botDifficulty: Array<SeatInfo['botDifficulty']>;
@@ -37,7 +43,23 @@ const LOCATIONS: Array<{ category: string; location: string }> = [
   { category: 'Places', location: 'zoo' },
   { category: 'Places', location: 'library' },
   { category: 'Places', location: 'stadium' },
+  { category: 'Places', location: 'casino' },
+  { category: 'Places', location: 'pirate ship' },
+  { category: 'Places', location: 'submarine' },
+  { category: 'Places', location: 'circus' },
+  { category: 'Places', location: 'bank' },
+  { category: 'Places', location: 'train station' },
+  { category: 'Places', location: 'supermarket' },
+  { category: 'Places', location: 'museum' },
+  { category: 'Places', location: 'ski resort' },
+  { category: 'Places', location: 'wedding' },
+  { category: 'Places', location: 'police station' },
+  { category: 'Places', location: 'amusement park' },
+  { category: 'Places', location: 'farm' },
+  { category: 'Places', location: 'gym' },
 ];
+
+const OPTION_COUNT = 8;
 
 const DISCUSSION_MS = 22000;
 const VOTING_MS = 14000;
@@ -63,6 +85,16 @@ export class ImpostorLightEngine extends BaseGameEngine {
     const impostorSeat = Math.floor(Math.random() * n);
     const place = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
     const start = Date.now();
+    const pool = LOCATIONS.filter((l) => l.location !== place.location).map((l) => l.location);
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const options = [...pool.slice(0, OPTION_COUNT - 1), place.location];
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
 
     const board: ImpostorBoard = {
       phase: 'discussion',
@@ -74,6 +106,10 @@ export class ImpostorLightEngine extends BaseGameEngine {
       phaseEndsAt: new Date(start + DISCUSSION_MS).toISOString(),
       results: [],
       message: 'Discuss! Blend in and spot the liar.',
+      options,
+      ejectedSeat: null,
+      outcome: null,
+      impostorGuess: null,
       botSeats: config.seats.map((s) => s.isBot),
       botDifficulty: config.seats.map((s) => s.botDifficulty ?? 'medium'),
       botVoted: config.seats.map(() => false),
@@ -114,6 +150,13 @@ export class ImpostorLightEngine extends BaseGameEngine {
       if (target !== -1 && (!board.players[target]?.alive)) return { ok: false, error: 'Invalid vote.' };
       return { ok: true };
     }
+    if (action.type === 'guess_location') {
+      if (seat !== board.impostorSeat) return { ok: false, error: 'Only the impostor can guess the location.' };
+      if (board.phase === 'resolution') return { ok: false, error: 'The round is over.' };
+      const location = String(action.payload['location'] ?? '').trim().toLowerCase();
+      if (!board.options.includes(location)) return { ok: false, error: 'Pick one of the listed locations.' };
+      return { ok: true };
+    }
     return { ok: false, error: 'Unknown action.' };
   }
 
@@ -129,6 +172,20 @@ export class ImpostorLightEngine extends BaseGameEngine {
       state.version += 1;
       const alive = board.players.filter((p) => p.alive).length;
       if (board.votedCount >= alive) this.resolveVoting(state);
+    } else if (action.type === 'guess_location') {
+      const location = String(action.payload['location']).trim().toLowerCase();
+      board.impostorGuess = location;
+      board.phase = 'resolution';
+      board.phaseEndsAt = new Date(Date.now() + RESOLUTION_MS).toISOString();
+      const name = state.seats[board.impostorSeat].displayName;
+      if (location === board.location) {
+        board.message = `${name} was the impostor and guessed the location — impostor wins!`;
+        this.finish(state, board, true);
+      } else {
+        board.message = `${name} was the impostor but guessed "${location}" — crew wins!`;
+        this.finish(state, board, false);
+      }
+      state.version += 1;
     }
     return state;
   }
@@ -212,6 +269,7 @@ export class ImpostorLightEngine extends BaseGameEngine {
 
     board.phase = 'resolution';
     board.phaseEndsAt = new Date(Date.now() + RESOLUTION_MS).toISOString();
+    board.ejectedSeat = ejected >= 0 ? ejected : null;
 
     if (ejected === board.impostorSeat) {
       board.message = `${state.seats[board.impostorSeat].displayName} was the impostor — crew wins!`;
@@ -230,6 +288,7 @@ export class ImpostorLightEngine extends BaseGameEngine {
   private finish(state: GameState, board: ImpostorBoard, impostorWins: boolean): void {
     state.phase = 'completed';
     state.currentSeat = -1;
+    board.outcome = impostorWins ? 'impostor' : 'crew';
     if (impostorWins) {
       state.winnerSeat = board.impostorSeat;
       state.winnerSeats = [board.impostorSeat];
@@ -244,7 +303,7 @@ export class ImpostorLightEngine extends BaseGameEngine {
 
   canSeatAct(state: GameState, action: GameAction): boolean {
     if (state.phase !== 'in_progress') return false;
-    return action.type === 'vote' && action.seat >= 0;
+    return (action.type === 'vote' || action.type === 'guess_location') && action.seat >= 0;
   }
 
   chooseBotMove(): BotMove {
@@ -267,13 +326,25 @@ export class ImpostorLightEngine extends BaseGameEngine {
       youAreImpostor: isImpostor,
       round: board.round,
       phaseEndsAt: board.phaseEndsAt,
+      phaseMs: board.phase === 'discussion' ? DISCUSSION_MS : board.phase === 'voting' ? VOTING_MS : RESOLUTION_MS,
       message: board.message,
       results: board.results,
+      options: board.options,
+      myVote: seat >= 0 && seat < board.players.length ? board.players[seat].voted : null,
+      votedCount: board.votedCount,
+      aliveCount: board.players.filter((p) => p.alive).length,
+      ejectedSeat: board.ejectedSeat,
+      outcome: board.outcome,
+      impostorGuess: board.impostorGuess,
+      // Once the round is decided everyone learns who the impostor was.
+      revealedImpostor: board.phase === 'resolution' ? board.impostorSeat : null,
+      revealedLocation: board.phase === 'resolution' ? board.location : null,
       players: board.players.map((p, i) => ({
         seat: i,
         name: state.seats[i].displayName,
         alive: p.alive,
-        voted: board.phase === 'voting' ? false : p.voted != null,
+        // During voting show who has locked in (not whom they picked).
+        voted: p.voted != null,
       })),
     };
     return { ...state, board: safe };

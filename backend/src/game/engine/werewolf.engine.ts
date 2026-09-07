@@ -26,7 +26,18 @@ interface WwBoard extends Record<string, unknown> {
   log: string[];
   winner: 'wolves' | 'village' | null;
   difficulty: Array<SeatInfo['botDifficulty']>;
+  names: string[];
+  // Private seer knowledge: seerSeat → { target, isWolf } (only sent to the seer).
+  seerResult: { target: number; isWolf: boolean } | null;
+  // Last dramatic event for the UI (attack / lynch / peaceful) with the victim
+  // seat and the role revealed by a lynch.
+  lastEvent: { kind: 'attack' | 'lynch' | 'peace' | 'none'; seat: number | null; role: Role | null };
 }
+
+const NIGHT_MS = 14000;
+const SEER_MS = 10000;
+const DISCUSS_MS = 20000;
+const VOTE_MS = 15000;
 
 /**
  * Werewolf (social deduction) for 5–8 players, run LIVE with invisible bot
@@ -59,7 +70,7 @@ export class WerewolfEngine extends BaseGameEngine {
       isBot: s.isBot,
     }));
 
-    const phaseMs = 8000;
+    const phaseMs = NIGHT_MS;
     const board: WwBoard = {
       players,
       phase: 'night_kill',
@@ -72,6 +83,9 @@ export class WerewolfEngine extends BaseGameEngine {
       log: ['Night 1 falls — the werewolves choose a victim.'],
       winner: null,
       difficulty: seats.map((s) => s.botDifficulty ?? 'medium'),
+      names: seats.map((s, i) => s.displayName || `Player ${i + 1}`),
+      seerResult: null,
+      lastEvent: { kind: 'none', seat: null, role: null },
     };
 
     const state: GameState = {
@@ -216,7 +230,10 @@ export class WerewolfEngine extends BaseGameEngine {
       }
       if (board.killTarget != null) {
         board.players[board.killTarget].alive = false;
-        board.log.push(`The wolves attacked player ${board.killTarget + 1}.`);
+        board.log.push(`The wolves attacked ${board.names[board.killTarget]}.`);
+        board.lastEvent = { kind: 'attack', seat: board.killTarget, role: null };
+      } else {
+        board.lastEvent = { kind: 'peace', seat: null, role: null };
       }
       board.killTarget = null;
       if (this.checkEnd(state, board)) return;
@@ -226,7 +243,7 @@ export class WerewolfEngine extends BaseGameEngine {
         board.phase = 'night_seer';
         board.seerChecked = null;
         board.log.push('The seer looks into a player…');
-        setTimer(5000);
+        setTimer(SEER_MS);
       } else {
         this.startDay(state, board);
       }
@@ -235,8 +252,9 @@ export class WerewolfEngine extends BaseGameEngine {
     }
 
     if (board.phase === 'night_seer') {
-      if (board.seerChecked != null) {
+      if (board.seerChecked != null && board.players[board.seerChecked]) {
         board.log.push('The seer has learned a secret.');
+        board.seerResult = { target: board.seerChecked, isWolf: board.players[board.seerChecked].role === 'werewolf' };
       }
       board.seerChecked = null;
       this.startDay(state, board);
@@ -248,7 +266,7 @@ export class WerewolfEngine extends BaseGameEngine {
       board.phase = 'day_vote';
       board.votes = {};
       board.log.push(`Day ${board.day}: cast your votes.`);
-      setTimer(8000);
+      setTimer(VOTE_MS);
       state.version += 1;
       return;
     }
@@ -271,16 +289,18 @@ export class WerewolfEngine extends BaseGameEngine {
       });
       if (lynched >= 0 && max > 0) {
         board.players[lynched].alive = false;
-        board.log.push(`The village lynched player ${lynched + 1} (${board.players[lynched].role}).`);
+        board.log.push(`The village lynched ${board.names[lynched]} — a ${board.players[lynched].role}.`);
+        board.lastEvent = { kind: 'lynch', seat: lynched, role: board.players[lynched].role };
       } else {
         board.log.push('The village could not agree — no one was lynched.');
+        board.lastEvent = { kind: 'peace', seat: null, role: null };
       }
       if (this.checkEnd(state, board)) return;
       board.day += 1;
       board.phase = 'night_kill';
       board.killTarget = null;
       board.log.push(`Night ${board.day} falls.`);
-      setTimer(7000);
+      setTimer(NIGHT_MS);
       state.version += 1;
       return;
     }
@@ -289,8 +309,8 @@ export class WerewolfEngine extends BaseGameEngine {
   private startDay(state: GameState, board: WwBoard): void {
     board.phase = 'day_discuss';
     board.log.push(`Day ${board.day} begins — discuss who to lynch.`);
-    board.phaseMs = 5000;
-    board.phaseEndsAt = new Date(Date.now() + 5000).toISOString();
+    board.phaseMs = DISCUSS_MS;
+    board.phaseEndsAt = new Date(Date.now() + DISCUSS_MS).toISOString();
     state.version += 1;
   }
 
@@ -360,14 +380,26 @@ export class WerewolfEngine extends BaseGameEngine {
         seat: i,
       };
     });
+    const isWolf = me?.role === 'werewolf';
+    const isSeer = me?.role === 'seer';
     const safe: Record<string, unknown> = {
       phase: board.phase,
       day: board.day,
       phaseEndsAt: board.phaseEndsAt,
+      phaseMs: board.phaseMs,
       players: safePlayers,
+      names: board.names,
       votes: board.phase === 'day_vote' ? board.votes : {},
       log: board.log,
       myRole: me?.role ?? null,
+      // Wolves see the pack's current pick; the seer sees their own pick + last result.
+      killTarget: isWolf ? board.killTarget : null,
+      seerChecked: isSeer ? board.seerChecked : null,
+      seerResult: isSeer ? board.seerResult : null,
+      lastEvent: board.lastEvent,
+      wolfCount: board.players.filter((p) => p.role === 'werewolf').length,
+      aliveCount: board.players.filter((p) => p.alive).length,
+      winner: board.winner,
     };
     return { ...state, board: safe };
   }

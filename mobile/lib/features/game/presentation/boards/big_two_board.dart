@@ -236,21 +236,17 @@ class _BigTwoBoardState extends State<BigTwoBoard> {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    Expanded(
-                      child: ActionButton(
-                        label: table == null ? 'Lead' : 'Play',
-                        icon: Icons.play_arrow_rounded,
-                        onPressed: canPlay && !_busy ? _play : null,
-                      ),
+                    ActionButton(
+                      label: table == null ? 'Lead' : 'Play',
+                      icon: Icons.play_arrow_rounded,
+                      onPressed: canPlay && !_busy ? _play : null,
                     ),
                     const SizedBox(width: 10),
-                    Expanded(
-                      child: ActionButton(
-                        label: 'Pass',
-                        icon: Icons.skip_next_rounded,
-                        color: AppColors.surfaceElevated,
-                        onPressed: _myTurn && table != null && !_busy ? _pass : null,
-                      ),
+                    ActionButton(
+                      label: 'Pass',
+                      icon: Icons.skip_next_rounded,
+                      color: AppColors.surfaceElevated,
+                      onPressed: _myTurn && table != null && !_busy ? _pass : null,
                     ),
                     if (_selected.isNotEmpty) ...[
                       const SizedBox(width: 10),
