@@ -266,6 +266,12 @@ String _gameEmoji(String slug) {
       return '🔲';
     case 'sea_battle':
       return '🚢';
+    case 'mancala':
+      return '🪨';
+    case 'mines':
+      return '💣';
+    case 'go_fish':
+      return '🐟';
     case 'connect4':
       return '🔴';
     case 'bingo':

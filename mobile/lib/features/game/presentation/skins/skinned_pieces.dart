@@ -75,6 +75,7 @@ class SkinnedPiece extends StatelessWidget {
       case PieceStyle.candy:
       case PieceStyle.glass:
       case PieceStyle.galaxy:
+      case PieceStyle.lava:
         return Colors.white;
     }
   }
@@ -97,7 +98,7 @@ class _SkinnedPiecePainter extends CustomPainter {
       ..color = Colors.black.withValues(alpha: 0.45)
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.25);
     canvas.drawCircle(c + Offset(0, r * 0.18), r * 0.95, shadow);
-    if (highlight || style == PieceStyle.neon || style == PieceStyle.galaxy) {
+    if (highlight || style == PieceStyle.neon || style == PieceStyle.galaxy || style == PieceStyle.lava) {
       final glow = Paint()
         ..color = palette.glow.withValues(alpha: highlight ? 0.85 : 0.45)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * (highlight ? 0.55 : 0.35));
@@ -123,6 +124,9 @@ class _SkinnedPiecePainter extends CustomPainter {
         break;
       case PieceStyle.galaxy:
         _paintGalaxy(canvas, c, r);
+        break;
+      case PieceStyle.lava:
+        _paintLava(canvas, c, r);
         break;
     }
 
@@ -301,6 +305,42 @@ class _SkinnedPiecePainter extends CustomPainter {
       ..strokeWidth = r * 0.06
       ..color = palette.glow.withValues(alpha: 0.9);
     canvas.drawCircle(c, r * 0.96, rim);
+  }
+
+  void _paintLava(Canvas canvas, Offset c, double r) {
+    // Molten core under a cracked obsidian crust.
+    final core = Paint()
+      ..shader = RadialGradient(
+        colors: [palette.light, palette.base, palette.dark],
+        stops: const [0.0, 0.45, 1.0],
+      ).createShader(Rect.fromCircle(center: c, radius: r));
+    canvas.drawCircle(c, r, core);
+    final crust = Paint()..color = const Color(0xFF14090C).withValues(alpha: 0.88);
+    // Crust plates: wedges separated by glowing cracks.
+    final rnd = math.Random(11);
+    var a = 0.0;
+    while (a < math.pi * 2) {
+      final span = 0.5 + rnd.nextDouble() * 0.6;
+      final inner = r * (0.28 + rnd.nextDouble() * 0.15);
+      final path = Path()
+        ..moveTo(c.dx + math.cos(a + 0.06) * inner, c.dy + math.sin(a + 0.06) * inner)
+        ..arcTo(Rect.fromCircle(center: c, radius: r * 0.9), a + 0.06, span - 0.12, false)
+        ..lineTo(c.dx + math.cos(a + span - 0.06) * inner, c.dy + math.sin(a + span - 0.06) * inner)
+        ..close();
+      canvas.drawPath(path, crust);
+      a += span;
+    }
+    final glowRing = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = r * 0.08
+      ..color = palette.glow.withValues(alpha: 0.85)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.12);
+    canvas.drawCircle(c, r * 0.93, glowRing);
+    final spec = Paint()
+      ..shader = RadialGradient(
+        colors: [Colors.white.withValues(alpha: 0.35), Colors.white.withValues(alpha: 0)],
+      ).createShader(Rect.fromCircle(center: c + Offset(-r * 0.3, -r * 0.35), radius: r * 0.5));
+    canvas.drawCircle(c + Offset(-r * 0.28, -r * 0.32), r * 0.4, spec);
   }
 
   @override

@@ -77,6 +77,12 @@ class TableSkins {
       style: PieceStyle.glass,
       seats: [_neonCyan, _neonPink, _neonLime, _neonAmber],
     ),
+    'lava': PieceSkin(
+      id: 'lava',
+      name: 'Lava',
+      style: PieceStyle.lava,
+      seats: [_lavaViolet, _lavaRed, _lavaTeal, _lavaAmber],
+    ),
   };
 
   static const Map<String, PlaygroundSkin> playgrounds = {
@@ -164,6 +170,42 @@ class TableSkins {
       lightSquare: Color(0xFF8A4A5A),
       darkSquare: Color(0xFF4F2A44),
     ),
+    'ice': PlaygroundSkin(
+      id: 'ice',
+      name: 'Aurora Ice',
+      feltTop: Color(0xFF1E3A5F),
+      feltBottom: Color(0xFF0A1830),
+      rail: Color(0xFF9FD3F0),
+      line: Color(0x88DFF6FF),
+      glow: Color(0xFF7FE3FF),
+      accent: Color(0xFFDFF6FF),
+      lightSquare: Color(0xFF4B7FB3),
+      darkSquare: Color(0xFF244B7A),
+    ),
+    'lava': PlaygroundSkin(
+      id: 'lava',
+      name: 'Lava',
+      feltTop: Color(0xFF2A1416),
+      feltBottom: Color(0xFF0E0506),
+      rail: Color(0xFF3A1A14),
+      line: Color(0x88FF7A3D),
+      glow: Color(0xFFFF5A1F),
+      accent: Color(0xFFFFB347),
+      lightSquare: Color(0xFF5A2A22),
+      darkSquare: Color(0xFF2E1412),
+    ),
+    'walnut': PlaygroundSkin(
+      id: 'walnut',
+      name: 'Royal Walnut',
+      feltTop: Color(0xFF244A3A),
+      feltBottom: Color(0xFF0F2A1F),
+      rail: Color(0xFF5A3A22),
+      line: Color(0x66F2D9A8),
+      glow: Color(0xFFE8B923),
+      accent: Color(0xFFF2D9A8),
+      lightSquare: Color(0xFFC9A46A),
+      darkSquare: Color(0xFF6E4527),
+    ),
   };
 
   static const Map<String, DiceSkin> dice = {
@@ -194,7 +236,7 @@ class TableSkins {
   }
 }
 
-enum PieceStyle { gloss, neon, candy, matte, metal, glass, galaxy }
+enum PieceStyle { gloss, neon, candy, matte, metal, glass, galaxy, lava }
 
 class PieceSkin {
   const PieceSkin({required this.id, required this.name, required this.style, required this.seats});
@@ -307,3 +349,9 @@ const _marbleWhite = PiecePalette(Color(0xFFFFFFFF), Color(0xFFE9E7EF), Color(0x
 const _marbleBlack = PiecePalette(Color(0xFF6E6E80), Color(0xFF2A2A38), Color(0xFF0A0A12), Color(0xFF7C7C96));
 const _marbleGreen = PiecePalette(Color(0xFFBFE3CF), Color(0xFF4E8F6C), Color(0xFF1F4633), Color(0xFF9AD8B4));
 const _marbleRose = PiecePalette(Color(0xFFF8D9DC), Color(0xFFC98A93), Color(0xFF6E3C44), Color(0xFFF0B8BE));
+
+// Lava (cracked obsidian, molten core).
+const _lavaViolet = PiecePalette(Color(0xFFD9A6FF), Color(0xFF8A3DFF), Color(0xFF1A0A2E), Color(0xFFB56BFF));
+const _lavaRed = PiecePalette(Color(0xFFFFC28A), Color(0xFFFF5A1F), Color(0xFF2E0A06), Color(0xFFFF8A3D));
+const _lavaTeal = PiecePalette(Color(0xFFA8FFF0), Color(0xFF1FC9A8), Color(0xFF062420), Color(0xFF63FFE0));
+const _lavaAmber = PiecePalette(Color(0xFFFFF0B0), Color(0xFFFFB347), Color(0xFF2E1A04), Color(0xFFFFD27A));

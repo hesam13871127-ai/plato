@@ -45,6 +45,9 @@ import { ReversiEngine } from './engine/reversi.engine';
 import { BackgammonEngine } from './engine/backgammon.engine';
 import { DotsBoxesEngine } from './engine/dots-boxes.engine';
 import { SeaBattleEngine } from './engine/sea-battle.engine';
+import { MancalaEngine } from './engine/mancala.engine';
+import { MinesEngine } from './engine/mines.engine';
+import { GoFishEngine } from './engine/go-fish.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -93,6 +96,9 @@ const ENTITIES = [
     BackgammonEngine,
     DotsBoxesEngine,
     SeaBattleEngine,
+    MancalaEngine,
+    MinesEngine,
+    GoFishEngine,
     EngineRegistry,
     // Services
     BotService,

@@ -23,6 +23,9 @@ import 'reversi_board.dart';
 import 'backgammon_board.dart';
 import 'dots_boxes_board.dart';
 import 'sea_battle_board.dart';
+import 'mancala_board.dart';
+import 'mines_board.dart';
+import 'go_fish_board.dart';
 
 typedef BoardAction = Future<void> Function(String type, Map<String, dynamic> payload);
 
@@ -88,6 +91,12 @@ class GameBoardDispatcher extends StatelessWidget {
         return DotsBoxesBoard(session: session, mySeat: mySeat, onAction: onAction);
       case 'sea_battle':
         return SeaBattleBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'mancala':
+        return MancalaBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'mines':
+        return MinesBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'go_fish':
+        return GoFishBoard(session: session, mySeat: mySeat, onAction: onAction);
       default:
         return _UnknownBoard(slug: session.gameSlug);
     }

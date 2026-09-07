@@ -20,6 +20,9 @@ import { ReversiEngine } from '../src/game/engine/reversi.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import { DotsBoxesEngine } from '../src/game/engine/dots-boxes.engine';
 import { SeaBattleEngine } from '../src/game/engine/sea-battle.engine';
+import { MancalaEngine } from '../src/game/engine/mancala.engine';
+import { MinesEngine } from '../src/game/engine/mines.engine';
+import { GoFishEngine } from '../src/game/engine/go-fish.engine';
 import type { BaseGameEngine } from '../src/game/engine/base-game.engine';
 import type { GameState, MatchConfig, SeatInfo } from '../src/game/engine/types';
 
@@ -111,6 +114,13 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'dots_boxes (2p)', build: () => new DotsBoxesEngine(), players: 2 },
   { name: 'dots_boxes (4p)', build: () => new DotsBoxesEngine(), players: 4 },
   { name: 'sea_battle', build: () => new SeaBattleEngine(), players: 2 },
+  { name: 'dice_party (2p)', build: () => new DicePartyEngine(), players: 2 },
+  { name: 'dice_party (4p)', build: () => new DicePartyEngine(), players: 4 },
+  { name: 'mancala', build: () => new MancalaEngine(), players: 2 },
+  { name: 'mines (2p)', build: () => new MinesEngine(), players: 2 },
+  { name: 'mines (4p)', build: () => new MinesEngine(), players: 4 },
+  { name: 'go_fish (2p)', build: () => new GoFishEngine(), players: 2 },
+  { name: 'go_fish (4p)', build: () => new GoFishEngine(), players: 4 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -141,7 +151,6 @@ describe('turn-based game engines — full bot play-through', () => {
 
 const LIVE: Array<{ name: string; build: () => BaseGameEngine; players?: number; humanSeat?: number }> = [
   { name: 'bingo', build: () => new BingoEngine() },
-  { name: 'dice_party', build: () => new DicePartyEngine() },
   { name: 'pool_8ball', build: () => new PoolEngine(), players: 2 },
   { name: 'carrom', build: () => new CarromEngine(), players: 2 },
   { name: 'werewolf', build: () => new WerewolfEngine() },
@@ -468,5 +477,139 @@ describe('classic board engines — rules, secrecy and cosmetics', () => {
     expect(hb.legal.some((m) => m.from === 2 && m.to === 24 && m.die === 3)).toBe(true);
     const after = engine.applyAction(home, { seat: 0, type: 'move', payload: { from: 2, die: 3 } });
     expect((after.board as { off: number[] }).off[0]).toBe(1);
+  });
+});
+
+describe('new tables — scoring, secrecy and multi-seat rules', () => {
+  test('dice party scores a Yacht-style card correctly and previews only for the mover', () => {
+    const engine = new DicePartyEngine();
+    expect(engine.scoreCategory('yacht', [4, 4, 4, 4, 4])).toBe(50);
+    expect(engine.scoreCategory('full_house', [2, 2, 5, 5, 5])).toBe(25);
+    expect(engine.scoreCategory('small_straight', [1, 2, 3, 4, 6])).toBe(30);
+    expect(engine.scoreCategory('large_straight', [2, 3, 4, 5, 6])).toBe(40);
+    expect(engine.scoreCategory('large_straight', [1, 2, 3, 4, 6])).toBe(0);
+    expect(engine.scoreCategory('four_kind', [6, 6, 6, 6, 1])).toBe(25);
+    expect(engine.scoreCategory('three_kind', [6, 6, 1, 2, 3])).toBe(0);
+    expect(engine.scoreCategory('sixes', [6, 6, 1, 2, 3])).toBe(12);
+    expect(engine.scoreCategory('chance', [1, 1, 1, 1, 2])).toBe(6);
+
+    let state = engine.createInitialState(makeConfig(engine, 2));
+    expect(engine.validate(state, { seat: 0, type: 'score', payload: { category: 'chance' } }).ok).toBe(false);
+    state = engine.applyAction(state, { seat: 0, type: 'roll', payload: {} });
+    const mover = engine.playerView(state, 0).board as { preview: Record<string, number>; rollsLeft: number };
+    const other = engine.playerView(state, 1).board as { preview: Record<string, number> };
+    expect(Object.keys(mover.preview).length).toBe(13);
+    expect(Object.keys(other.preview).length).toBe(0);
+    expect(mover.rollsLeft).toBe(2);
+    // Holding is only allowed after the first roll and toggles a die.
+    state = engine.applyAction(state, { seat: 0, type: 'hold', payload: { index: 2 } });
+    expect((state.board as { held: boolean[] }).held[2]).toBe(true);
+    state = engine.applyAction(state, { seat: 0, type: 'score', payload: { category: 'chance' } });
+    expect(state.currentSeat).toBe(1);
+    expect((state.board as { rollsLeft: number }).rollsLeft).toBe(3);
+    expect(engine.validate(state, { seat: 1, type: 'score', payload: { category: 'chance' } }).ok).toBe(false);
+  });
+
+  test('mancala sows counter-clockwise, skips the enemy store and grants an extra turn', () => {
+    const engine = new MancalaEngine();
+    const state = engine.createInitialState(makeConfig(engine, 2));
+    // Pit 2 holds 4 stones → 3,4,5,store(6): lands in own store ⇒ extra turn.
+    const next = engine.applyAction(state, { seat: 0, type: 'sow', payload: { pit: 2 } });
+    const cups = (next.board as { cups: number[] }).cups;
+    expect(cups[2]).toBe(0);
+    expect(cups[6]).toBe(1);
+    expect(next.currentSeat).toBe(0);
+    expect(next.scores[0]).toBe(1);
+    // Seat 1 may not act, and seat 0 may not sow from the enemy side or an empty pit.
+    expect(engine.validate(next, { seat: 1, type: 'sow', payload: { pit: 7 } }).ok).toBe(false);
+    expect(engine.validate(next, { seat: 0, type: 'sow', payload: { pit: 7 } }).ok).toBe(false);
+    expect(engine.validate(next, { seat: 0, type: 'sow', payload: { pit: 2 } }).ok).toBe(false);
+    // Pit 5 has 5 stones → store, 7, 8, 9, 10 — must skip nothing here, but a
+    // long sow from pit 5 with 13 stones must skip cup 13 (enemy store).
+    const crafted = engine.createInitialState(makeConfig(engine, 2));
+    const cb = crafted.board as { cups: number[]; legal: number[] };
+    cb.cups = Array(14).fill(0);
+    cb.cups[5] = 13;
+    cb.cups[7] = 1; // keep the opponent side non-empty
+    cb.legal = [5];
+    const after = engine.applyAction(crafted, { seat: 0, type: 'sow', payload: { pit: 5 } });
+    const c2 = (after.board as { cups: number[] }).cups;
+    expect(c2[13]).toBe(0); // enemy store skipped
+    expect(c2[6]).toBeGreaterThanOrEqual(1);
+  });
+
+  test('mines keeps the turn on a hit, cascades zeros and never leaks the minefield', () => {
+    const engine = new MinesEngine();
+    const state = engine.createInitialState(makeConfig(engine, 4));
+    const full = state.board as { mines: boolean[][]; size: number };
+    expect(full.size).toBe(16);
+    const view = engine.playerView(state, 0) as GameState;
+    expect(JSON.stringify(view.board)).not.toContain('"mines"');
+    // Find a mine and a zero cell to exercise both branches.
+    let mine: [number, number] | null = null;
+    let zero: [number, number] | null = null;
+    for (let r = 0; r < full.size && (!mine || !zero); r++) {
+      for (let c = 0; c < full.size && (!mine || !zero); c++) {
+        if (full.mines[r][c]) {
+          mine ??= [r, c];
+        } else {
+          let n = 0;
+          for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+            const rr = r + dr; const cc = c + dc;
+            if ((dr || dc) && rr >= 0 && cc >= 0 && rr < full.size && cc < full.size && full.mines[rr][cc]) n++;
+          }
+          if (n === 0) zero ??= [r, c];
+        }
+      }
+    }
+    expect(mine).not.toBeNull();
+    const hit = engine.applyAction(state, { seat: 0, type: 'reveal', payload: { r: mine![0], c: mine![1] } });
+    expect(hit.currentSeat).toBe(0);
+    expect(hit.scores[0]).toBe(1);
+    expect((hit.board as { owners: number[][] }).owners[mine![0]][mine![1]]).toBe(0);
+    if (zero) {
+      const opened = engine.applyAction(hit, { seat: 0, type: 'reveal', payload: { r: zero[0], c: zero[1] } });
+      expect(opened.currentSeat).toBe(1);
+      expect((opened.board as { lastMove: { revealed: number } }).lastMove.revealed).toBeGreaterThan(1);
+    }
+  });
+
+  test('go fish hides other hands, hands over matching cards and books fours', () => {
+    const engine = new GoFishEngine();
+    const state = engine.createInitialState(makeConfig(engine, 3));
+    const full = state.board as { hands: Array<Array<{ id: string; rank: string }>>; pond: unknown[] };
+    const v1 = engine.playerView(state, 1).board as { hand: Array<{ id: string }>; handSizes: number[]; pondCount: number };
+    expect(v1.hand.map((c) => c.id).sort()).toEqual(full.hands[1].map((c) => c.id).sort());
+    expect(v1.handSizes).toEqual(full.hands.map((h) => h.length));
+    expect(v1.pondCount).toBe(full.pond.length);
+    const json = JSON.stringify(engine.spectatorView(state).board);
+    expect(json).not.toContain('"hands"');
+    expect(json).not.toContain('"memory"');
+    expect((engine.spectatorView(state).board as { hand: unknown }).hand).toBeNull();
+
+    // Craft: seat 0 holds three 7s, seat 1 holds the fourth → asking books it and keeps the turn.
+    const crafted = engine.createInitialState(makeConfig(engine, 2));
+    const cb = crafted.board as { hands: Array<Array<{ id: string; rank: string; suit: string }>>; books: string[][] };
+    cb.hands[0] = [
+      { id: '7S', rank: '7', suit: 'S' },
+      { id: '7H', rank: '7', suit: 'H' },
+      { id: '7D', rank: '7', suit: 'D' },
+      { id: '2C', rank: '2', suit: 'C' },
+    ];
+    cb.hands[1] = [
+      { id: '7C', rank: '7', suit: 'C' },
+      { id: '9C', rank: '9', suit: 'C' },
+    ];
+    cb.books = [[], []];
+    expect(engine.validate(crafted, { seat: 0, type: 'ask', payload: { target: 1, rank: 'K' } }).ok).toBe(false);
+    expect(engine.validate(crafted, { seat: 0, type: 'ask', payload: { target: 0, rank: '7' } }).ok).toBe(false);
+    const after = engine.applyAction(crafted, { seat: 0, type: 'ask', payload: { target: 1, rank: '7' } });
+    const ab = after.board as { books: string[][]; hands: Array<Array<{ rank: string }>>; lastEvent: { got: number; booked: string | null } };
+    expect(ab.lastEvent.got).toBe(1);
+    expect(ab.lastEvent.booked).toBe('7');
+    expect(ab.books[0]).toEqual(['7']);
+    expect(ab.hands[0].some((c) => c.rank === '7')).toBe(false);
+    expect(after.currentSeat).toBe(0);
+    expect(after.scores[0]).toBe(1);
   });
 });

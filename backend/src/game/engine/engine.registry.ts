@@ -22,6 +22,9 @@ import { ReversiEngine } from './reversi.engine';
 import { BackgammonEngine } from './backgammon.engine';
 import { DotsBoxesEngine } from './dots-boxes.engine';
 import { SeaBattleEngine } from './sea-battle.engine';
+import { MancalaEngine } from './mancala.engine';
+import { MinesEngine } from './mines.engine';
+import { GoFishEngine } from './go-fish.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -54,6 +57,9 @@ export class EngineRegistry {
     backgammon: BackgammonEngine,
     dotsBoxes: DotsBoxesEngine,
     seaBattle: SeaBattleEngine,
+    mancala: MancalaEngine,
+    mines: MinesEngine,
+    goFish: GoFishEngine,
   ) {
     this.register(dominoes);
     this.register(connect4);
@@ -77,6 +83,9 @@ export class EngineRegistry {
     this.register(backgammon);
     this.register(dotsBoxes);
     this.register(seaBattle);
+    this.register(mancala);
+    this.register(mines);
+    this.register(goFish);
   }
 
   register(engine: BaseGameEngine): void {

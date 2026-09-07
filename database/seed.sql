@@ -15,7 +15,10 @@ VALUES
   ('11111111-0000-4000-8000-000000000005', 'checkers',    'Checkers',    'Jump, capture and crown your kings. The timeless duel of draughts.', NULL, 2, 2, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000006', 'reversi',     'Reversi',     'Flip your rival''s discs by trapping them. Own the corners, own the board.', NULL, 2, 2, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000007', 'dots_boxes',  'Dots & Boxes','Connect the dots, close the boxes, steal the chains. Play with 2, 3 or 4 friends.', NULL, 2, 4, 8, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000008', 'sea_battle',  'Sea Battle',  'Hide your fleet, hunt theirs. Hits fire again — sink all five ships to win.', NULL, 2, 2, 10, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000008', 'sea_battle',  'Sea Battle',  'Hide your fleet, hunt theirs. Hits fire again — sink all five ships to win.', NULL, 2, 2, 10, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000009', 'mancala',     'Mancala',     'Sow stones around the board, capture across it, land in your store to go again.', NULL, 2, 2, 8, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000010', 'mines',       'Mines',       'Competitive minesweeper: find more mines than your rivals on one shared field. 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000011', 'go_fish',     'Go Fish',     'Ask, collect, book! The classic card game of memory and luck for 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), min_players = VALUES(min_players), max_players = VALUES(max_players), supports_bots = VALUES(supports_bots), status = VALUES(status);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -76,7 +79,13 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9202-000000000003', 'Emerald Forest Playground',  'Mossy green felt with warm oak rails.',                  'board_theme', 'rare',      NULL, 1100, 'coins', 0,  1, 1, 1, 0, 112, JSON_OBJECT('theme', 'forest')),
   ('44444444-0000-4000-9203-000000000004', 'Sakura Playground',          'Blush-pink lacquer with drifting cherry petals.',        'board_theme', 'epic',      NULL, 2200, 'coins', 10, 1, 1, 1, 0, 113, JSON_OBJECT('theme', 'sakura')),
   ('44444444-0000-4000-9204-000000000005', 'Cyber Grid Playground',      'Black glass and cyan laser lines — a table from the future.', 'board_theme', 'legendary', NULL, 360, 'pips', 0, 1, 1, 1, 0, 114, JSON_OBJECT('theme', 'cyber')),
-  ('44444444-0000-4000-9205-000000000006', 'Sunset Dunes Playground',    'Warm amber sands under a violet evening sky.',           'board_theme', 'rare',      NULL, 1300, 'coins', 0,  1, 1, 1, 0, 115, JSON_OBJECT('theme', 'sunset'))
+  ('44444444-0000-4000-9205-000000000006', 'Sunset Dunes Playground',    'Warm amber sands under a violet evening sky.',           'board_theme', 'rare',      NULL, 1300, 'coins', 0,  1, 1, 1, 0, 115, JSON_OBJECT('theme', 'sunset')),
+  ('44444444-0000-4000-9206-000000000007', 'Aurora Ice Playground',      'Frosted glass over a glacier-blue aurora — crisp and calm.', 'board_theme', 'epic',      NULL, 2300, 'coins', 0,  1, 1, 1, 0, 116, JSON_OBJECT('theme', 'ice')),
+  ('44444444-0000-4000-9207-000000000008', 'Lava Playground',            'Obsidian slate with glowing magma seams. Bring the heat.', 'board_theme', 'legendary', NULL, 380,  'pips',  0,  1, 1, 1, 0, 117, JSON_OBJECT('theme', 'lava')),
+  ('44444444-0000-4000-9208-000000000009', 'Royal Walnut Playground',    'Hand-polished walnut and brass — a classic club table.', 'board_theme', 'rare',      NULL, 1250, 'coins', 0,  1, 1, 1, 0, 118, JSON_OBJECT('theme', 'walnut')),
+  ('44444444-0000-4000-9106-000000000008', 'Hologram Pieces',            'Translucent holo-glass pieces that shimmer as they move.', 'game_piece', 'legendary', NULL, 340,  'pips',  0,  1, 1, 1, 0, 98,  JSON_OBJECT('piece', 'hologram')),
+  ('44444444-0000-4000-9107-000000000009', 'Marble Pieces',              'Cool polished marble — white, black, jade and rose.',    'game_piece', 'rare',      NULL, 1400, 'coins', 0,  1, 1, 1, 0, 99,  JSON_OBJECT('piece', 'marble')),
+  ('44444444-0000-4000-9108-000000000010', 'Lava Pieces',                'Cracked obsidian with a molten core — pulses with heat.', 'game_piece', 'epic',      NULL, 2500, 'coins', 0,  1, 1, 1, 0, 100, JSON_OBJECT('piece', 'lava'))
 ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), metadata = VALUES(metadata);
 
 -- ── Daily quests ───────────────────────────────────────────────────────────
