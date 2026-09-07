@@ -51,6 +51,9 @@ import { GoFishEngine } from './engine/go-fish.engine';
 import { DartsEngine } from './engine/darts.engine';
 import { BowlingEngine } from './engine/bowling.engine';
 import { BigTwoEngine } from './engine/big-two.engine';
+import { CupPongEngine } from './engine/cup-pong.engine';
+import { MiniGolfEngine } from './engine/mini-golf.engine';
+import { HeartsEngine } from './engine/hearts.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -105,6 +108,9 @@ const ENTITIES = [
     DartsEngine,
     BowlingEngine,
     BigTwoEngine,
+    CupPongEngine,
+    MiniGolfEngine,
+    HeartsEngine,
     EngineRegistry,
     // Services
     BotService,

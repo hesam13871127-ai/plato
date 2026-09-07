@@ -28,6 +28,9 @@ import { GoFishEngine } from './go-fish.engine';
 import { DartsEngine } from './darts.engine';
 import { BowlingEngine } from './bowling.engine';
 import { BigTwoEngine } from './big-two.engine';
+import { CupPongEngine } from './cup-pong.engine';
+import { MiniGolfEngine } from './mini-golf.engine';
+import { HeartsEngine } from './hearts.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -66,6 +69,9 @@ export class EngineRegistry {
     darts: DartsEngine,
     bowling: BowlingEngine,
     bigTwo: BigTwoEngine,
+    cupPong: CupPongEngine,
+    miniGolf: MiniGolfEngine,
+    hearts: HeartsEngine,
   ) {
     this.register(dominoes);
     this.register(connect4);
@@ -95,6 +101,9 @@ export class EngineRegistry {
     this.register(darts);
     this.register(bowling);
     this.register(bigTwo);
+    this.register(cupPong);
+    this.register(miniGolf);
+    this.register(hearts);
   }
 
   register(engine: BaseGameEngine): void {

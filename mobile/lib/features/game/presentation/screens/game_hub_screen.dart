@@ -278,6 +278,12 @@ String _gameEmoji(String slug) {
       return '🎳';
     case 'big_two':
       return '🂢';
+    case 'cup_pong':
+      return '🥤';
+    case 'mini_golf':
+      return '⛳';
+    case 'hearts':
+      return '♥️';
     case 'connect4':
       return '🔴';
     case 'bingo':

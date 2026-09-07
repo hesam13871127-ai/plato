@@ -26,6 +26,9 @@ import { GoFishEngine } from '../src/game/engine/go-fish.engine';
 import { DartsEngine } from '../src/game/engine/darts.engine';
 import { BowlingEngine } from '../src/game/engine/bowling.engine';
 import { BigTwoEngine } from '../src/game/engine/big-two.engine';
+import { CupPongEngine } from '../src/game/engine/cup-pong.engine';
+import { MiniGolfEngine } from '../src/game/engine/mini-golf.engine';
+import { HeartsEngine } from '../src/game/engine/hearts.engine';
 import type { BaseGameEngine } from '../src/game/engine/base-game.engine';
 import type { GameState, MatchConfig, SeatInfo } from '../src/game/engine/types';
 
@@ -131,6 +134,14 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'big_two (2p)', build: () => new BigTwoEngine(), players: 2 },
   { name: 'big_two (3p)', build: () => new BigTwoEngine(), players: 3 },
   { name: 'big_two (4p)', build: () => new BigTwoEngine(), players: 4 },
+  { name: 'cup_pong (2p)', build: () => new CupPongEngine(), players: 2 },
+  { name: 'cup_pong (3p)', build: () => new CupPongEngine(), players: 3 },
+  { name: 'cup_pong (2v2)', build: () => new CupPongEngine(), players: 4 },
+  { name: 'mini_golf (2p)', build: () => new MiniGolfEngine(), players: 2 },
+  { name: 'mini_golf (4p)', build: () => new MiniGolfEngine(), players: 4 },
+  { name: 'hearts (2p)', build: () => new HeartsEngine(), players: 2 },
+  { name: 'hearts (3p)', build: () => new HeartsEngine(), players: 3 },
+  { name: 'hearts (4p)', build: () => new HeartsEngine(), players: 4 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {

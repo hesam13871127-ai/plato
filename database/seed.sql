@@ -21,7 +21,10 @@ VALUES
   ('11111111-0000-4000-8000-000000000011', 'go_fish',     'Go Fish',     'Ask, collect, book! The classic card game of memory and luck for 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000012', 'darts',       'Darts',       '301, double-out. Steady the drifting reticle, hit trebles, and check out on a double. 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000013', 'bowling',     'Bowling',     'Five frames, strikes, spares and splits. Line up, swipe with spin and hit the pocket. 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000014', 'big_two',     'Big Two',     'The climbing card game: singles, pairs and poker hands — 2s are high, first to shed every card wins. 2–4 players.', NULL, 2, 4, 10, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000014', 'big_two',     'Big Two',     'The climbing card game: singles, pairs and poker hands — 2s are high, first to shed every card wins. 2–4 players.', NULL, 2, 4, 10, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000015', 'cup_pong',    'Cup Pong',    'The party classic: arc your throws into the ten-cup triangle, sink both balls for balls back, re-rack at three. 2 players or 2v2.', NULL, 2, 4, 7, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000016', 'mini_golf',   'Mini Golf',   'Nine themed holes with walls, bumpers and sand — drag back to putt, lowest total wins. 2–4 players.', NULL, 2, 4, 12, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000017', 'hearts',      'Hearts',      'The evasion trick-taker: dodge hearts and the Queen of Spades, pass three cards, or shoot the moon. 2–4 players.', NULL, 2, 4, 15, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), min_players = VALUES(min_players), max_players = VALUES(max_players), supports_bots = VALUES(supports_bots), status = VALUES(status);
 
 -- ── First season ───────────────────────────────────────────────────────────

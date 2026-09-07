@@ -58,6 +58,9 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
     'darts': 'Darts',
     'bowling': 'Bowling',
     'big_two': 'Big Two',
+    'cup_pong': 'Cup Pong',
+    'mini_golf': 'Mini Golf',
+    'hearts': 'Hearts',
   };
 
   @override

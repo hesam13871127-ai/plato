@@ -437,6 +437,75 @@ class GameTutorials {
         bodyFa: 'وقتی بقیه پاس دادند، آخرین بازیکنی که کارت گذاشته آزادانه شروع می‌کند. اولین نفری که دستش خالی شود برنده است؛ بقیه بر اساس کارت‌های مانده رتبه می‌گیرند.',
       ),
     ],
+    'cup_pong': [
+      TutorialStep(
+        emoji: '🥤',
+        titleEn: 'Sink the cups',
+        titleFa: 'توپ را در لیوان بینداز',
+        bodyEn: 'Ten cups stand at the far end of the table. Drag back from the ball to aim, and let go to throw. Longer drags throw harder; a slight angle curves the ball left or right.',
+        bodyFa: 'ده لیوان در انتهای میز چیده شده. از روی توپ به عقب بکش تا نشانه بگیری و رها کن تا پرتاب شود. کشیدن بیشتر یعنی پرتاب قوی‌تر؛ کمی زاویه، توپ را به چپ یا راست می‌برد.',
+      ),
+      TutorialStep(
+        emoji: '🔥',
+        titleEn: 'Streaks and bounces',
+        titleFa: 'زنجیره و پرتاب با برخورد',
+        bodyEn: 'Sink two in a row and you get the ball back. A bounce shot is harder to land but knocks out two cups when it drops in. When six cups are left you may re-rack once into a tight diamond.',
+        bodyFa: 'دو تا پشت سر هم بینداز تا توپ دوباره به تو برسد. پرتاب با برخورد به میز سخت‌تر است اما اگر بیفتد دو لیوان را حذف می‌کند. وقتی شش لیوان مانده، یک بار می‌توانی لیوان‌ها را دوباره جمع کنی.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Clear the rack',
+        titleFa: 'همه لیوان‌ها را حذف کن',
+        bodyEn: 'The first player (or team, in 2v2) to clear every cup on the other side wins. Miss too many in a row and the pressure shifts to you!',
+        bodyFa: 'اولین بازیکن (یا تیم در حالت ۲ در برابر ۲) که همه لیوان‌های حریف را حذف کند برنده است. چند خطای پشت سر هم، فشار را روی تو می‌اندازد!',
+      ),
+    ],
+    'mini_golf': [
+      TutorialStep(
+        emoji: '⛳',
+        titleEn: 'Drag to putt',
+        titleFa: 'برای ضربه بکش',
+        bodyEn: 'Drag back from your ball to aim — the arrow shows direction and the bar shows power. Release to putt. Walls bounce the ball, sand slows it, and bumpers kick it away.',
+        bodyFa: 'از روی توپت به عقب بکش تا نشانه بگیری؛ فلش جهت و نوار قدرت را نشان می‌دهد. رها کن تا ضربه بزنی. دیوارها توپ را برمی‌گردانند، شن سرعتش را کم می‌کند و ضربه‌گیرها آن را پرت می‌کنند.',
+      ),
+      TutorialStep(
+        emoji: '🕳️',
+        titleEn: 'Nine holes, fewest strokes',
+        titleFa: 'نه چاله، کمترین ضربه',
+        bodyEn: 'Everyone plays the same nine holes. Each hole has a par; finish under it and the scorecard lights up green. After seven strokes the ball is picked up automatically.',
+        bodyFa: 'همه همان نه چاله را بازی می‌کنند. هر چاله یک «پار» دارد؛ کمتر از آن تمام کنی، کارت امتیاز سبز می‌شود. بعد از هفت ضربه، توپ خودکار برداشته می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🏁',
+        titleEn: 'Lowest total wins',
+        titleFa: 'کمترین مجموع برنده است',
+        bodyEn: 'Play with 2, 3 or 4 golfers. The lowest total after the ninth hole wins the round — a hole-in-one is worth bragging about.',
+        bodyFa: 'با ۲، ۳ یا ۴ نفر بازی کن. کمترین مجموع بعد از چاله نهم برنده دور است؛ هول‌این‌وان ارزش پز دادن دارد!',
+      ),
+    ],
+    'hearts': [
+      TutorialStep(
+        emoji: '♥️',
+        titleEn: 'Avoid the points',
+        titleFa: 'از امتیازها فرار کن',
+        bodyEn: 'Hearts is a trick-taking game where you want the LOWEST score. Every heart you win costs 1 point and the Queen of Spades costs 13. The lowest club leads the first trick and you must follow suit when you can.',
+        bodyFa: 'هارتس بازی دست‌گیری است که در آن کمترین امتیاز برنده است. هر دل که ببری ۱ امتیاز و بی‌بی پیک ۱۳ امتیاز منفی دارد. کوچک‌ترین گشنیز دست اول را شروع می‌کند و اگر همان خال را داری باید بازی کنی.',
+      ),
+      TutorialStep(
+        emoji: '🔁',
+        titleEn: 'Pass three cards',
+        titleFa: 'سه کارت رد کن',
+        bodyEn: 'Before most hands you pick three cards to pass left, right or across (no pass every fourth hand). Hearts cannot lead until one has been played on another suit — "breaking hearts".',
+        bodyFa: 'قبل از بیشتر دست‌ها سه کارت انتخاب می‌کنی و به چپ، راست یا روبه‌رو می‌دهی (هر چهار دست یک بار بدون رد کردن). تا وقتی دلی روی خال دیگر بازی نشده، نمی‌شود با دل شروع کرد.',
+      ),
+      TutorialStep(
+        emoji: '🌙',
+        titleEn: 'Shoot the moon',
+        titleFa: 'ماه را بگیر',
+        bodyEn: 'Collect every heart AND the Queen in one hand and everyone else takes 26 instead of you. The game ends when someone reaches 50 — the lowest score wins. Play with 2, 3 or 4.',
+        bodyFa: 'اگر در یک دست همه دل‌ها و بی‌بی پیک را جمع کنی، به جای تو بقیه ۲۶ امتیاز می‌گیرند. وقتی کسی به ۵۰ برسد بازی تمام است و کمترین امتیاز برنده است. با ۲، ۳ یا ۴ نفر.',
+      ),
+    ],
     'ocho': [
       TutorialStep(
         emoji: '🃏',
