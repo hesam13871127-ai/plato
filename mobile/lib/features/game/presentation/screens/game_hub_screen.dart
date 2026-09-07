@@ -256,6 +256,16 @@ class _GameCard extends ConsumerWidget {
 /// Fallback emoji per slug for games whose 3D logo asset is not bundled.
 String _gameEmoji(String slug) {
   switch (slug) {
+    case 'checkers':
+      return '⚫';
+    case 'reversi':
+      return '⚪';
+    case 'backgammon':
+      return '🎲';
+    case 'dots_boxes':
+      return '🔲';
+    case 'sea_battle':
+      return '🚢';
     case 'connect4':
       return '🔴';
     case 'bingo':

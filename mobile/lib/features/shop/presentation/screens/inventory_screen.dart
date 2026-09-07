@@ -7,6 +7,7 @@ import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/shop_item.dart';
 import '../providers/shop_providers.dart';
+import '../widgets/cosmetic_preview.dart';
 
 /// The user's owned cosmetics, grouped by category, with equip/unequip.
 class InventoryScreen extends ConsumerWidget {
@@ -83,6 +84,8 @@ class _InventoryTile extends ConsumerWidget {
         ShopItemType.chatBubble => Icons.chat_bubble_rounded,
         ShopItemType.theme => Icons.palette_rounded,
         ShopItemType.gameSkin => Icons.sports_esports_rounded,
+        ShopItemType.gamePiece => Icons.circle_rounded,
+        ShopItemType.boardTheme => Icons.grid_on_rounded,
         ShopItemType.idColor => Icons.badge_rounded,
         ShopItemType.usernameChange => Icons.alternate_email_rounded,
         ShopItemType.diceSet => Icons.casino_rounded,
@@ -96,7 +99,12 @@ class _InventoryTile extends ConsumerWidget {
       item.type == ShopItemType.banner ||
       item.type == ShopItemType.chatBubble ||
       item.type == ShopItemType.theme ||
-      item.type == ShopItemType.idColor;
+      item.type == ShopItemType.idColor ||
+      item.type == ShopItemType.gamePiece ||
+      item.type == ShopItemType.boardTheme ||
+      item.type == ShopItemType.diceSet;
+
+  bool get _hasPreview => CosmeticPreview.supports(item.type);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,13 +114,17 @@ class _InventoryTile extends ConsumerWidget {
       child: Row(
         children: [
           Container(
-            width: 52,
+            width: _hasPreview ? 88 : 52,
             height: 52,
             decoration: BoxDecoration(
-              gradient: AppColors.brandGradient,
+              gradient: _hasPreview ? null : AppColors.brandGradient,
+              color: _hasPreview ? AppColors.glassFill : null,
               borderRadius: BorderRadius.circular(14),
+              border: _hasPreview ? Border.all(color: AppColors.glassStroke) : null,
             ),
-            child: Icon(_icon, color: Colors.white),
+            child: _hasPreview
+                ? Center(child: CosmeticPreview(type: item.type, metadata: item.metadata, compact: true))
+                : Icon(_icon, color: Colors.white),
           ),
           const SizedBox(width: 14),
           Expanded(

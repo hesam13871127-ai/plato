@@ -38,9 +38,16 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen> {
   }
 
   Future<void> _enqueue() async {
+    // Quick play uses the smallest table the game supports (most games: 2),
+    // so a match forms as fast as possible. Some games need more seats
+    // (e.g. Werewolf), which the catalogue tells us.
+    var seats = 2;
+    final catalog = ref.read(gameCatalogProvider).valueOrNull ?? const [];
+    final matches = catalog.where((g) => g.slug == widget.gameSlug);
+    if (matches.isNotEmpty && matches.first.minPlayers > seats) seats = matches.first.minPlayers;
     await ref
         .read(matchmakingNotifierProvider.notifier)
-        .enqueue(gameSlug: widget.gameSlug, isRanked: widget.isRanked, seats: 2);
+        .enqueue(gameSlug: widget.gameSlug, isRanked: widget.isRanked, seats: seats);
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../domain/entities/shop_item.dart';
+import 'cosmetic_preview.dart';
 
 /// A single catalogue tile with price, discount badge, buy/gift actions.
 class ShopItemCard extends StatelessWidget {
@@ -22,7 +23,7 @@ class ShopItemCard extends StatelessWidget {
   final VoidCallback? onGift;
 
   Color get _rarityColor => switch (item.rarity) {
-        'legendary' => const Color(0xFFFFC857),
+        'legendary' => AppColors.gold,
         'epic' => AppColors.electricPurple,
         'rare' => AppColors.softCyan,
         _ => AppColors.textSecondary,
@@ -34,6 +35,8 @@ class ShopItemCard extends StatelessWidget {
         ShopItemType.chatBubble => Icons.chat_bubble_rounded,
         ShopItemType.theme => Icons.palette_rounded,
         ShopItemType.gameSkin => Icons.sports_esports_rounded,
+        ShopItemType.gamePiece => Icons.circle_rounded,
+        ShopItemType.boardTheme => Icons.grid_on_rounded,
         ShopItemType.idColor => Icons.badge_rounded,
         ShopItemType.usernameChange => Icons.alternate_email_rounded,
         ShopItemType.diceSet => Icons.casino_rounded,
@@ -41,6 +44,8 @@ class ShopItemCard extends StatelessWidget {
         ShopItemType.bundle => Icons.inventory_2_rounded,
         ShopItemType.consumable => Icons.redeem_rounded,
       };
+
+  bool get _hasPreview => CosmeticPreview.supports(item.type);
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +76,24 @@ class ShopItemCard extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(_icon, color: _rarityColor, size: 34),
+                child: _hasPreview
+                    ? Center(child: CosmeticPreview(type: item.type, metadata: item.metadata))
+                    : Icon(_icon, color: _rarityColor, size: 34),
               ),
+              if (item.type == ShopItemType.gamePiece && (item.metadata['game'] as String?)?.isNotEmpty == true)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(cosmeticScopeLabel(item.metadata),
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+                  ),
+                ),
               if (item.isDiscounted)
                 Positioned(
                   left: 8,

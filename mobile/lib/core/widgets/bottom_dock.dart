@@ -40,7 +40,7 @@ class BottomDock extends ConsumerWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xD91C2B54), Color(0xB30E1830)],
+              colors: [Color(0xD9201F4E), Color(0xB3111330)],
             ),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: AppColors.glassStroke),
@@ -74,7 +74,7 @@ class BottomDock extends ConsumerWidget {
                           ? const LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Color(0x557B5CFF), Color(0x3300E5FF)],
+                              colors: [Color(0x558A6CFF), Color(0x33FF6B8B)],
                             )
                           : null,
                       borderRadius: BorderRadius.circular(22),

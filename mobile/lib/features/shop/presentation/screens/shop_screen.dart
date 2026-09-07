@@ -24,16 +24,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   static const _categories = <ShopItemType?>[
     null, // All
+    ShopItemType.gamePiece,
+    ShopItemType.boardTheme,
+    ShopItemType.diceSet,
     ShopItemType.avatarFrame,
     ShopItemType.banner,
     ShopItemType.chatBubble,
     ShopItemType.theme,
     ShopItemType.gameSkin,
-    ShopItemType.gamePiece,
-    ShopItemType.boardTheme,
     ShopItemType.idColor,
     ShopItemType.usernameChange,
-    ShopItemType.diceSet,
     ShopItemType.emote,
     ShopItemType.bundle,
   ];

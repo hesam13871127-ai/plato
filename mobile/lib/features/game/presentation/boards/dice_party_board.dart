@@ -4,8 +4,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/piece_3d.dart';
 import '../../domain/entities/game_entities.dart';
+import '../skins/skinned_pieces.dart';
+import '../skins/table_skins.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
 
@@ -77,6 +78,7 @@ class _DicePartyBoardState extends State<DicePartyBoard> with SingleTickerProvid
     final canRoll = widget.session.isInProgress && !rolled;
 
     final dice = ((me?['lastRoll'] as List?) ?? const []).whereType<num>().map((n) => n.toInt()).toList();
+    final diceSkin = TableSkins.diceFor(widget.session, widget.mySeat);
 
     return Column(
       children: [
@@ -96,11 +98,11 @@ class _DicePartyBoardState extends State<DicePartyBoard> with SingleTickerProvid
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _Die(value: dice.isNotEmpty ? dice[0] : 1, anim: _ctrl),
+                  _Die(value: dice.isNotEmpty ? dice[0] : 1, anim: _ctrl, skin: diceSkin),
                   const SizedBox(width: 12),
-                  _Die(value: dice.length > 1 ? dice[1] : 1, anim: _ctrl),
+                  _Die(value: dice.length > 1 ? dice[1] : 1, anim: _ctrl, skin: diceSkin),
                   const SizedBox(width: 12),
-                  _Die(value: dice.length > 2 ? dice[2] : 1, anim: _ctrl),
+                  _Die(value: dice.length > 2 ? dice[2] : 1, anim: _ctrl, skin: diceSkin),
                 ],
               ),
               const SizedBox(height: 18),
@@ -143,9 +145,10 @@ class _DicePartyBoardState extends State<DicePartyBoard> with SingleTickerProvid
 }
 
 class _Die extends StatelessWidget {
-  const _Die({required this.value, required this.anim});
+  const _Die({required this.value, required this.anim, required this.skin});
   final int value;
   final Animation<double> anim;
+  final DiceSkin skin;
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +158,7 @@ class _Die extends StatelessWidget {
         final wobble = math.sin(anim.value * math.pi * 6) * (1 - anim.value) * 0.6;
         return Transform.rotate(
           angle: wobble,
-          child: Dice3D(size: 62, value: value, rolling: anim.value > 0.02),
+          child: SkinnedDie(skin: skin, size: 62, value: value, rolling: anim.value > 0.02),
         );
       },
     );

@@ -53,7 +53,18 @@ class GameSeatModel extends GameSeat {
       avatarUrl: json['avatarUrl'] as String?,
       connected: json['connected'] as bool? ?? true,
       score: (json['score'] as num?)?.toInt() ?? 0,
+      cosmetics: _cosmeticsFromJson(json['cosmetics']),
     );
+  }
+
+  static SeatCosmetics _cosmeticsFromJson(Object? raw) {
+    if (raw is! Map) return SeatCosmetics.defaults;
+    String pick(String key) {
+      final value = raw[key];
+      return value is String && value.isNotEmpty ? value : 'classic';
+    }
+
+    return SeatCosmetics(piece: pick('piece'), board: pick('board'), dice: pick('dice'));
   }
 }
 

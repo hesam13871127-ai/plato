@@ -176,8 +176,8 @@ class _JoinByCodeScreenState extends ConsumerState<_JoinByCodeScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Color(0xFF0B1426),
-      body: Center(child: CircularProgressIndicator(color: Color(0xFF00E5FF))),
+      backgroundColor: Color(0xFF0A0B1E),
+      body: Center(child: CircularProgressIndicator(color: Color(0xFF3DF2C4))),
     );
   }
 }

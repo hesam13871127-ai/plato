@@ -55,7 +55,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           gradient: RadialGradient(
             center: Alignment(0.8, -0.9),
             radius: 1.5,
-            colors: [Color(0xFF1B2350), AppColors.deepNavy],
+            colors: [Color(0xFF2A1F5E), AppColors.deepNavy],
           ),
         ),
         child: SafeArea(
@@ -99,7 +99,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0x4D7B5CFF), Color(0x2600E5FF)],
+                  colors: [Color(0x4D8A6CFF), Color(0x26FF6B8B)],
                 ),
                 child: Row(
                   children: [
@@ -131,9 +131,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _CategoryCard(
                     emoji: '🎲',
                     title: l10n.t('tab_games'),
-                    subtitle: '12',
+                    subtitle: '22',
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF2E2480), Color(0xFF123B5A)],
+                      colors: [Color(0xFF3B2A9E), Color(0xFF1B3A6B)],
                     ),
                     onTap: () => context.push(AppRoutes.games),
                   ),
@@ -143,7 +143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     title: l10n.t('tab_shop'),
                     subtitle: l10n.t('shop_games'),
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF3A2470), Color(0xFF4A1F52)],
+                      colors: [Color(0xFF5A2A6E), Color(0xFF7A2E4C)],
                     ),
                     onTap: () => context.push(AppRoutes.shop),
                   ),
@@ -157,7 +157,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     title: l10n.t('tab_profile'),
                     subtitle: 'Season',
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF1F4A44), Color(0xFF123B5A)],
+                      colors: [Color(0xFF14574A), Color(0xFF1B3A6B)],
                     ),
                     onTap: () => context.push(AppRoutes.season),
                   ),
@@ -168,7 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     subtitle: 'Daily',
                     badge: dailyAvailable,
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF4A2E1F), Color(0xFF4A1F52)],
+                      colors: [Color(0xFF7A4A1E), Color(0xFF7A2E4C)],
                     ),
                     onTap: () =>
                         context.push(dailyAvailable ? AppRoutes.quests : AppRoutes.chat),
@@ -186,9 +186,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: const [
-                    _QuickGame(slug: 'dominoes', name: 'Dominoes', emoji: '🁢'),
                     _QuickGame(slug: 'ludo', name: 'Ludo', emoji: '🟥'),
+                    _QuickGame(slug: 'checkers', name: 'Checkers', emoji: '⚫'),
+                    _QuickGame(slug: 'backgammon', name: 'Backgammon', emoji: '🎲'),
+                    _QuickGame(slug: 'dots_boxes', name: 'Dots & Boxes', emoji: '🔲'),
+                    _QuickGame(slug: 'reversi', name: 'Reversi', emoji: '⚪'),
+                    _QuickGame(slug: 'sea_battle', name: 'Sea Battle', emoji: '🚢'),
                     _QuickGame(slug: 'chess', name: 'Chess', emoji: '♟️'),
+                    _QuickGame(slug: 'dominoes', name: 'Dominoes', emoji: '🁢'),
                     _QuickGame(slug: 'pool_8ball', name: '8 Ball', emoji: '🎱'),
                     _QuickGame(slug: 'ocho', name: 'Ocho', emoji: '🃏'),
                     _QuickGame(slug: 'connect4', name: 'Connect 4', emoji: '🔴'),

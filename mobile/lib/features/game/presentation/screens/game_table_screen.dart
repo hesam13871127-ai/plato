@@ -8,6 +8,7 @@ import '../../../../core/widgets/game_logo.dart';
 import '../../domain/entities/game_entities.dart';
 import '../boards/game_board_dispatcher.dart';
 import '../providers/game_table_notifier.dart';
+import '../skins/table_skins.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
 import '../widgets/tutorial_sheet.dart';
@@ -40,6 +41,17 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
     'sketch_guess': 'Sketch & Guess',
     'pool_8ball': 'Pool 8-Ball',
     'carrom': 'Carrom',
+    'trivia': 'Trivia',
+    'emoji_charades': 'Emoji Charades',
+    'word_chain': 'Word Chain',
+    'memory_race': 'Memory Race',
+    'impostor_light': 'Impostor',
+    'quick_challenges': 'Quick Challenges',
+    'checkers': 'Checkers',
+    'reversi': 'Reversi',
+    'backgammon': 'Backgammon',
+    'dots_boxes': 'Dots & Boxes',
+    'sea_battle': 'Sea Battle',
   };
 
   @override
@@ -100,10 +112,13 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: GameBoardDispatcher(
-                      session: session,
-                      mySeat: table.mySeat,
-                      onAction: notifier.sendAction,
+                    child: TableSkinScope(
+                      skin: TableSkins.playgroundFor(session, table.mySeat),
+                      child: GameBoardDispatcher(
+                        session: session,
+                        mySeat: table.mySeat,
+                        onAction: notifier.sendAction,
+                      ),
                     ),
                   ),
                 ),
@@ -136,6 +151,13 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
       case 'werewolf':
         // Everyone alive is engaged; highlight all.
         return <int>{for (var i = 0; i < session.seats.length; i++) i};
+      case 'sea_battle':
+        // During fleet placement both admirals act at once.
+        if (b['phase'] == 'placing') {
+          final ready = (b['ready'] as List?) ?? const [];
+          return <int>{for (var i = 0; i < session.seats.length; i++) if (i >= ready.length || ready[i] != true) i};
+        }
+        return {session.currentSeat};
       default:
         return {session.currentSeat};
     }

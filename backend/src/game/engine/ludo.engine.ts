@@ -48,9 +48,11 @@ export class LudoEngine extends BaseGameEngine {
     const tokens: LudoToken[][] = seats.map(() =>
       Array.from({ length: TOKENS_PER_SEAT }, () => ({ progress: -1 })),
     );
-    // Evenly spaced starts on the 52-cell track.
-    const step = Math.floor(TRACK / seats.length);
-    const startOffset = seats.map((_, i) => (i * step) % TRACK);
+    // Classic corner starts on the 52-cell track (13 cells apart). Two
+    // players sit in opposite corners; three take the first three corners.
+    // The client draws the cross board from the same corner table.
+    const CORNERS = [0, 13, 26, 39];
+    const startOffset = seats.length === 2 ? [0, 26] : seats.map((_, i) => CORNERS[i % 4]);
     const board: LudoBoard = {
       tokens,
       die: null,
@@ -328,6 +330,7 @@ export class LudoEngine extends BaseGameEngine {
       die: board.die,
       hasRolled: board.hasRolled,
       captures: board.captures,
+      startOffset: board.startOffset,
       mySeat: seat,
     };
     return { ...state, board: safe };

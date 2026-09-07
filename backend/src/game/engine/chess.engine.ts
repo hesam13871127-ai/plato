@@ -498,13 +498,32 @@ export class ChessEngine extends BaseGameEngine {
     return score;
   }
 
-  protected redactHidden(state: GameState, _seat: number): GameState {
-    // Chess is a perfect-information game: the board is fully public.
+  protected redactHidden(state: GameState, seat: number): GameState {
+    // Chess is a perfect-information game: the board is fully public. We add
+    // UI helpers: the last move, whether the side to move is in check, and —
+    // for the seat to move only — its legal moves so the client can highlight
+    // targets without re-implementing the rules.
     const cb = state.board as unknown as ChessBoard;
+    const last = cb.history.length > 0 ? cb.history[cb.history.length - 1] : null;
+    let lastMove: { from: [number, number]; to: [number, number] } | null = null;
+    if (last) {
+      const m = /^(.)(\d),(\d)-(\d),(\d)$/.exec(last);
+      if (m) lastMove = { from: [Number(m[3]), Number(m[2])], to: [Number(m[5]), Number(m[4])] };
+    }
+    const inCheck =
+      state.phase === 'in_progress' &&
+      this.isSquareAttacked(cb, this.kingSquare(cb, cb.turnColor), cb.turnColor === 'w' ? 'b' : 'w');
+    const legal =
+      state.phase === 'in_progress' && seat === state.currentSeat
+        ? this.legalMoves(cb, this.seatColor(seat)).map((m) => ({ from: m.from, to: m.to }))
+        : [];
     const safe = {
       board: cb.board,
       turnColor: cb.turnColor,
       captured: cb.captured,
+      lastMove,
+      inCheck,
+      legal,
     };
     return { ...state, board: safe as unknown as Record<string, unknown> };
   }

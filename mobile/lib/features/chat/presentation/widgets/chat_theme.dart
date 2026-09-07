@@ -23,9 +23,9 @@ class ChatThemeData {
     ChatThemeData(
       key: 'neon',
       label: 'Neon Night',
-      selfBubble: Color(0xFF7B5CFF),
-      otherBubble: Color(0xFF1A2547),
-      accent: Color(0xFF00E5FF),
+      selfBubble: Color(0xFF8A6CFF),
+      otherBubble: Color(0xFF1E2148),
+      accent: Color(0xFF3DF2C4),
     ),
     ChatThemeData(
       key: 'sunset',
@@ -70,7 +70,7 @@ LinearGradient chatBackground(String? themeKey) {
       return const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF1A1330), AppColors.deepNavy],
+        colors: [Color(0xFF221A4A), AppColors.deepNavy],
       );
     case 'emerald':
       return const LinearGradient(

@@ -62,8 +62,25 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
     );
   }
 
+  /// Seat counts this game supports, from the catalogue (falls back to 2–4).
+  List<int> _seatOptions() {
+    final catalog = ref.watch(gameCatalogProvider).valueOrNull ?? const [];
+    final matches = catalog.where((g) => g.slug == widget.gameSlug);
+    final entry = matches.isEmpty ? null : matches.first;
+    final min = entry?.minPlayers ?? 2;
+    final max = entry?.maxPlayers ?? 4;
+    final lo = min.clamp(2, 8);
+    final hi = max.clamp(lo, 8);
+    return [for (var n = lo; n <= hi; n++) n];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final seatOptions = _seatOptions();
+    if (!seatOptions.contains(_seats)) {
+      // Snap to the nearest supported seat count once the catalogue loads.
+      _seats = seatOptions.first;
+    }
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
       appBar: AppBar(
@@ -157,12 +174,14 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                     onChanged: (v) => setState(() => _fillWithBots = v),
                   ),
                   const SizedBox(height: 12),
-                  const Text('Seats',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  Text(
+                    seatOptions.length == 1 ? 'Seats · ${seatOptions.first} players' : 'Seats',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      for (final n in const [2, 3, 4])
+                      for (final n in seatOptions)
                         Padding(
                           padding: const EdgeInsets.only(right: 10),
                           child: ChoiceChip(

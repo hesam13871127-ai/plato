@@ -36,6 +36,26 @@ class GameCatalogEntry extends Equatable {
   List<Object?> get props => [slug, name, status, isLive];
 }
 
+/// Public rendering hints for a seat: which piece set, playground (board
+/// theme) and dice the player has equipped. Every client renders every seat
+/// with that seat's own skin, so purchases are visible to opponents too.
+class SeatCosmetics extends Equatable {
+  const SeatCosmetics({
+    this.piece = 'classic',
+    this.board = 'classic',
+    this.dice = 'classic',
+  });
+
+  static const SeatCosmetics defaults = SeatCosmetics();
+
+  final String piece;
+  final String board;
+  final String dice;
+
+  @override
+  List<Object?> get props => [piece, board, dice];
+}
+
 /// A seated player at a table. Mirrors the server's public seat descriptor —
 /// there is intentionally no bot flag: bots are indistinguishable on the wire.
 class GameSeat extends Equatable {
@@ -46,6 +66,7 @@ class GameSeat extends Equatable {
     required this.connected,
     required this.score,
     this.avatarUrl,
+    this.cosmetics = SeatCosmetics.defaults,
   });
 
   final int seatNumber;
@@ -54,9 +75,10 @@ class GameSeat extends Equatable {
   final String? avatarUrl;
   final bool connected;
   final int score;
+  final SeatCosmetics cosmetics;
 
   @override
-  List<Object?> get props => [seatNumber, playerId, displayName, connected, score];
+  List<Object?> get props => [seatNumber, playerId, displayName, connected, score, cosmetics];
 }
 
 /// Domino-specific board data (redacted server-side: a player only sees their
@@ -111,6 +133,12 @@ class GameSessionView extends Equatable {
 
   bool get isCompleted => phase == 'completed';
   bool get isInProgress => phase == 'in_progress';
+
+  /// Cosmetics of a seat (defaults when out of range, e.g. spectators).
+  SeatCosmetics cosmeticsOf(int seat) {
+    if (seat < 0 || seat >= seats.length) return SeatCosmetics.defaults;
+    return seats[seat].cosmetics;
+  }
 
   /// Parsed domino board when the game slug is dominoes.
   DominoBoardView? get dominoBoard {

@@ -8,6 +8,8 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../data/datasources/game_socket_service.dart';
 import '../../domain/entities/game_entities.dart';
 import '../providers/game_providers.dart';
+import '../skins/skinned_pieces.dart';
+import '../skins/table_skins.dart';
 import '../utils/game_feedback.dart';
 
 /// Animated opponent/seat strip across the top of a table: avatars, names,
@@ -35,14 +37,14 @@ class SeatStrip extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 5),
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
             decoration: BoxDecoration(
-              color: active ? AppColors.electricPurple.withOpacity(0.30) : AppColors.glassFill,
+              color: active ? AppColors.electricPurple.withValues(alpha: 0.30) : AppColors.glassFill,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: active ? AppColors.softCyan : AppColors.glassStroke,
                 width: active ? 1.8 : 1,
               ),
               boxShadow: active
-                  ? [BoxShadow(color: AppColors.softCyan.withOpacity(0.25), blurRadius: 12)]
+                  ? [BoxShadow(color: AppColors.softCyan.withValues(alpha: 0.25), blurRadius: 12)]
                   : null,
             ),
             child: Column(
@@ -104,7 +106,7 @@ class _FinishHeader extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: (won ? AppColors.softCyan : AppColors.textMuted).withOpacity(0.45),
+                color: (won ? AppColors.softCyan : AppColors.textMuted).withValues(alpha: 0.45),
                 blurRadius: 28,
                 spreadRadius: 2,
               ),
@@ -138,7 +140,7 @@ class _AvatarDot extends StatelessWidget {
         gradient: const LinearGradient(colors: [AppColors.electricPurple, AppColors.softCyan]),
         boxShadow: connected
             ? null
-            : [BoxShadow(color: AppColors.textMuted.withOpacity(0.5), blurRadius: 4)],
+            : [BoxShadow(color: AppColors.textMuted.withValues(alpha: 0.5), blurRadius: 4)],
       ),
       alignment: Alignment.center,
       child: Text(initial,
@@ -149,6 +151,25 @@ class _AvatarDot extends StatelessWidget {
 
 /// Glass container for the playing surface with a glossy 3D felt look:
 /// angled perspective, top light sheen and vignette — shared by every board.
+/// Provides the equipped playground skin to legacy boards that use
+/// [TableSurface] so the whole table (not only the new boards) follows the
+/// player's cosmetic choice. The table screen installs it above the board.
+class TableSkinScope extends InheritedWidget {
+  const TableSkinScope({super.key, required this.skin, required super.child});
+
+  final PlaygroundSkin skin;
+
+  static PlaygroundSkin of(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<TableSkinScope>();
+    return scope?.skin ?? TableSkins.playground(null);
+  }
+
+  @override
+  bool updateShouldNotify(TableSkinScope oldWidget) => oldWidget.skin.id != skin.id;
+}
+
+/// A 3D-tilted felt table that hosts a board. Uses the playground skin from
+/// the nearest [TableSkinScope] (the default Aurora table otherwise).
 class TableSurface extends StatelessWidget {
   const TableSurface({super.key, required this.child, this.padding});
 
@@ -157,55 +178,8 @@ class TableSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      child: Transform(
-        alignment: Alignment.center,
-        transform: Matrix4.identity()
-          ..setEntry(3, 2, 0.0008)
-          ..rotateX(0.045),
-        child: Container(
-          padding: padding ?? const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF16294D), Color(0xFF0C1730), Color(0xFF08101F)],
-            ),
-            border: Border.all(color: AppColors.glassStroke),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.55), blurRadius: 30, offset: const Offset(0, 16)),
-              BoxShadow(color: AppColors.electricPurple.withOpacity(0.14), blurRadius: 42, spreadRadius: -10),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // Top glossy sheen.
-              Positioned(
-                top: 0,
-                left: 12,
-                right: 12,
-                child: IgnorePointer(
-                  child: Container(
-                    height: 46,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.white.withOpacity(0.08), Colors.white.withOpacity(0.0)],
-                      ),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-                    ),
-                  ),
-                ),
-              ),
-              child,
-            ],
-          ),
-        ),
-      ),
-    );
+    final skin = TableSkinScope.of(context);
+    return Playground(skin: skin, padding: padding ?? const EdgeInsets.all(12), child: child);
   }
 }
 
@@ -312,16 +286,16 @@ class FinishBanner extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: iWon
-                  ? [AppColors.softCyan.withOpacity(0.30), AppColors.electricPurple.withOpacity(0.28)]
-                  : [AppColors.surfaceElevated.withOpacity(0.9), AppColors.surfaceDark.withOpacity(0.9)],
+                  ? [AppColors.softCyan.withValues(alpha: 0.30), AppColors.electricPurple.withValues(alpha: 0.28)]
+                  : [AppColors.surfaceElevated.withValues(alpha: 0.9), AppColors.surfaceDark.withValues(alpha: 0.9)],
             ),
             border: Border.all(
-              color: iWon ? AppColors.softCyan.withOpacity(0.6) : AppColors.glassStroke,
+              color: iWon ? AppColors.softCyan.withValues(alpha: 0.6) : AppColors.glassStroke,
               width: 1.4,
             ),
             boxShadow: [
               BoxShadow(
-                color: (iWon ? AppColors.softCyan : AppColors.electricPurple).withOpacity(0.35),
+                color: (iWon ? AppColors.softCyan : AppColors.electricPurple).withValues(alpha: 0.35),
                 blurRadius: 40,
                 offset: const Offset(0, 16),
               ),
@@ -471,7 +445,7 @@ class _GameChatPanelState extends ConsumerState<GameChatPanel> {
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: line.me
-                                          ? AppColors.electricPurple.withOpacity(0.35)
+                                          ? AppColors.electricPurple.withValues(alpha: 0.35)
                                           : AppColors.glassFill,
                                       borderRadius: BorderRadius.circular(12),
                                     ),

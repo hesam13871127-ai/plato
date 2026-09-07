@@ -1,4 +1,4 @@
-import '../../../core/i18n/app_localizations.dart';
+import '../../../../core/i18n/app_localizations.dart';
 
 /// One step of a "how to play" tutorial sheet.
 class TutorialStep {
@@ -46,6 +46,121 @@ class GameTutorials {
   ];
 
   static const Map<String, List<TutorialStep>> _data = {
+    'checkers': [
+      TutorialStep(
+        emoji: '⚫',
+        titleEn: 'Move diagonally',
+        titleFa: 'حرکت مورب',
+        bodyEn: 'Men move one square diagonally forward on the dark squares. Tap a piece, then a glowing target.',
+        bodyFa: 'مهره‌ها یک خانه مورب رو به جلو روی خانه‌های تیره حرکت می‌کنند. یک مهره و بعد خانه روشن را لمس کن.',
+      ),
+      TutorialStep(
+        emoji: '⚡',
+        titleEn: 'Captures are mandatory',
+        titleFa: 'زدن اجباری است',
+        bodyEn: 'Jump over an adjacent enemy into the empty square behind it. If a jump exists you must take it — chains continue automatically.',
+        bodyFa: 'از روی مهره حریف به خانه خالی پشت آن بپر. اگر پرش ممکن باشد باید انجام شود؛ پرش‌های زنجیره‌ای ادامه می‌یابند.',
+      ),
+      TutorialStep(
+        emoji: '👑',
+        titleEn: 'Kings',
+        titleFa: 'شاه',
+        bodyEn: 'Reach the far rank to crown a king that moves and captures backwards too. Capture everything or block all moves to win.',
+        bodyFa: 'با رسیدن به ردیف آخر، مهره شاه می‌شود و به عقب هم حرکت می‌کند. همه مهره‌ها را بزن یا حریف را قفل کن تا ببری.',
+      ),
+    ],
+    'reversi': [
+      TutorialStep(
+        emoji: '⚪',
+        titleEn: 'Trap to flip',
+        titleFa: 'محاصره کن',
+        bodyEn: 'Place a disc so that enemy discs sit in a straight line between it and another of yours — they all flip to your colour.',
+        bodyFa: 'مهره‌ات را طوری بگذار که مهره‌های حریف بین آن و مهره دیگرت در یک خط باشند؛ همه به رنگ تو برمی‌گردند.',
+      ),
+      TutorialStep(
+        emoji: '📐',
+        titleEn: 'Corners win',
+        titleFa: 'گوشه‌ها برنده‌اند',
+        bodyEn: 'Corner discs can never be flipped. Glowing squares show your legal moves; with none, you pass.',
+        bodyFa: 'مهره‌های گوشه هرگز برنمی‌گردند. خانه‌های روشن حرکت‌های مجاز تو هستند؛ اگر نبود، نوبت رد می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🏁',
+        titleEn: 'Most discs',
+        titleFa: 'بیشترین مهره',
+        bodyEn: 'When the board is full or nobody can move, the player with more discs wins.',
+        bodyFa: 'وقتی صفحه پر شد یا کسی حرکت نداشت، بازیکنی با مهره‌های بیشتر برنده است.',
+      ),
+    ],
+    'backgammon': [
+      TutorialStep(
+        emoji: '🎲',
+        titleEn: 'Roll and move',
+        titleFa: 'تاس بریز و حرکت کن',
+        bodyEn: 'Roll two dice, then tap a checker and a die to move it that many points towards your home board. Doubles give four moves.',
+        bodyFa: 'دو تاس بریز، سپس یک مهره و یک تاس را لمس کن تا به همان تعداد به سمت خانه‌ات برود. جفت چهار حرکت می‌دهد.',
+      ),
+      TutorialStep(
+        emoji: '💥',
+        titleEn: 'Hit blots',
+        titleFa: 'زدن مهره تک',
+        bodyEn: 'Landing on a lone enemy checker sends it to the bar; it must re-enter before anything else moves. Two or more checkers block a point.',
+        bodyFa: 'اگر روی مهره تک حریف بنشینی به بار می‌رود و باید اول وارد شود. دو مهره یا بیشتر یک خانه را می‌بندند.',
+      ),
+      TutorialStep(
+        emoji: '🏠',
+        titleEn: 'Bear off',
+        titleFa: 'بیرون بردن',
+        bodyEn: 'Once all 15 checkers are in your home board, bear them off. First to remove all wins — gammons score double!',
+        bodyFa: 'وقتی هر ۱۵ مهره در خانه‌ات بودند آن‌ها را بیرون ببر. اولین نفری که همه را خارج کند برنده است؛ مارس دو برابر امتیاز دارد!',
+      ),
+    ],
+    'dots_boxes': [
+      TutorialStep(
+        emoji: '🔲',
+        titleEn: 'Draw lines',
+        titleFa: 'خط بکش',
+        bodyEn: 'Tap the gap between two dots to draw a line. Play with 2, 3 or 4 players — the grid grows with the table.',
+        bodyFa: 'فاصله بین دو نقطه را لمس کن تا خط کشیده شود. با ۲، ۳ یا ۴ نفر بازی کن؛ جدول با تعداد بازیکنان بزرگ‌تر می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '📦',
+        titleEn: 'Close boxes',
+        titleFa: 'جعبه ببند',
+        bodyEn: 'Drawing the fourth side of a box claims it with your piece and gives you another turn.',
+        bodyFa: 'کشیدن ضلع چهارم یک جعبه آن را مال تو می‌کند و یک نوبت اضافه می‌گیری.',
+      ),
+      TutorialStep(
+        emoji: '🧠',
+        titleEn: 'Mind the chains',
+        titleFa: 'مراقب زنجیره‌ها باش',
+        bodyEn: 'Avoid drawing the third side of a box — you hand it to the next player. Most boxes at the end wins.',
+        bodyFa: 'ضلع سوم جعبه را نکش؛ آن را به نفر بعدی هدیه می‌دهی. در پایان بیشترین جعبه برنده است.',
+      ),
+    ],
+    'sea_battle': [
+      TutorialStep(
+        emoji: '⚓',
+        titleEn: 'Place your fleet',
+        titleFa: 'ناوگانت را بچین',
+        bodyEn: 'Five ships are arranged for you. Shuffle until you like the layout, then lock in. The enemy never sees them.',
+        bodyFa: 'پنج کشتی برایت چیده می‌شود. آن‌قدر بُر بزن تا چینش را بپسندی، بعد قفل کن. حریف آن‌ها را نمی‌بیند.',
+      ),
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'Fire!',
+        titleFa: 'شلیک!',
+        bodyEn: 'Tap a square on the enemy ocean. A hit lets you fire again; a miss passes the turn.',
+        bodyFa: 'یک خانه از دریای حریف را لمس کن. اگر بخورد دوباره شلیک می‌کنی؛ اگر نه نوبت رد می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🚢',
+        titleEn: 'Sink them all',
+        titleFa: 'همه را غرق کن',
+        bodyEn: 'Sink all five enemy ships before yours go down. Sunk ships are revealed in red.',
+        bodyFa: 'قبل از این‌که کشتی‌هایت غرق شوند هر پنج کشتی حریف را غرق کن. کشتی‌های غرق‌شده قرمز می‌شوند.',
+      ),
+    ],
     'connect4': [
       TutorialStep(
         emoji: '🔴',
