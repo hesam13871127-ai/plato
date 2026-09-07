@@ -31,7 +31,31 @@ const EQUIP_SLOT: Partial<Record<ItemType, keyof ProfileEntity>> = {
   id_color: 'equippedIdColorId',
 };
 
-const EQUIPPABLE_TYPES = new Set<ItemType>(Object.keys(EQUIP_SLOT) as ItemType[]);
+/**
+ * Table cosmetics are equippable too but are not pinned to a single profile
+ * column: a player may equip one piece set PER GAME (Ludo tokens and chess
+ * pieces at the same time), one board theme and one dice set. The equipped
+ * rows are resolved at match start by the game module's CosmeticsService.
+ */
+const TABLE_COSMETIC_TYPES = new Set<ItemType>(['game_piece', 'board_theme', 'dice_set']);
+
+const EQUIPPABLE_TYPES = new Set<ItemType>([
+  ...(Object.keys(EQUIP_SLOT) as ItemType[]),
+  ...TABLE_COSMETIC_TYPES,
+]);
+
+/**
+ * Two table cosmetics conflict (only one may be equipped) when they occupy the
+ * same slot: same type, and for piece sets also the same target game (a
+ * universal piece set with no `game` key conflicts with every game).
+ */
+function sameCosmeticSlot(a: ShopItemEntity, b: ShopItemEntity): boolean {
+  if (a.type !== b.type) return false;
+  if (a.type !== 'game_piece') return true;
+  const ga = (a.metadata as { game?: string } | null)?.game;
+  const gb = (b.metadata as { game?: string } | null)?.game;
+  return !ga || !gb || ga === gb;
+}
 
 @Injectable()
 export class ShopService {
@@ -229,20 +253,23 @@ export class ShopService {
       if (!owned) throw new NotFoundException('You do not own this item.');
       if (!owned.item) throw new NotFoundException('Item no longer exists.');
 
-      const slot = EQUIP_SLOT[owned.item.type];
-      if (!slot) {
+      if (!EQUIPPABLE_TYPES.has(owned.item.type)) {
         throw new BadRequestException('This item cannot be equipped.');
       }
+      const slot = EQUIP_SLOT[owned.item.type];
+      const isTableCosmetic = TABLE_COSMETIC_TYPES.has(owned.item.type);
 
-      const profile = await this.lockProfile(manager, userId);
-
-      // Unequip any other equipped item of the same category.
+      // Unequip any other equipped item occupying the same slot.
       const ownedItems = await manager.find(UserInventoryEntity, {
         where: { userId },
         relations: { item: true },
       });
       for (const row of ownedItems) {
-        if (row.item && row.item.type === owned.item.type && row.isEquipped && row.id !== owned.id) {
+        if (!row.item || !row.isEquipped || row.id === owned.id) continue;
+        const conflicts = isTableCosmetic
+          ? sameCosmeticSlot(row.item, owned.item)
+          : row.item.type === owned.item.type;
+        if (conflicts) {
           row.isEquipped = false;
           await manager.save(row);
         }
@@ -251,8 +278,11 @@ export class ShopService {
       owned.isEquipped = true;
       await manager.save(owned);
 
-      (profile[slot] as string | null) = owned.id;
-      await manager.save(profile);
+      if (slot) {
+        const profile = await this.lockProfile(manager, userId);
+        (profile[slot] as string | null) = owned.id;
+        await manager.save(profile);
+      }
     });
     return { equipped: true };
   }

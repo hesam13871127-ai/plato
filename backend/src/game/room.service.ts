@@ -16,6 +16,7 @@ import { RoomPlayerEntity } from '../database/entities/room-player.entity';
 import { SeasonEntity } from '../database/entities/season.entity';
 import { UserEntity } from '../database/entities/user.entity';
 import { BotService } from './bot/bot.service';
+import { CosmeticsService } from './cosmetics.service';
 import { GameSessionService } from './game-session.service';
 import type { SeatInfo } from './engine/types';
 
@@ -74,6 +75,7 @@ export class RoomService {
     @InjectRepository(SeasonEntity) private readonly seasons: Repository<SeasonEntity>,
     private readonly bots: BotService,
     private readonly sessions: GameSessionService,
+    private readonly cosmetics: CosmeticsService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -274,6 +276,8 @@ export class RoomService {
     finalSeats.forEach((seat, index) => {
       seat.seatNumber = index;
     });
+    // Attach each player's equipped pieces / board / dice (public cosmetics).
+    await this.cosmetics.decorateSeats(finalSeats, game.slug);
 
     room.status = 'playing';
     room.startedAt = new Date();

@@ -144,6 +144,7 @@ export class GameSessionService {
       connected.set(index, seat.isBot ? new Set(['bot']) : new Set());
       state.seats[index].connected = seat.isBot;
     });
+    this.stampCosmetics(params.seats, state);
 
     const session: ActiveSession = {
       sessionId: params.sessionId,
@@ -286,6 +287,40 @@ export class GameSessionService {
     }, graceMs).unref?.();
   }
 
+  // ── Cosmetics ─────────────────────────────────────────────────────────────
+
+  /**
+   * Copies each seat's equipped cosmetics (piece set / board theme / dice) on
+   * to the public seat descriptors. Cosmetics are public by design — every
+   * player must see the pieces their opponents bought — and they are never a
+   * bot tell (bots receive a rotating skin from the same catalogue).
+   */
+  private stampCosmetics(seats: SeatInfo[], state: GameState): void {
+    seats.forEach((seat, index) => {
+      const target = state.seats[index];
+      if (!target) return;
+      if (seat.cosmetics && Object.keys(seat.cosmetics).length > 0) {
+        target.cosmetics = { ...seat.cosmetics };
+      }
+    });
+  }
+
+  /**
+   * Some engines rebuild the seat array between rounds (trivia, charades…)
+   * and would drop the cosmetic stamps; re-apply them on every outgoing view
+   * so clients always render the right skins.
+   */
+  private withCosmetics(session: ActiveSession, view: GameState): GameState {
+    let changed = false;
+    const seats = view.seats.map((s, i) => {
+      const cosmetics = session.seats[i]?.cosmetics;
+      if (!cosmetics || Object.keys(cosmetics).length === 0 || s.cosmetics) return s;
+      changed = true;
+      return { ...s, cosmetics: { ...cosmetics } };
+    });
+    return changed ? { ...view, seats } : view;
+  }
+
   // ── Views (redacted) ──────────────────────────────────────────────────────
 
   /** Full snapshot for a player seat (sees own hidden info). */
@@ -296,7 +331,10 @@ export class GameSessionService {
       channel: session.channel,
       gameSlug: session.config.gameSlug,
       version: session.state.version,
-      state: seat >= 0 ? session.engine.playerView(session.state, seat) : session.engine.spectatorView(session.state),
+      state: this.withCosmetics(
+        session,
+        seat >= 0 ? session.engine.playerView(session.state, seat) : session.engine.spectatorView(session.state),
+      ),
     };
   }
 
@@ -307,7 +345,7 @@ export class GameSessionService {
       channel: session.channel,
       gameSlug: session.config.gameSlug,
       version: session.state.version,
-      state: session.engine.spectatorView(session.state),
+      state: this.withCosmetics(session, session.engine.spectatorView(session.state)),
     };
   }
 
@@ -459,7 +497,7 @@ export class GameSessionService {
       sessionId: session.sessionId,
       gameSlug: session.config.gameSlug,
       version: session.state.version,
-      state: session.engine.spectatorView(session.state),
+      state: this.withCosmetics(session, session.engine.spectatorView(session.state)),
       ...extra,
     };
     channel.emit(event, spectatorFrame);
@@ -472,7 +510,7 @@ export class GameSessionService {
           sessionId: session.sessionId,
           gameSlug: session.config.gameSlug,
           version: session.state.version,
-          state: session.engine.playerView(session.state, seat),
+          state: this.withCosmetics(session, session.engine.playerView(session.state, seat)),
           ...extra,
         });
     }

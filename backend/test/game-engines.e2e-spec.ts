@@ -15,6 +15,11 @@ import { WordChainEngine } from '../src/game/engine/word-chain.engine';
 import { MemoryRaceEngine } from '../src/game/engine/memory-race.engine';
 import { ImpostorLightEngine } from '../src/game/engine/impostor-light.engine';
 import { QuickChallengesEngine } from '../src/game/engine/quick-challenges.engine';
+import { CheckersEngine } from '../src/game/engine/checkers.engine';
+import { ReversiEngine } from '../src/game/engine/reversi.engine';
+import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
+import { DotsBoxesEngine } from '../src/game/engine/dots-boxes.engine';
+import { SeaBattleEngine } from '../src/game/engine/sea-battle.engine';
 import type { BaseGameEngine } from '../src/game/engine/base-game.engine';
 import type { GameState, MatchConfig, SeatInfo } from '../src/game/engine/types';
 
@@ -100,6 +105,12 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'ludo', build: () => new LudoEngine() },
   { name: 'chess', build: () => new ChessEngine(), players: 2 },
   { name: 'word_chain', build: () => new WordChainEngine() },
+  { name: 'checkers', build: () => new CheckersEngine(), players: 2 },
+  { name: 'reversi', build: () => new ReversiEngine(), players: 2 },
+  { name: 'backgammon', build: () => new BackgammonEngine(), players: 2 },
+  { name: 'dots_boxes (2p)', build: () => new DotsBoxesEngine(), players: 2 },
+  { name: 'dots_boxes (4p)', build: () => new DotsBoxesEngine(), players: 4 },
+  { name: 'sea_battle', build: () => new SeaBattleEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -328,5 +339,134 @@ describe('hidden information is never leaked to other seats or spectators', () =
         }
       }
     }
+  });
+});
+
+describe('classic board engines — rules, secrecy and cosmetics', () => {
+  test('sea battle never reveals the enemy fleet, but shows my own ships', () => {
+    const engine = new SeaBattleEngine();
+    const state = engine.createInitialState(makeConfig(engine, 2));
+    const full = state.board as { fleets: Array<{ ships: Array<{ cells: number[][] }> }> };
+    expect(full.fleets).toHaveLength(2);
+
+    const spectator = engine.spectatorView(state) as GameState;
+    const sJson = JSON.stringify(spectator.board);
+    expect(sJson).not.toContain('"fleets"');
+    expect(sJson).not.toContain('"botTargets"');
+    expect((spectator.board as { myShips: unknown }).myShips).toBeNull();
+
+    const mine = engine.playerView(state, 0) as GameState;
+    const myShips = (mine.board as { myShips: Array<{ cells: number[][] }> }).myShips;
+    expect(myShips).toHaveLength(5);
+    // The opponent's ship cells must not be present anywhere in my view.
+    const enemyCells = full.fleets[1].ships.flatMap((s) => s.cells);
+    const oceans = (mine.board as { oceans: Array<{ shots: number[][] }> }).oceans;
+    for (const [r, c] of enemyCells) expect(oceans[1].shots[r][c]).toBe(0);
+    expect(JSON.stringify(mine.board)).not.toContain('"fleets"');
+  });
+
+  test('checkers enforces mandatory captures and crowns kings', () => {
+    const engine = new CheckersEngine();
+    const state = engine.createInitialState(makeConfig(engine, 2));
+    const board = state.board as { grid: string[][]; legal: Array<{ from: number[]; to: number[]; captures: number[][] }> };
+    // Craft a position: seat 0 man at (4,3) with a seat 1 man at (3,4) and an empty (2,5).
+    for (const row of board.grid) row.fill('');
+    board.grid[4][3] = 'r';
+    board.grid[3][4] = 'b';
+    board.grid[7][0] = 'b';
+    board.legal = engine.legalMoves(board as never, 0);
+    // Only the jump is legal (captures are mandatory).
+    expect(board.legal).toHaveLength(1);
+    expect(board.legal[0].captures).toHaveLength(1);
+    const quiet = engine.validate(state, { seat: 0, type: 'move', payload: { from: [4, 3], to: [3, 2] } });
+    expect(quiet.ok).toBe(false);
+    expect(quiet.error).toMatch(/capture/i);
+    // Move a man to the crown row and verify it becomes a king.
+    const crownState = engine.createInitialState(makeConfig(engine, 2));
+    const cb = crownState.board as { grid: string[][]; legal: unknown[] };
+    for (const row of cb.grid) row.fill('');
+    cb.grid[1][2] = 'r';
+    cb.grid[7][0] = 'b';
+    cb.grid[6][7] = 'b';
+    cb.legal = engine.legalMoves(cb as never, 0);
+    const after = engine.applyAction(crownState, { seat: 0, type: 'move', payload: { from: [1, 2], to: [0, 1] } });
+    expect((after.board as { grid: string[][] }).grid[0][1]).toBe('R');
+  });
+
+  test('reversi flips bracketed discs and rejects non-flipping squares', () => {
+    const engine = new ReversiEngine();
+    const state = engine.createInitialState(makeConfig(engine, 2));
+    const bad = engine.validate(state, { seat: 0, type: 'place', payload: { r: 0, c: 0 } });
+    expect(bad.ok).toBe(false);
+    const good = engine.applyAction(state, { seat: 0, type: 'place', payload: { r: 2, c: 3 } });
+    const grid = (good.board as { grid: number[][] }).grid;
+    expect(grid[2][3]).toBe(0);
+    expect(grid[3][3]).toBe(0); // flipped
+    expect(good.scores).toEqual([4, 1]);
+    expect(good.currentSeat).toBe(1);
+  });
+
+  test('dots & boxes grants another turn when a box is closed and sizes the board by table', () => {
+    const engine = new DotsBoxesEngine();
+    const two = engine.createInitialState(makeConfig(engine, 2));
+    const four = engine.createInitialState(makeConfig(engine, 4));
+    expect((two.board as { size: number }).size).toBe(5);
+    expect((four.board as { size: number }).size).toBe(7);
+
+    let s = two;
+    s = engine.applyAction(s, { seat: 0, type: 'draw', payload: { kind: 'h', r: 0, c: 0 } });
+    expect(s.currentSeat).toBe(1);
+    s = engine.applyAction(s, { seat: 1, type: 'draw', payload: { kind: 'v', r: 0, c: 0 } });
+    s = engine.applyAction(s, { seat: 0, type: 'draw', payload: { kind: 'v', r: 0, c: 1 } });
+    expect(s.currentSeat).toBe(1);
+    // Seat 1 closes the box (0,0) and keeps the turn.
+    s = engine.applyAction(s, { seat: 1, type: 'draw', payload: { kind: 'h', r: 1, c: 0 } });
+    expect((s.board as { boxes: number[][] }).boxes[0][0]).toBe(1);
+    expect(s.currentSeat).toBe(1);
+    const dup = engine.validate(s, { seat: 1, type: 'draw', payload: { kind: 'h', r: 1, c: 0 } });
+    expect(dup.ok).toBe(false);
+  });
+
+  test('backgammon forces bar entry and bears off only from home', () => {
+    const engine = new BackgammonEngine();
+    const state = engine.createInitialState(makeConfig(engine, 2));
+    const board = state.board as {
+      opening: unknown;
+      hasRolled: boolean;
+      dice: number[];
+      remaining: number[];
+      bar: number[];
+      legal: Array<{ from: number; to: number; die: number }>;
+      points: number[];
+    };
+    // Skip the opening roll and hand seat 0 a fixed roll with a checker on the bar.
+    board.opening = null;
+    board.bar[0] = 1;
+    board.points[23] = 1;
+    board.hasRolled = true;
+    board.dice = [3, 5];
+    board.remaining = [3, 5];
+    board.legal = (engine as unknown as { legalMoves: (b: unknown, s: number) => typeof board.legal }).legalMoves(board, 0);
+    expect(board.legal.every((m) => m.from === -1)).toBe(true);
+    const fromBoard = engine.validate(state, { seat: 0, type: 'move', payload: { from: 12, die: 3 } });
+    expect(fromBoard.ok).toBe(false);
+    expect(fromBoard.error).toMatch(/bar/i);
+
+    // Bearing off: all 15 checkers home ⇒ an exact die bears off.
+    const home = engine.createInitialState(makeConfig(engine, 2));
+    const hb = home.board as typeof board;
+    hb.opening = null;
+    hb.points.fill(0);
+    hb.points[0] = 5;
+    hb.points[1] = 5;
+    hb.points[2] = 5;
+    hb.points[20] = -15;
+    hb.hasRolled = true;
+    hb.dice = [3, 1];
+    hb.remaining = [3, 1];
+    hb.legal = (engine as unknown as { legalMoves: (b: unknown, s: number) => typeof board.legal }).legalMoves(hb, 0);
+    expect(hb.legal.some((m) => m.from === 2 && m.to === 24 && m.die === 3)).toBe(true);
+    const after = engine.applyAction(home, { seat: 0, type: 'move', payload: { from: 2, die: 3 } });
+    expect((after.board as { off: number[] }).off[0]).toBe(1);
   });
 });

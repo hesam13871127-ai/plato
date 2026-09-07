@@ -10,6 +10,19 @@
 /** Slug of a concrete game (must match `games.slug` in the catalogue). */
 export type GameSlug = string;
 
+/**
+ * Purely cosmetic, publicly visible equipment a seat brings to the table:
+ * the piece set its tokens/discs/checkers are drawn with, the board
+ * ("playground") theme it plays on and the dice set it rolls. Every value is a
+ * skin id from the shop catalogue metadata (e.g. `neon`, `gold_casino`).
+ * Cosmetics never influence rules — they are rendering hints only.
+ */
+export interface SeatCosmetics {
+  piece?: string;
+  board?: string;
+  dice?: string;
+}
+
 /** One seat at the table. A bot seat carries an AI profile. */
 export interface SeatInfo {
   /** User id for a human, or the bot user id (kept server-side only). */
@@ -21,6 +34,8 @@ export interface SeatInfo {
   botDifficulty?: 'easy' | 'medium' | 'hard' | 'expert';
   displayName: string;
   avatarUrl: string | null;
+  /** Equipped, public cosmetics (safe to broadcast). */
+  cosmetics?: SeatCosmetics;
 }
 
 /** Immutable configuration handed to an engine when a match starts. */
@@ -65,6 +80,8 @@ export interface SeatPublic {
   avatarUrl: string | null;
   connected: boolean;
   score: number;
+  /** Equipped cosmetics so every client renders each seat's chosen pieces. */
+  cosmetics?: SeatCosmetics;
 }
 
 /** A move/action submitted by a seat (or chosen by a bot). */

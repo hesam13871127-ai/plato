@@ -17,6 +17,11 @@ import { WordChainEngine } from './word-chain.engine';
 import { MemoryRaceEngine } from './memory-race.engine';
 import { ImpostorLightEngine } from './impostor-light.engine';
 import { QuickChallengesEngine } from './quick-challenges.engine';
+import { CheckersEngine } from './checkers.engine';
+import { ReversiEngine } from './reversi.engine';
+import { BackgammonEngine } from './backgammon.engine';
+import { DotsBoxesEngine } from './dots-boxes.engine';
+import { SeaBattleEngine } from './sea-battle.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -44,6 +49,11 @@ export class EngineRegistry {
     memoryRace: MemoryRaceEngine,
     impostorLight: ImpostorLightEngine,
     quickChallenges: QuickChallengesEngine,
+    checkers: CheckersEngine,
+    reversi: ReversiEngine,
+    backgammon: BackgammonEngine,
+    dotsBoxes: DotsBoxesEngine,
+    seaBattle: SeaBattleEngine,
   ) {
     this.register(dominoes);
     this.register(connect4);
@@ -62,6 +72,11 @@ export class EngineRegistry {
     this.register(memoryRace);
     this.register(impostorLight);
     this.register(quickChallenges);
+    this.register(checkers);
+    this.register(reversi);
+    this.register(backgammon);
+    this.register(dotsBoxes);
+    this.register(seaBattle);
   }
 
   register(engine: BaseGameEngine): void {

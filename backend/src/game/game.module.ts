@@ -12,7 +12,9 @@ import { RoomEntity } from '../database/entities/room.entity';
 import { RoomPlayerEntity } from '../database/entities/room-player.entity';
 import { SeasonEntity } from '../database/entities/season.entity';
 import { UserEntity } from '../database/entities/user.entity';
+import { UserInventoryEntity } from '../database/entities/user-inventory.entity';
 import { BotService } from './bot/bot.service';
+import { CosmeticsService } from './cosmetics.service';
 import { GameCatalogSeeder } from './game-catalog.seeder';
 import { GameBootstrap } from './game.bootstrap';
 import { GameController } from './game.controller';
@@ -38,6 +40,11 @@ import { WordChainEngine } from './engine/word-chain.engine';
 import { MemoryRaceEngine } from './engine/memory-race.engine';
 import { ImpostorLightEngine } from './engine/impostor-light.engine';
 import { QuickChallengesEngine } from './engine/quick-challenges.engine';
+import { CheckersEngine } from './engine/checkers.engine';
+import { ReversiEngine } from './engine/reversi.engine';
+import { BackgammonEngine } from './engine/backgammon.engine';
+import { DotsBoxesEngine } from './engine/dots-boxes.engine';
+import { SeaBattleEngine } from './engine/sea-battle.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -51,6 +58,7 @@ const ENTITIES = [
   BotEntity,
   UserEntity,
   ProfileEntity,
+  UserInventoryEntity,
 ];
 
 /**
@@ -80,9 +88,15 @@ const ENTITIES = [
     MemoryRaceEngine,
     ImpostorLightEngine,
     QuickChallengesEngine,
+    CheckersEngine,
+    ReversiEngine,
+    BackgammonEngine,
+    DotsBoxesEngine,
+    SeaBattleEngine,
     EngineRegistry,
     // Services
     BotService,
+    CosmeticsService,
     GameSessionService,
     MatchmakingService,
     RoomService,

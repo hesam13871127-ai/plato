@@ -10,6 +10,7 @@ import { ProfileEntity } from '../database/entities/profile.entity';
 import { RankingEntity } from '../database/entities/ranking.entity';
 import { SeasonEntity } from '../database/entities/season.entity';
 import { BotService } from './bot/bot.service';
+import { CosmeticsService } from './cosmetics.service';
 import { GameSessionService } from './game-session.service';
 import type { SeatInfo } from './engine/types';
 
@@ -57,6 +58,7 @@ export class MatchmakingService {
     @InjectRepository(SeasonEntity) private readonly seasons: Repository<SeasonEntity>,
     private readonly bots: BotService,
     private readonly sessions: GameSessionService,
+    private readonly cosmetics: CosmeticsService,
     config: ConfigService<AppConfig, true>,
   ) {
     this.fallbackSeconds = config.get('game.botFallbackSeconds', { infer: true });
@@ -222,6 +224,8 @@ export class MatchmakingService {
     seats.forEach((seat, index) => {
       seat.seatNumber = index;
     });
+    // Attach each player's equipped pieces / board / dice (public cosmetics).
+    await this.cosmetics.decorateSeats(seats, anchor.gameSlug);
 
     const sessionId = uuidv4();
     const session = this.sessions.start({

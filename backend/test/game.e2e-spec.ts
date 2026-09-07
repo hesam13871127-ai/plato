@@ -6,6 +6,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { GameSessionService } from '../src/game/game-session.service';
 import { MatchmakingService } from '../src/game/matchmaking.service';
+import { EconomyService } from '../src/economy/economy.service';
 
 /**
  * Phase 4 end-to-end tests: pluggable game catalogue, smart matchmaking with
@@ -145,6 +146,77 @@ describe('VibeTable games (e2e)', () => {
       // Session must have been settled.
       await waitUntil(() => (sessions.get(sessionId)?.settled ?? true) === true, 8000);
       expect(sessions.get(sessionId)?.settled ?? true).toBe(true);
+    });
+  });
+
+  describe('equipped cosmetics travel with the player to the table', () => {
+    const WOODEN_PIECES = '44444444-0000-4000-9101-000000000003'; // 600 coins, universal piece set
+    const FOREST_PLAYGROUND = '44444444-0000-4000-9202-000000000003'; // 1100 coins, board theme
+    const IVORY_DICE = '44444444-0000-4000-9100-000000000002'; // 400 coins
+
+    it('equips a piece set + playground and stamps them on the seat, never on bots as a tell', async () => {
+      const player = await signUp('+14155551301', 'Skinned Sky');
+      const economy = app.get(EconomyService);
+      await economy.credit(player.id, 'coins', 5000, { type: 'reward', description: 'test funding' });
+
+      for (const itemId of [WOODEN_PIECES, FOREST_PLAYGROUND, IVORY_DICE]) {
+        await request(httpServer).post('/api/shop/purchase').set(auth(player.token)).send({ itemId }).expect(200);
+      }
+      const inventory = await request(httpServer).get('/api/shop/inventory').set(auth(player.token)).expect(200);
+      const rows = inventory.body.data.items as Array<{ id: string; itemId: string; isEquipped: boolean }>;
+      for (const itemId of [WOODEN_PIECES, FOREST_PLAYGROUND, IVORY_DICE]) {
+        const row = rows.find((r) => r.itemId === itemId)!;
+        await request(httpServer).post('/api/shop/inventory/equip').set(auth(player.token)).send({ inventoryId: row.id }).expect(200);
+      }
+      const after = await request(httpServer).get('/api/shop/inventory').set(auth(player.token)).expect(200);
+      const equipped = (after.body.data.items as Array<{ itemId: string; isEquipped: boolean }>).filter((r) => r.isEquipped);
+      expect(equipped.map((r) => r.itemId).sort()).toEqual([WOODEN_PIECES, FOREST_PLAYGROUND, IVORY_DICE].sort());
+
+      // Start a checkers room against an invisible bot.
+      const created = await request(httpServer)
+        .post('/api/games/rooms')
+        .set(auth(player.token))
+        .send({ gameSlug: 'checkers', isPrivate: true, maxPlayers: 2, fillWithBots: true })
+        .expect(201);
+      const roomId = created.body.data.room.id as string;
+      const started = await request(httpServer).post(`/api/games/rooms/${roomId}/start`).set(auth(player.token)).expect(200);
+      const sessionId = started.body.data.sessionId as string;
+
+      const view = await request(httpServer).get(`/api/games/sessions/${sessionId}`).set(auth(player.token)).expect(200);
+      assertNoBotLeak(view.body.data);
+      const seats = view.body.data.state.seats as Array<{ playerId: string; cosmetics?: Record<string, string> }>;
+      const mine = seats.find((s) => s.playerId === player.id)!;
+      expect(mine.cosmetics).toEqual({ piece: 'wooden', board: 'forest', dice: 'ivory' });
+      // Every seat (including the bot's) carries cosmetics, so they are not a bot tell.
+      for (const seat of seats) {
+        expect(seat.cosmetics).toBeDefined();
+        expect(typeof seat.cosmetics!.piece).toBe('string');
+        expect(typeof seat.cosmetics!.board).toBe('string');
+      }
+      // Spectators see the same public cosmetics.
+      const stranger = await signUp('+14155551302', 'Watcher Wen');
+      const spec = await request(httpServer).get(`/api/games/sessions/${sessionId}`).set(auth(stranger.token)).expect(200);
+      const specSeats = spec.body.data.state.seats as Array<{ playerId: string; cosmetics?: Record<string, string> }>;
+      expect(specSeats.find((s) => s.playerId === player.id)!.cosmetics!.piece).toBe('wooden');
+    });
+
+    it('equipping a second piece set for the same game replaces the first', async () => {
+      const player = await signUp('+14155551303', 'Swap Sal');
+      const economy = app.get(EconomyService);
+      await economy.credit(player.id, 'coins', 5000, { type: 'reward', description: 'test funding' });
+      const CANDY_PIECES = '44444444-0000-4000-9101-000000000007';
+      for (const itemId of [WOODEN_PIECES, CANDY_PIECES]) {
+        await request(httpServer).post('/api/shop/purchase').set(auth(player.token)).send({ itemId }).expect(200);
+      }
+      const inv = await request(httpServer).get('/api/shop/inventory').set(auth(player.token)).expect(200);
+      const rows = inv.body.data.items as Array<{ id: string; itemId: string }>;
+      const wooden = rows.find((r) => r.itemId === WOODEN_PIECES)!;
+      const candy = rows.find((r) => r.itemId === CANDY_PIECES)!;
+      await request(httpServer).post('/api/shop/inventory/equip').set(auth(player.token)).send({ inventoryId: wooden.id }).expect(200);
+      await request(httpServer).post('/api/shop/inventory/equip').set(auth(player.token)).send({ inventoryId: candy.id }).expect(200);
+      const after = await request(httpServer).get('/api/shop/inventory').set(auth(player.token)).expect(200);
+      const equipped = (after.body.data.items as Array<{ itemId: string; isEquipped: boolean }>).filter((r) => r.isEquipped);
+      expect(equipped.map((r) => r.itemId)).toEqual([CANDY_PIECES]);
     });
   });
 
