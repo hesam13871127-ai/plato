@@ -159,7 +159,7 @@ class _StatusRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final players = state.status?.playersFound ?? 1;
-    final fallback = state.status?.fallbackInSeconds ?? 30;
+    final fallback = state.status?.fallbackInSeconds ?? 15;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(

@@ -1,20 +1,46 @@
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/cached_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/i18n/app_localizations.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/feedback_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/bottom_dock.dart';
+import '../../../../core/widgets/cached_avatar.dart';
+import '../../../../core/widgets/game_logo.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/wallet_chip.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../auth/presentation/widgets/set_password_sheet.dart';
 import '../../../quests/presentation/providers/quests_providers.dart';
 
-class HomeScreen extends ConsumerWidget {
+/// Redesigned landing screen: a rich hero header, 3D glass cards for the main
+/// categories, quick-launch game tiles, and the floating bottom dock.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // New phone sign-ups land here; offer to set a password once so future
+    // logins can use username/password (and SMS recovery works).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = ref.read(authNotifierProvider);
+      if (auth.isNewUser) {
+        SetPasswordSheet.show(context);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final user = ref.watch(authNotifierProvider.select((s) => s.user));
     final dailyAvailable = ref.watch(dailyPanelProvider).maybeWhen(
           data: (panel) => !panel.daily.claimedToday,
@@ -22,147 +48,179 @@ class HomeScreen extends ConsumerWidget {
         );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('VibeTable'),
-        actions: [
-          // Friends & groups hub.
-          IconButton(
-            icon: const Icon(Icons.people_alt_rounded, size: 26),
-            color: AppColors.softCyan,
-            onPressed: () => context.push(AppRoutes.friends),
-            tooltip: 'Friends',
-          ),
-          // Real-time chat inbox.
-          IconButton(
-            icon: const Icon(Icons.forum_rounded, size: 26),
-            color: AppColors.softCyan,
-            onPressed: () => context.push(AppRoutes.chat),
-            tooltip: 'Messages',
-          ),
-          // Daily reward shortcut — pulses/highlights when unclaimed.
-          IconButton(
-            icon: Badge(
-              isLabelVisible: dailyAvailable,
-              label: const Text('1'),
-              child: const Icon(Icons.calendar_month_rounded, size: 26),
-            ),
-            color: AppColors.softCyan,
-            onPressed: () => context.push(AppRoutes.quests),
-            tooltip: 'Daily rewards',
-          ),
-          IconButton(
-            icon: const Icon(Icons.account_circle_rounded, size: 28),
-            color: AppColors.softCyan,
-            onPressed: () => context.push(AppRoutes.profile),
-            tooltip: 'Profile',
-          ),
-        ],
-      ),
+      backgroundColor: Colors.transparent,
+      extendBody: true,
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.navyGradient),
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            GlassCard(
-              onTap: () => context.push(AppRoutes.wallet),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0x407B5CFF), Color(0x2000E5FF)],
-              ),
-              child: Row(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(0.8, -0.9),
+            radius: 1.5,
+            colors: [Color(0xFF1B2350), AppColors.deepNavy],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 120),
+            children: [
+              // ── Top bar ──────────────────────────────────────────────
+              Row(
                 children: [
-                  CachedAvatar(name: user.displayName, imageUrl: user.avatarUrl, radius: 28),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hi, ${user.displayName.isNotEmpty ? user.displayName : 'Player'}',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                        ),
-                        Text('@${user.username} · Level ${user.level}',
-                            style: const TextStyle(color: AppColors.textSecondary)),
-                      ],
+                  AppBrandLogo(size: 44),
+                  const SizedBox(width: 10),
+                  ShaderMask(
+                    shaderCallback: (r) => AppColors.brandGradient.createShader(r),
+                    child: const Text(
+                      'VibeTable',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 0.4,
+                      ),
                     ),
                   ),
-                  WalletChip(coins: user.coins, pips: user.pips),
+                  const Spacer(),
+                  _IconPill(
+                    icon: Icons.settings_outlined,
+                    onTap: () => context.push(AppRoutes.settings),
+                  ),
+                  _IconPill(
+                    icon: Icons.forum_rounded,
+                    onTap: () => context.push(AppRoutes.chat),
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text('Your stuff',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-            const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.5,
-              children: const [
-                _HubTile(
-                  title: 'Play',
-                  subtitle: 'Games & matchmaking',
-                  icon: Icons.casino_rounded,
-                  route: AppRoutes.games,
+              const SizedBox(height: 18),
+
+              // ── Profile/hero card ────────────────────────────────────
+              GlassCard(
+                onTap: () => context.push(AppRoutes.profile),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0x4D7B5CFF), Color(0x2600E5FF)],
                 ),
-                _HubTile(
-                  title: 'Ranked Season',
-                  subtitle: 'Tiers, rewards & leaderboard',
-                  icon: Icons.emoji_events_rounded,
-                  route: AppRoutes.season,
+                child: Row(
+                  children: [
+                    CachedAvatar(
+                        name: user.displayName, imageUrl: user.avatarUrl, radius: 30),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${user.displayName.isNotEmpty ? user.displayName : 'Player'} 👋',
+                            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+                          ),
+                          Text('@${user.username} · Lv ${user.level}',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    WalletChip(coins: user.coins, pips: user.pips),
+                  ],
                 ),
-                _HubTile(
-                  title: 'Shop',
-                  subtitle: 'Cosmetics & gifts',
-                  icon: Icons.storefront_rounded,
-                  route: AppRoutes.shop,
+              ),
+              const SizedBox(height: 22),
+
+              // ── Main categories (large 3D glass tiles) ───────────────
+              Row(
+                children: [
+                  _CategoryCard(
+                    emoji: '🎲',
+                    title: l10n.t('tab_games'),
+                    subtitle: '12',
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2E2480), Color(0xFF123B5A)],
+                    ),
+                    onTap: () => context.push(AppRoutes.games),
+                  ),
+                  const SizedBox(width: 12),
+                  _CategoryCard(
+                    emoji: '🛍️',
+                    title: l10n.t('tab_shop'),
+                    subtitle: l10n.t('shop_games'),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF3A2470), Color(0xFF4A1F52)],
+                    ),
+                    onTap: () => context.push(AppRoutes.shop),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _CategoryCard(
+                    emoji: '🏆',
+                    title: l10n.t('tab_profile'),
+                    subtitle: 'Season',
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1F4A44), Color(0xFF123B5A)],
+                    ),
+                    onTap: () => context.push(AppRoutes.season),
+                  ),
+                  const SizedBox(width: 12),
+                  _CategoryCard(
+                    emoji: '🎁',
+                    title: l10n.t('tab_chat'),
+                    subtitle: 'Daily',
+                    badge: dailyAvailable,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4A2E1F), Color(0xFF4A1F52)],
+                    ),
+                    onTap: () =>
+                        context.push(dailyAvailable ? AppRoutes.quests : AppRoutes.chat),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 26),
+
+              // ── Quick-play games strip ───────────────────────────────
+              Text(l10n.t('choose_game'),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 128,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: const [
+                    _QuickGame(slug: 'dominoes', name: 'Dominoes', emoji: '🁢'),
+                    _QuickGame(slug: 'ludo', name: 'Ludo', emoji: '🟥'),
+                    _QuickGame(slug: 'chess', name: 'Chess', emoji: '♟️'),
+                    _QuickGame(slug: 'pool_8ball', name: '8 Ball', emoji: '🎱'),
+                    _QuickGame(slug: 'ocho', name: 'Ocho', emoji: '🃏'),
+                    _QuickGame(slug: 'connect4', name: 'Connect 4', emoji: '🔴'),
+                  ],
                 ),
-                _HubTile(
-                  title: 'Inventory',
-                  subtitle: 'Equip your look',
-                  icon: Icons.checkroom_rounded,
-                  route: AppRoutes.inventory,
-                ),
-                _HubTile(
-                  title: 'Daily rewards',
-                  subtitle: 'Free coins & quests',
-                  icon: Icons.card_giftcard_rounded,
-                  route: AppRoutes.quests,
-                ),
-                _HubTile(
-                  title: 'Wallet',
-                  subtitle: 'Balance & history',
-                  icon: Icons.account_balance_wallet_rounded,
-                  route: AppRoutes.wallet,
-                ),
-                _HubTile(
-                  title: 'Messages',
-                  subtitle: 'Chat, voice & Lounge',
-                  icon: Icons.forum_rounded,
-                  route: AppRoutes.chat,
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const Text('Popular Tables',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-            const SizedBox(height: 12),
-            _GameTile(
-              title: 'Dominoes',
-              subtitle: 'Draw Dominoes · 2–4 players · play now',
-              icon: Icons.view_module_rounded,
-              route: AppRoutes.matchmaking('dominoes'),
-            ),
-            const _GameTile(
-              title: 'More games',
-              subtitle: 'Browse the full catalogue',
-              icon: Icons.sports_esports_rounded,
-              route: AppRoutes.games,
-            ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+        child: BottomDock(
+          current: 0,
+          items: [
+            DockItem(icon: Icons.home_rounded, labelKey: 'tab_home', onTap: () {}),
+            DockItem(
+                icon: Icons.casino_rounded,
+                labelKey: 'tab_games',
+                onTap: () => context.push(AppRoutes.games)),
+            DockItem(
+                icon: Icons.storefront_rounded,
+                labelKey: 'tab_shop',
+                onTap: () => context.push(AppRoutes.shop)),
+            DockItem(
+                icon: Icons.forum_rounded,
+                labelKey: 'tab_chat',
+                onTap: () => context.push(AppRoutes.chat)),
+            DockItem(
+                icon: Icons.person_rounded,
+                labelKey: 'tab_profile',
+                onTap: () => context.push(AppRoutes.profile)),
           ],
         ),
       ),
@@ -170,93 +228,144 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _HubTile extends StatelessWidget {
-  const _HubTile({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.route,
-  });
+class _IconPill extends ConsumerWidget {
+  const _IconPill({required this.icon, required this.onTap});
 
-  final String title;
-  final String subtitle;
   final IconData icon;
-  final String route;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      onTap: () => context.push(route),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: AppColors.brandGradient,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
-                Text(subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
-            ),
-          ),
-        ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: Material(
+        color: AppColors.glassFill,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.glassStroke),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            ref.read(feedbackServiceProvider.notifier).tap();
+            onTap();
+          },
+          child: Padding(padding: const EdgeInsets.all(9), child: Icon(icon, color: AppColors.softCyan, size: 21)),
+        ),
       ),
     );
   }
 }
 
-class _GameTile extends StatelessWidget {
-  const _GameTile({required this.title, required this.subtitle, required this.icon, required this.route});
+class _CategoryCard extends ConsumerWidget {
+  const _CategoryCard({
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.gradient,
+    required this.onTap,
+    this.badge = false,
+  });
+
+  final String emoji;
   final String title;
   final String subtitle;
-  final IconData icon;
-  final String route;
+  final Gradient gradient;
+  final VoidCallback onTap;
+  final bool badge;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GlassCard(
-        onTap: () => context.push(route),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                gradient: AppColors.brandGradient,
-                borderRadius: BorderRadius.circular(14),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          ref.read(feedbackServiceProvider.notifier).action();
+          onTap();
+        },
+        child: Container(
+          height: 132,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.glassStroke),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.electricPurple.withValues(alpha: 0.25),
+                blurRadius: 22,
+                offset: const Offset(0, 10),
               ),
-              child: Icon(icon, color: Colors.white),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -6,
+                bottom: -10,
+                child: Text(emoji, style: const TextStyle(fontSize: 56)),
+              ),
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  Row(
+                    children: [
+                      Text(title,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+                      if (badge)
+                        Container(
+                          margin: const EdgeInsets.only(left: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger,
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: const Text('1',
+                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                        ),
+                    ],
+                  ),
+                  Text(subtitle,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickGame extends ConsumerWidget {
+  const _QuickGame({required this.slug, required this.name, required this.emoji});
+
+  final String slug;
+  final String name;
+  final String emoji;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 14),
+      child: GestureDetector(
+        onTap: () {
+          ref.read(feedbackServiceProvider.notifier).diceRoll();
+          context.push(AppRoutes.matchmaking(slug));
+        },
+        child: Column(
+          children: [
+            GameLogo(slug: slug, size: 84, radius: 24, emoji: emoji),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: 84,
+              child: Text(name,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
           ],
         ),
       ),

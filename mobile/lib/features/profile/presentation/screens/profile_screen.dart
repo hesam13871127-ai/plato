@@ -3,6 +3,7 @@ import '../../../../core/widgets/cached_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/i18n/app_localizations.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -61,9 +62,21 @@ class ProfileScreen extends ConsumerWidget {
             ],
             const SizedBox(height: 16),
             const _ModerationEntry(),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => context.push(AppRoutes.settings),
+              icon: const Icon(Icons.settings_outlined, size: 20),
+              label: Text(context.l10n.t('settings')),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.softCyan,
+                side: const BorderSide(color: AppColors.glassStroke),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
             const SizedBox(height: 24),
             GradientButton(
-              label: 'Log out',
+              label: context.l10n.t('logout'),
               icon: Icons.logout_rounded,
               onPressed: () => ref.read(authNotifierProvider.notifier).logout(),
             ),

@@ -6,18 +6,23 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { AuthService, AuthResult } from './auth.service';
 import {
   EmailLoginDto,
   EmailRegisterDto,
+  ForgotPasswordDto,
+  IdentifierLoginDto,
   LogoutDto,
   PhoneOtpRequestDto,
   PhoneOtpVerifyDto,
   RefreshTokenDto,
+  ResetPasswordDto,
+  SetPasswordDto,
 } from './dto/auth.dto';
 import { TokenPair } from './token.service';
 
@@ -68,6 +73,42 @@ export class AuthController {
   @ApiOperation({ summary: 'Register with email and password' })
   registerEmail(@Body() dto: EmailRegisterDto, @Req() request: Request): Promise<AuthResult> {
     return this.authService.registerEmail(dto, this.meta(request));
+  }
+
+  @Public()
+  @Throttle({ default: AuthController.normal })
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Sign in with email, @username or phone + password' })
+  login(@Body() dto: IdentifierLoginDto, @Req() request: Request): Promise<AuthResult> {
+    return this.authService.loginWithIdentifier(dto.identifier, dto.password, this.meta(request));
+  }
+
+  @Public()
+  @Throttle({ default: AuthController.strict })
+  @Post('password/forgot')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request an SMS code to reset a forgotten password' })
+  forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ sent: true; devCode?: string }> {
+    return this.authService.requestPasswordReset(dto.phone);
+  }
+
+  @Public()
+  @Throttle({ default: AuthController.strict })
+  @Post('password/reset')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify the SMS code, set the new password and sign in' })
+  resetPassword(@Body() dto: ResetPasswordDto, @Req() request: Request): Promise<AuthResult> {
+    return this.authService.resetPassword(dto.phone, dto.code, dto.newPassword, this.meta(request));
+  }
+
+  @Throttle({ default: AuthController.normal })
+  @Post('password/set')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set/change the account password (after phone sign-up)' })
+  setPassword(@CurrentUser('id') userId: string, @Body() dto: SetPasswordDto) {
+    return this.authService.setPassword(userId, dto.newPassword);
   }
 
   @Public()

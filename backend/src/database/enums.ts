@@ -55,6 +55,8 @@ export type ItemType =
   | 'chat_bubble' // Chat Bubbles
   | 'theme' // Themes
   | 'game_skin' // Game Skins (table/felt skins)
+  | 'game_piece' // Game pieces (dice, tokens, balls, dominoes …)
+  | 'board_theme' // 3D board themes / table layouts
   | 'id_color' // ID Color
   | 'username_change' // Username Change (consumable)
   | 'dice_set'
@@ -67,6 +69,8 @@ export const ITEM_TYPES: ItemType[] = [
   'chat_bubble',
   'theme',
   'game_skin',
+  'game_piece',
+  'board_theme',
   'id_color',
   'username_change',
   'dice_set',

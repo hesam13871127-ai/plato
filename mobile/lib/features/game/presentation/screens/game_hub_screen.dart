@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/i18n/app_localizations.dart';
+import '../../../../core/services/feedback_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/game_logo.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../domain/entities/game_entities.dart';
 import '../providers/game_providers.dart';
+import '../widgets/tutorial_sheet.dart';
 
 /// Landing screen for the game subsystem: catalogue, quick play (smart
 /// matchmaking with invisible bot fallback), private tables and open lobbies.
@@ -169,18 +173,7 @@ class _GameCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.softCyan.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  game.isLive ? Icons.bolt : Icons.extension,
-                  color: AppColors.softCyan,
-                  size: 28,
-                ),
-              ),
+              GameLogo(slug: game.slug, size: 64, radius: 18, emoji: _gameEmoji(game.slug)),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -194,7 +187,7 @@ class _GameCard extends ConsumerWidget {
                         )),
                     const SizedBox(height: 2),
                     Text(
-                      '${game.minPlayers}–${game.maxPlayers} players · ~${game.avgDurationMinutes} min'
+                      '${game.minPlayers}–${game.maxPlayers} ${context.l10n.t('players')} · ~${game.avgDurationMinutes} ${context.l10n.t('minutes')}'
                       '${game.isLive ? ' · Live' : ' · Turn-based'}',
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                     ),
@@ -208,9 +201,17 @@ class _GameCard extends ConsumerWidget {
                     color: AppColors.glassFill,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text('SOON',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 1)),
+                  child: Text(context.l10n.t('status_coming_soon').toUpperCase(),
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 1)),
                 ),
+              IconButton(
+                tooltip: context.l10n.t('how_to_play'),
+                onPressed: () {
+                  ref.read(feedbackServiceProvider.notifier).tap();
+                  TutorialSheet.show(context, slug: game.slug, name: game.name);
+                },
+                icon: const Icon(Icons.help_outline_rounded, color: AppColors.softCyan),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -222,9 +223,12 @@ class _GameCard extends ConsumerWidget {
               children: [
                 Expanded(
                   child: GradientButton(
-                    label: 'Quick play',
+                    label: context.l10n.t('play_now'),
                     icon: Icons.play_arrow_rounded,
-                    onPressed: () => context.push('/matchmaking/${game.slug}'),
+                    onPressed: () {
+                      ref.read(feedbackServiceProvider.notifier).action();
+                      context.push('/matchmaking/${game.slug}');
+                    },
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -232,7 +236,7 @@ class _GameCard extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => context.push('/rooms/create/${game.slug}'),
                     icon: const Icon(Icons.group_add, size: 18),
-                    label: const Text('Create table'),
+                    label: Text(context.l10n.t('create_room')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.softCyan,
                       side: const BorderSide(color: AppColors.glassStroke),
@@ -246,6 +250,38 @@ class _GameCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Fallback emoji per slug for games whose 3D logo asset is not bundled.
+String _gameEmoji(String slug) {
+  switch (slug) {
+    case 'connect4':
+      return '🔴';
+    case 'bingo':
+      return '🎱';
+    case 'carrom':
+      return '⚪';
+    case 'chess':
+      return '♟️';
+    case 'dice_party':
+      return '🎲';
+    case 'dominoes':
+      return '🁢';
+    case 'emoji_charades':
+      return '😂';
+    case 'impostor_light':
+      return '🕵️';
+    case 'ludo':
+      return '🟥';
+    case 'memory_race':
+      return '🃏';
+    case 'ocho':
+      return '🃏';
+    case 'pool_8ball':
+      return '🎱';
+    default:
+      return '🎮';
   }
 }
 

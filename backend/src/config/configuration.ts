@@ -154,7 +154,7 @@ export default (): AppConfig => {
 
     game: {
       botPoolSize: parseInt(process.env.BOT_POOL_SIZE ?? '40', 10),
-      botFallbackSeconds: parseInt(process.env.MATCHMAKING_BOT_FALLBACK_SECONDS ?? '30', 10),
+      botFallbackSeconds: parseInt(process.env.MATCHMAKING_BOT_FALLBACK_SECONDS ?? '15', 10),
       maxRatingGap: parseInt(process.env.MATCHMAKING_MAX_RATING_GAP ?? '200', 10),
       reconnectGraceSeconds: parseInt(process.env.GAME_RECONNECT_GRACE_SECONDS ?? '45', 10),
       botThinkDivisor: parseFloat(process.env.BOT_THINK_DIVISOR ?? '1'),

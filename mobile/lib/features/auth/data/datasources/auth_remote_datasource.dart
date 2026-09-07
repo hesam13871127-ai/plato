@@ -62,6 +62,49 @@ class AuthRemoteDataSource {
     return AuthResponseModel.fromEnvelope(response.data ?? const {});
   }
 
+  /// Sign in with any identifier (email, @username or phone) + password.
+  Future<AuthResponseModel> loginWithIdentifier({
+    required String identifier,
+    required String password,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.login,
+      data: {'identifier': identifier, 'password': password},
+    );
+    return AuthResponseModel.fromEnvelope(response.data ?? const {});
+  }
+
+  /// Step 1 of password recovery: send an SMS reset code to the account's phone.
+  /// Returns the dev code when the backend runs with the development SMS provider.
+  Future<String?> requestPasswordReset({required String phone}) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.passwordForgot,
+      data: {'phone': phone},
+    );
+    return response.data?['data']?['devCode'] as String?;
+  }
+
+  /// Step 2: verify the SMS code and set the new password (signs the user in).
+  Future<AuthResponseModel> resetPassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.passwordReset,
+      data: {'phone': phone, 'code': code, 'newPassword': newPassword},
+    );
+    return AuthResponseModel.fromEnvelope(response.data ?? const {});
+  }
+
+  /// Attach a password to the current account (used right after phone sign-up).
+  Future<void> setPassword({required String newPassword}) async {
+    await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.passwordSet,
+      data: {'newPassword': newPassword},
+    );
+  }
+
   Future<Map<String, dynamic>> fetchCurrentUser() async {
     final response = await _dio.get<Map<String, dynamic>>(ApiEndpoints.me);
     return response.data?['data'] as Map<String, dynamic>? ?? const {};

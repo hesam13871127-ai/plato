@@ -12,6 +12,7 @@ class AuthState extends Equatable {
     this.errorMessage,
     this.otpSent = false,
     this.verificationId,
+    this.isNewUser = false,
   });
 
   final AuthStatus status;
@@ -25,6 +26,10 @@ class AuthState extends Equatable {
   /// Phone number awaiting OTP verification.
   final String? verificationId;
 
+  /// True when the last sign-in created a brand-new account (used to prompt
+  /// the player to choose a password right after phone sign-up).
+  final bool isNewUser;
+
   bool get isAuthenticated => status == AuthStatus.authenticated;
 
   AuthState copyWith({
@@ -34,6 +39,7 @@ class AuthState extends Equatable {
     String? errorMessage,
     bool? otpSent,
     String? verificationId,
+    bool? isNewUser,
     bool clearError = false,
   }) {
     return AuthState(
@@ -43,9 +49,11 @@ class AuthState extends Equatable {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       otpSent: otpSent ?? this.otpSent,
       verificationId: verificationId ?? this.verificationId,
+      isNewUser: isNewUser ?? false,
     );
   }
 
   @override
-  List<Object?> get props => [status, user, isLoading, errorMessage, otpSent, verificationId];
+  List<Object?> get props =>
+      [status, user, isLoading, errorMessage, otpSent, verificationId, isNewUser];
 }

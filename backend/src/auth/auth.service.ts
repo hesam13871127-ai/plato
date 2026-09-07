@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -150,6 +151,85 @@ export class AuthService {
     await this.staffSeeder.applyStaffRole(user);
     const tokens = await this.tokenService.issueTokens(user, meta);
     return { user: (await this.toDto(user.id)).user, tokens, isNewUser: false };
+  }
+
+  // ------------------------------------------------------------------
+  // Unified identifier login + password recovery via SMS
+  // ------------------------------------------------------------------
+
+  /**
+   * Sign in with a password. The identifier may be an email, a @username
+   * or an E.164 phone number (whatever the player used at registration).
+   */
+  async loginWithIdentifier(identifier: string, password: string, meta: RequestMeta): Promise<AuthResult> {
+    const id = identifier.trim().toLowerCase();
+    const normalizedPhone = /^\+?\d{8,15}$/.test(identifier.replace(/[\s-]/g, ''))
+      ? normalizePhone(identifier.replace(/[\s-]/g, ''))
+      : null;
+
+    const user = await this.users
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.profile', 'profile')
+      .addSelect('user.passwordHash')
+      .where('user.email = :id', { id })
+      .orWhere('user.phoneNormalized = :phone', { phone: normalizedPhone ?? '' })
+      .orWhere('LOWER(profile.username) = :id', { id })
+      .getOne();
+
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const matches = await bcrypt.compare(password, user.passwordHash);
+    if (!matches) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    await this.assertCanAuthenticate(user);
+    await this.staffSeeder.applyStaffRole(user);
+    const tokens = await this.tokenService.issueTokens(user, meta);
+    return { user: (await this.toDto(user.id)).user, tokens, isNewUser: false };
+  }
+
+  /** Sends a password-reset SMS code. Always reports success to avoid account enumeration. */
+  async requestPasswordReset(phone: string): Promise<{ sent: true; devCode?: string }> {
+    const result = await this.otpService.requestCode(phone, 'reset');
+    return { sent: true, ...result };
+  }
+
+  /** Verifies the SMS code and sets a new password, signing the player in. */
+  async resetPassword(
+    phone: string,
+    code: string,
+    newPassword: string,
+    meta: RequestMeta,
+  ): Promise<AuthResult> {
+    await this.otpService.verifyCode(phone, code, 'reset');
+
+    const normalized = normalizePhone(phone);
+    const user = await this.users.findOne({
+      where: { phoneNormalized: normalized },
+      relations: { profile: true },
+    });
+    if (!user) {
+      throw new BadRequestException('No account is registered with this phone number.');
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await this.users.save(user);
+
+    await this.assertCanAuthenticate(user);
+    const tokens = await this.tokenService.issueTokens(user, meta);
+    return { user: (await this.toDto(user.id)).user, tokens, isNewUser: false };
+  }
+
+  /** Attaches a password to a freshly created (phone OTP) account. */
+  async setPassword(userId: string, newPassword: string): Promise<{ passwordSet: true }> {
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('Account not found.');
+    user.passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await this.users.save(user);
+    return { passwordSet: true };
   }
 
   // ------------------------------------------------------------------

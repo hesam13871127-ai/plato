@@ -29,10 +29,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     ShopItemType.chatBubble,
     ShopItemType.theme,
     ShopItemType.gameSkin,
+    ShopItemType.gamePiece,
+    ShopItemType.boardTheme,
     ShopItemType.idColor,
     ShopItemType.usernameChange,
     ShopItemType.diceSet,
     ShopItemType.emote,
+    ShopItemType.bundle,
   ];
 
   @override
