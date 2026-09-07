@@ -55,6 +55,9 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
     'mancala': 'Mancala',
     'mines': 'Mines',
     'go_fish': 'Go Fish',
+    'darts': 'Darts',
+    'bowling': 'Bowling',
+    'big_two': 'Big Two',
   };
 
   @override

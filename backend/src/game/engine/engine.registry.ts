@@ -25,6 +25,9 @@ import { SeaBattleEngine } from './sea-battle.engine';
 import { MancalaEngine } from './mancala.engine';
 import { MinesEngine } from './mines.engine';
 import { GoFishEngine } from './go-fish.engine';
+import { DartsEngine } from './darts.engine';
+import { BowlingEngine } from './bowling.engine';
+import { BigTwoEngine } from './big-two.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -60,6 +63,9 @@ export class EngineRegistry {
     mancala: MancalaEngine,
     mines: MinesEngine,
     goFish: GoFishEngine,
+    darts: DartsEngine,
+    bowling: BowlingEngine,
+    bigTwo: BigTwoEngine,
   ) {
     this.register(dominoes);
     this.register(connect4);
@@ -86,6 +92,9 @@ export class EngineRegistry {
     this.register(mancala);
     this.register(mines);
     this.register(goFish);
+    this.register(darts);
+    this.register(bowling);
+    this.register(bigTwo);
   }
 
   register(engine: BaseGameEngine): void {

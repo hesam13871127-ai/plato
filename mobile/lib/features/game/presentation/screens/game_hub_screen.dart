@@ -272,6 +272,12 @@ String _gameEmoji(String slug) {
       return '💣';
     case 'go_fish':
       return '🐟';
+    case 'darts':
+      return '🎯';
+    case 'bowling':
+      return '🎳';
+    case 'big_two':
+      return '🂢';
     case 'connect4':
       return '🔴';
     case 'bingo':

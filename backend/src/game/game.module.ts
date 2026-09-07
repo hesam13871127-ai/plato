@@ -48,6 +48,9 @@ import { SeaBattleEngine } from './engine/sea-battle.engine';
 import { MancalaEngine } from './engine/mancala.engine';
 import { MinesEngine } from './engine/mines.engine';
 import { GoFishEngine } from './engine/go-fish.engine';
+import { DartsEngine } from './engine/darts.engine';
+import { BowlingEngine } from './engine/bowling.engine';
+import { BigTwoEngine } from './engine/big-two.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -99,6 +102,9 @@ const ENTITIES = [
     MancalaEngine,
     MinesEngine,
     GoFishEngine,
+    DartsEngine,
+    BowlingEngine,
+    BigTwoEngine,
     EngineRegistry,
     // Services
     BotService,

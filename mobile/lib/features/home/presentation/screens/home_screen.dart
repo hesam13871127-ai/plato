@@ -131,7 +131,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _CategoryCard(
                     emoji: '🎲',
                     title: l10n.t('tab_games'),
-                    subtitle: '25',
+                    subtitle: '28',
                     gradient: const LinearGradient(
                       colors: [Color(0xFF3B2A9E), Color(0xFF1B3A6B)],
                     ),
@@ -187,6 +187,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   scrollDirection: Axis.horizontal,
                   children: const [
                     _QuickGame(slug: 'ludo', name: 'Ludo', emoji: '🟥'),
+                    _QuickGame(slug: 'bowling', name: 'Bowling', emoji: '🎳'),
+                    _QuickGame(slug: 'darts', name: 'Darts', emoji: '🎯'),
+                    _QuickGame(slug: 'big_two', name: 'Big Two', emoji: '🂢'),
                     _QuickGame(slug: 'checkers', name: 'Checkers', emoji: '⚫'),
                     _QuickGame(slug: 'backgammon', name: 'Backgammon', emoji: '🎲'),
                     _QuickGame(slug: 'dots_boxes', name: 'Dots & Boxes', emoji: '🔲'),

@@ -18,7 +18,10 @@ VALUES
   ('11111111-0000-4000-8000-000000000008', 'sea_battle',  'Sea Battle',  'Hide your fleet, hunt theirs. Hits fire again — sink all five ships to win.', NULL, 2, 2, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000009', 'mancala',     'Mancala',     'Sow stones around the board, capture across it, land in your store to go again.', NULL, 2, 2, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000010', 'mines',       'Mines',       'Competitive minesweeper: find more mines than your rivals on one shared field. 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000011', 'go_fish',     'Go Fish',     'Ask, collect, book! The classic card game of memory and luck for 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000011', 'go_fish',     'Go Fish',     'Ask, collect, book! The classic card game of memory and luck for 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000012', 'darts',       'Darts',       '301, double-out. Steady the drifting reticle, hit trebles, and check out on a double. 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000013', 'bowling',     'Bowling',     'Five frames, strikes, spares and splits. Line up, swipe with spin and hit the pocket. 2–4 players.', NULL, 2, 4, 8, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000014', 'big_two',     'Big Two',     'The climbing card game: singles, pairs and poker hands — 2s are high, first to shed every card wins. 2–4 players.', NULL, 2, 4, 10, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), min_players = VALUES(min_players), max_players = VALUES(max_players), supports_bots = VALUES(supports_bots), status = VALUES(status);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -85,7 +88,9 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9208-000000000009', 'Royal Walnut Playground',    'Hand-polished walnut and brass — a classic club table.', 'board_theme', 'rare',      NULL, 1250, 'coins', 0,  1, 1, 1, 0, 118, JSON_OBJECT('theme', 'walnut')),
   ('44444444-0000-4000-9106-000000000008', 'Hologram Pieces',            'Translucent holo-glass pieces that shimmer as they move.', 'game_piece', 'legendary', NULL, 340,  'pips',  0,  1, 1, 1, 0, 98,  JSON_OBJECT('piece', 'hologram')),
   ('44444444-0000-4000-9107-000000000009', 'Marble Pieces',              'Cool polished marble — white, black, jade and rose.',    'game_piece', 'rare',      NULL, 1400, 'coins', 0,  1, 1, 1, 0, 99,  JSON_OBJECT('piece', 'marble')),
-  ('44444444-0000-4000-9108-000000000010', 'Lava Pieces',                'Cracked obsidian with a molten core — pulses with heat.', 'game_piece', 'epic',      NULL, 2500, 'coins', 0,  1, 1, 1, 0, 100, JSON_OBJECT('piece', 'lava'))
+  ('44444444-0000-4000-9108-000000000010', 'Lava Pieces',                'Cracked obsidian with a molten core — pulses with heat.', 'game_piece', 'epic',      NULL, 2500, 'coins', 0,  1, 1, 1, 0, 100, JSON_OBJECT('piece', 'lava')),
+  ('44444444-0000-4000-9209-000000000010', 'Neon Arcade Playground',     'Blacklight felt, magenta rails and cyan lines — bowling-alley glow for every table.', 'board_theme', 'epic', NULL, 2100, 'coins', 0,  1, 1, 1, 0, 119, JSON_OBJECT('theme', 'arcade')),
+  ('44444444-0000-4000-9210-000000000011', 'Deep Ocean Playground',      'Sunlit water over a sandy reef — calm blues with a sea-glass accent.', 'board_theme', 'rare', NULL, 1100, 'coins', 0,  1, 1, 1, 0, 120, JSON_OBJECT('theme', 'ocean'))
 ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), metadata = VALUES(metadata);
 
 -- ── Daily quests ───────────────────────────────────────────────────────────

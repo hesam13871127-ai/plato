@@ -368,6 +368,75 @@ class GameTutorials {
         bodyFa: 'چهار کارت هم‌عدد یک «کتاب» است. وقتی حوض و دست‌ها خالی شد، بیشترین کتاب برنده است. یادت باشد بقیه چه خواستند!',
       ),
     ],
+    'darts': [
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: '301, three darts a visit',
+        titleFa: '۳۰۱، هر نوبت سه دارت',
+        bodyEn: 'Everyone starts on 301. Each visit you throw three darts and the total comes off your score.',
+        bodyFa: 'همه از ۳۰۱ شروع می‌کنند. هر نوبت سه دارت پرتاب می‌کنی و مجموع امتیاز از عددت کم می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🫳',
+        titleEn: 'Hold to steady',
+        titleFa: 'نگه دار تا ثابت شود',
+        bodyEn: 'The reticle drifts. Press and hold to slow it down, release to throw. Trebles are the thin inner ring — T20 scores 60!',
+        bodyFa: 'نشانگر حرکت می‌کند. انگشتت را نگه دار تا آرام شود و رها کن تا پرتاب شود. حلقه باریک داخلی سه‌برابر است — T20 یعنی ۶۰ امتیاز!',
+      ),
+      TutorialStep(
+        emoji: '🏁',
+        titleEn: 'Finish on a double',
+        titleFa: 'با دابل تمام کن',
+        bodyEn: 'You must hit exactly zero and the last dart has to land in the outer double ring (or the bull\'s-eye). Going below zero or to 1 is a bust — your visit is voided.',
+        bodyFa: 'باید دقیقاً به صفر برسی و آخرین دارت در حلقه بیرونی «دابل» (یا مرکز) بنشیند. رفتن زیر صفر یا رسیدن به ۱ یعنی سوختن نوبت.',
+      ),
+    ],
+    'bowling': [
+      TutorialStep(
+        emoji: '🎳',
+        titleEn: 'Five frames',
+        titleFa: 'پنج فریم',
+        bodyEn: 'Each frame you get two balls to knock down ten pins. Knock them all with the first ball for a strike, with two for a spare.',
+        bodyFa: 'در هر فریم دو توپ داری تا ده پین را بیندازی. همه با توپ اول یعنی استرایک، با دو توپ یعنی اسپیر.',
+      ),
+      TutorialStep(
+        emoji: '👆',
+        titleEn: 'Line up and swipe',
+        titleFa: 'تنظیم کن و بکش',
+        bodyEn: 'Drag the ball left or right, then swipe up to bowl. A longer swipe means more power; swiping diagonally adds hook. Aim for the pocket between the 1 and 3 pins.',
+        bodyFa: 'توپ را چپ یا راست بکش، بعد به بالا سوایپ کن. سوایپ بلندتر یعنی قدرت بیشتر؛ سوایپ مورب یعنی پیچ. بین پین ۱ و ۳ را نشانه بگیر.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Bonuses',
+        titleFa: 'امتیازهای اضافه',
+        bodyEn: 'Strikes add your next two balls, spares your next one. Strike or spare in the last frame and you earn extra balls. Highest total wins.',
+        bodyFa: 'استرایک دو توپ بعدی و اسپیر توپ بعدی را به امتیازت اضافه می‌کند. استرایک یا اسپیر در فریم آخر توپ اضافه می‌دهد. بیشترین امتیاز برنده است.',
+      ),
+    ],
+    'big_two': [
+      TutorialStep(
+        emoji: '🂢',
+        titleEn: 'Twos are high',
+        titleFa: 'دو بالاترین است',
+        bodyEn: 'Cards rank 3 (low) up to A and then 2 (high). Suits break ties: ♦ < ♣ < ♥ < ♠. Whoever holds the 3♦ leads and must play it.',
+        bodyFa: 'کارت‌ها از ۳ (کمترین) تا آس و بعد ۲ (بیشترین). خال‌ها تساوی را می‌شکنند: ♦ < ♣ < ♥ < ♠. هر کس ۳ خشت دارد شروع می‌کند و باید آن را بازی کند.',
+      ),
+      TutorialStep(
+        emoji: '🃏',
+        titleEn: 'Singles, pairs, triples, poker hands',
+        titleFa: 'تک، جفت، سه‌تایی، دست‌های پوکر',
+        bodyEn: 'Tap cards to select them. Play a single, a pair, a triple or a five-card hand (straight < flush < full house < four of a kind < straight flush). You must beat the table with the same number of cards, or pass.',
+        bodyFa: 'کارت‌ها را لمس کن تا انتخاب شوند. تک، جفت، سه‌تایی یا دست پنج‌کارتی بازی کن (استریت < فلاش < فول‌هاوس < کاره < استریت‌فلاش). باید با همان تعداد کارت، روی میز را بزنی یا پاس بدهی.',
+      ),
+      TutorialStep(
+        emoji: '🏁',
+        titleEn: 'Empty your hand',
+        titleFa: 'دستت را خالی کن',
+        bodyEn: 'When everyone else passes, the last player to play leads anything. First to shed every card wins; the rest rank by cards left.',
+        bodyFa: 'وقتی بقیه پاس دادند، آخرین بازیکنی که کارت گذاشته آزادانه شروع می‌کند. اولین نفری که دستش خالی شود برنده است؛ بقیه بر اساس کارت‌های مانده رتبه می‌گیرند.',
+      ),
+    ],
     'ocho': [
       TutorialStep(
         emoji: '🃏',

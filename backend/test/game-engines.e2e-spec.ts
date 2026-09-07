@@ -23,6 +23,9 @@ import { SeaBattleEngine } from '../src/game/engine/sea-battle.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { MinesEngine } from '../src/game/engine/mines.engine';
 import { GoFishEngine } from '../src/game/engine/go-fish.engine';
+import { DartsEngine } from '../src/game/engine/darts.engine';
+import { BowlingEngine } from '../src/game/engine/bowling.engine';
+import { BigTwoEngine } from '../src/game/engine/big-two.engine';
 import type { BaseGameEngine } from '../src/game/engine/base-game.engine';
 import type { GameState, MatchConfig, SeatInfo } from '../src/game/engine/types';
 
@@ -121,6 +124,13 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'mines (4p)', build: () => new MinesEngine(), players: 4 },
   { name: 'go_fish (2p)', build: () => new GoFishEngine(), players: 2 },
   { name: 'go_fish (4p)', build: () => new GoFishEngine(), players: 4 },
+  { name: 'darts (2p)', build: () => new DartsEngine(), players: 2 },
+  { name: 'darts (4p)', build: () => new DartsEngine(), players: 4 },
+  { name: 'bowling (2p)', build: () => new BowlingEngine(), players: 2 },
+  { name: 'bowling (4p)', build: () => new BowlingEngine(), players: 4 },
+  { name: 'big_two (2p)', build: () => new BigTwoEngine(), players: 2 },
+  { name: 'big_two (3p)', build: () => new BigTwoEngine(), players: 3 },
+  { name: 'big_two (4p)', build: () => new BigTwoEngine(), players: 4 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -611,5 +621,162 @@ describe('new tables — scoring, secrecy and multi-seat rules', () => {
     expect(ab.hands[0].some((c) => c.rank === '7')).toBe(false);
     expect(after.currentSeat).toBe(0);
     expect(after.scores[0]).toBe(1);
+  });
+});
+
+describe('sports & card tables — darts, bowling, big two', () => {
+  test('darts scores beds correctly, busts below zero and checks out only on a double', () => {
+    const engine = new DartsEngine();
+    const state = engine.createInitialState(makeConfig(engine, 2));
+    // Treble 20 sits straight up at the treble ring.
+    const rings = (state.board as { rings: { trebleIn: number; trebleOut: number; doubleIn: number; doubleOut: number } }).rings;
+    const tRadius = (rings.trebleIn + rings.trebleOut) / 2;
+    const dRadius = (rings.doubleIn + rings.doubleOut) / 2;
+    const t20 = engine.applyAction(state, { seat: 0, type: 'throw', payload: { x: 0, y: tRadius } });
+    const b1 = t20.board as { players: Array<{ remaining: number; darts: Array<{ segment: number; multiplier: number; score: number }> }>; dartsLeft: number };
+    expect(b1.players[0].darts[0]).toMatchObject({ segment: 20, multiplier: 3, score: 60 });
+    expect(b1.players[0].remaining).toBe(241);
+    expect(b1.dartsLeft).toBe(2);
+    expect(t20.currentSeat).toBe(0);
+    // Bull's-eye = 50, a miss off the board = 0 and the visit passes to seat 1.
+    const bull = engine.applyAction(t20, { seat: 0, type: 'throw', payload: { x: 0, y: 0 } });
+    expect((bull.board as typeof b1).players[0].remaining).toBe(191);
+    const miss = engine.applyAction(bull, { seat: 0, type: 'throw', payload: { x: 1.3, y: 0 } });
+    expect((miss.board as typeof b1).players[0].remaining).toBe(191);
+    expect(miss.currentSeat).toBe(1);
+    expect((miss.board as { lastVisit: { total: number; bust: boolean } }).lastVisit).toMatchObject({ total: 110, bust: false });
+
+    // Craft a checkout: 40 left → D20 wins; S20 twice would bust (0 without a double).
+    const crafted = engine.createInitialState(makeConfig(engine, 2));
+    const cb = crafted.board as { players: Array<{ remaining: number; visitStart: number }> };
+    cb.players[0].remaining = 40;
+    cb.players[0].visitStart = 40;
+    const bust = engine.applyAction(crafted, { seat: 0, type: 'throw', payload: { x: 0, y: 0.4 } }); // single 20 → 20 left
+    expect((bust.board as typeof cb).players[0].remaining).toBe(20);
+    const bust2 = engine.applyAction(bust, { seat: 0, type: 'throw', payload: { x: 0, y: 0.4 } }); // single 20 → 0 but no double
+    expect((bust2.board as typeof cb).players[0].remaining).toBe(40);
+    expect((bust2.board as { lastVisit: { bust: boolean } }).lastVisit.bust).toBe(true);
+    expect(bust2.currentSeat).toBe(1);
+    expect(bust2.phase).toBe('in_progress');
+
+    const won = engine.applyAction(crafted, { seat: 0, type: 'throw', payload: { x: 0, y: dRadius } }); // double 20
+    expect(won.phase).toBe('completed');
+    expect(won.winnerSeat).toBe(0);
+    // Checkout hint only for the thrower.
+    expect((engine.playerView(crafted, 0).board as { hint: string | null }).hint).toBe('D20');
+    expect((engine.playerView(crafted, 1).board as { hint: string | null }).hint).toBeNull();
+  });
+
+  test('bowling keeps frame flow, awards strikes/spares with bonuses and grants last-frame extra balls', () => {
+    const engine = new BowlingEngine();
+    type Player = { frames: Array<{ rolls: number[]; score: number | null }>; frame: number; ball: number; standing: boolean[]; total: number; done: boolean };
+    const state = engine.createInitialState(makeConfig(engine, 2));
+    const board = state.board as { players: Player[]; frameCount: number };
+    expect(board.frameCount).toBe(5);
+    // Force deterministic pin results through the internal roller.
+    const roller = engine as unknown as { rollBall: (standing: boolean[], x: number, curve: number, power: number) => { arrival: number; knocked: number[] } };
+    const original = roller.rollBall;
+    const script: number[][] = [];
+    roller.rollBall = (standing: boolean[]) => {
+      const want = script.shift() ?? [];
+      const knocked = want.filter((p) => standing[p]);
+      return { arrival: 0, knocked };
+    };
+    try {
+      const all = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      // Seat 0: strike; seat 1: 7 + 3 spare. Then seat 0: 3 + 4 open; seat 1: 5 + 0.
+      script.push(all, [1, 2, 3, 4, 5, 6, 7], [8, 9, 10], [1, 2, 3], [4, 5, 6, 7], [1, 2, 3, 4, 5], []);
+      let s = engine.applyAction(state, { seat: 0, type: 'bowl', payload: { x: 0.2, curve: 0, power: 0.9 } });
+      expect(s.currentSeat).toBe(1); // strike ends the frame
+      s = engine.applyAction(s, { seat: 1, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      expect(s.currentSeat).toBe(1); // 7 pins, second ball
+      expect((s.board as { pins: number[] }).pins).toEqual([8, 9, 10]);
+      s = engine.applyAction(s, { seat: 1, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      expect((s.board as { lastRoll: { spare: boolean } }).lastRoll.spare).toBe(true);
+      expect(s.currentSeat).toBe(0);
+      s = engine.applyAction(s, { seat: 0, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      s = engine.applyAction(s, { seat: 0, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      s = engine.applyAction(s, { seat: 1, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      s = engine.applyAction(s, { seat: 1, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      const p = (s.board as { players: Player[] }).players;
+      // Strike (10 + 3 + 4 = 17) then open 7 → 24; spare (10 + 5 = 15) then 5 → 20.
+      expect(p[0].frames[0].score).toBe(17);
+      expect(p[0].frames[1].score).toBe(24);
+      expect(p[1].frames[0].score).toBe(15);
+      expect(p[1].frames[1].score).toBe(20);
+      expect(s.scores).toEqual([24, 20]);
+
+      // Fast-forward both to the last frame and check bonus balls after a strike.
+      for (const pl of p) {
+        while (pl.frames.length < 4) pl.frames.push({ rolls: [0, 0], score: null });
+        pl.frame = 4;
+        pl.ball = 1;
+        pl.standing = Array<boolean>(11).fill(true);
+        pl.standing[0] = false;
+      }
+      s.currentSeat = 0;
+      script.push(all, all, [1, 2, 3, 4, 5]);
+      s = engine.applyAction(s, { seat: 0, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      expect(s.currentSeat).toBe(0);
+      expect((s.board as { players: Player[] }).players[0].ball).toBe(2);
+      s = engine.applyAction(s, { seat: 0, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      expect((s.board as { players: Player[] }).players[0].ball).toBe(3);
+      s = engine.applyAction(s, { seat: 0, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      const last = (s.board as { players: Player[] }).players[0];
+      expect(last.done).toBe(true);
+      expect(last.frames[4].rolls).toEqual([10, 10, 5]);
+      expect(s.currentSeat).toBe(1);
+      // Seat 1 opens with 3 + 4 → no bonus ball, game ends.
+      script.push([1, 2, 3], [4, 5, 6, 7]);
+      s = engine.applyAction(s, { seat: 1, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      s = engine.applyAction(s, { seat: 1, type: 'bowl', payload: { x: 0, curve: 0, power: 0.9 } });
+      expect(s.phase).toBe('completed');
+      expect(s.winnerSeat).toBe(0);
+    } finally {
+      roller.rollBall = original;
+    }
+  });
+
+  test('big two ranks combinations, enforces the opening card, hides hands and clears the table after passes', () => {
+    const engine = new BigTwoEngine();
+    const mk = (id: string) => ({ id, rank: id.slice(0, -1), suit: id.slice(-1) as 'D' | 'C' | 'H' | 'S' });
+    const c = (ids: string[]) => engine.classify(ids.map(mk))!;
+    expect(c(['3D']).kind).toBe('single');
+    expect(c(['9H', '9S']).kind).toBe('pair');
+    expect(c(['3D', '4D', '5D', '6D', '7D']).kind).toBe('straight_flush');
+    expect(c(['3D', '4C', '5D', '6H', '7S']).kind).toBe('straight');
+    expect(c(['KD', 'KC', 'KH', '4S', '4D']).kind).toBe('full_house');
+    expect(c(['QD', 'QC', 'QH', 'QS', '3D']).kind).toBe('four_kind');
+    expect(engine.classify([mk('3D'), mk('4D')])).toBeNull();
+    expect(engine.beats(c(['2D']), c(['AS']))).toBe(true); // 2 is high
+    expect(engine.beats(c(['AS']), c(['AH']))).toBe(true); // spades beat hearts
+    expect(engine.beats(c(['4D', '4C']), c(['2D']))).toBe(false); // size mismatch
+    expect(engine.beats(c(['3D', '4C', '5D', '6H', '7S']), c(['KD', 'KC', 'KH', '4S', '4D']))).toBe(false);
+    expect(engine.beats(c(['QD', 'QC', 'QH', 'QS', '3D']), c(['KD', 'KC', 'KH', '4S', '4D']))).toBe(true);
+
+    const state = engine.createInitialState(makeConfig(engine, 4));
+    const full = state.board as { hands: Array<Array<{ id: string }>>; handSizes: number[] };
+    expect(full.handSizes).toEqual([13, 13, 13, 13]);
+    const starter = state.currentSeat;
+    const view = engine.playerView(state, starter).board as { hand: Array<{ id: string }>; mustInclude: string; playable: string[] };
+    expect(view.hand.map((x) => x.id).sort()).toEqual(full.hands[starter].map((x) => x.id).sort());
+    expect(view.mustInclude).toBe('3D');
+    expect(view.playable).toContain('3D');
+    const spectator = engine.spectatorView(state).board as { hand: unknown };
+    expect(spectator.hand).toBeNull();
+    expect(JSON.stringify(engine.spectatorView(state).board)).not.toContain('"hands"');
+    // Opening play must include the 3♦.
+    const other = full.hands[starter].find((x) => x.id !== '3D')!;
+    expect(engine.validate(state, { seat: starter, type: 'play', payload: { cards: [other.id] } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: starter, type: 'pass', payload: {} }).ok).toBe(false);
+    let s = engine.applyAction(state, { seat: starter, type: 'play', payload: { cards: ['3D'] } });
+    expect((s.board as { handSizes: number[] }).handSizes[starter]).toBe(12);
+    // Everyone else passes → the table clears and the starter leads again.
+    for (let i = 0; i < 3; i++) {
+      expect(s.currentSeat).not.toBe(starter);
+      s = engine.applyAction(s, { seat: s.currentSeat, type: 'pass', payload: {} });
+    }
+    expect(s.currentSeat).toBe(starter);
+    expect((s.board as { table: unknown }).table ?? (s.board as { tableCombo: unknown }).tableCombo).toBeNull();
   });
 });

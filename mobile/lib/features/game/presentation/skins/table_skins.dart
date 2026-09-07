@@ -206,6 +206,30 @@ class TableSkins {
       lightSquare: Color(0xFFC9A46A),
       darkSquare: Color(0xFF6E4527),
     ),
+    'arcade': PlaygroundSkin(
+      id: 'arcade',
+      name: 'Neon Arcade',
+      feltTop: Color(0xFF1A0B3A),
+      feltBottom: Color(0xFF07031A),
+      rail: Color(0xFF2A1160),
+      line: Color(0x99FF2DAA),
+      glow: Color(0xFFFF2DAA),
+      accent: Color(0xFF00F0FF),
+      lightSquare: Color(0xFF3A1A78),
+      darkSquare: Color(0xFF1B0B44),
+    ),
+    'ocean': PlaygroundSkin(
+      id: 'ocean',
+      name: 'Deep Ocean',
+      feltTop: Color(0xFF0B3A5C),
+      feltBottom: Color(0xFF041A2E),
+      rail: Color(0xFF0E2A44),
+      line: Color(0x8878E0FF),
+      glow: Color(0xFF3DC8FF),
+      accent: Color(0xFF7FF4E0),
+      lightSquare: Color(0xFF2C6E96),
+      darkSquare: Color(0xFF123B5C),
+    ),
   };
 
   static const Map<String, DiceSkin> dice = {
