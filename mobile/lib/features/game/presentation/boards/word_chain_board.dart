@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/piece_3d.dart';
 import '../../domain/entities/game_entities.dart';
+import '../skins/skinned_pieces.dart';
+import '../skins/table_skins.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
 
-/// Word Chain: on your turn type a word starting with the required letter (or
-/// any word to start). A wrong word or pass costs a life; last one alive wins.
+/// Word Chain. The chain snakes across the felt as letter tiles; the big
+/// glowing tile shows the letter your word must start with. Type a real
+/// word, hit play, and it slides onto the chain. Passing costs a heart —
+/// lose all three and you are out; last one standing wins.
 class WordChainBoard extends StatefulWidget {
   const WordChainBoard({super.key, required this.session, required this.mySeat, required this.onAction});
 
@@ -20,178 +25,220 @@ class WordChainBoard extends StatefulWidget {
 
 class _WordChainBoardState extends State<WordChainBoard> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focus = FocusNode();
+  final ScrollController _chainScroll = ScrollController();
   bool _busy = false;
+  int _chainLength = 0;
 
   Map<String, dynamic> get b => widget.session.board;
+  bool get _myTurn => widget.session.isInProgress && widget.session.currentSeat == widget.mySeat;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() => setState(() {}));
+  }
+
+  @override
+  void didUpdateWidget(covariant WordChainBoard old) {
+    super.didUpdateWidget(old);
+    final chain = (b['chain'] as List?) ?? const [];
+    if (chain.length != _chainLength) {
+      _chainLength = chain.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_chainScroll.hasClients) {
+          _chainScroll.animateTo(_chainScroll.position.maxScrollExtent, duration: const Duration(milliseconds: 350), curve: Curves.easeOut);
+        }
+      });
+    }
+    if (_myTurn && !old.session.isInProgress) _focus.requestFocus();
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focus.dispose();
+    _chainScroll.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final players = ((b['players'] as List?) ?? const []);
+    final players = ((b['players'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
     final chain = ((b['chain'] as List?) ?? const []).map((e) => e.toString()).toList();
-    final requiredLetter = b['requiredFirstLetter']?.toString();
-    final lastWord = b['lastWord']?.toString() ?? '';
-    final myTurn = widget.session.isInProgress && widget.session.currentSeat == widget.mySeat;
+    final required = ((b['requiredFirstLetter'] as String?) ?? '').toUpperCase();
+    final lastWord = (b['lastWord'] as String?) ?? '';
+    final playground = TableSkins.playgroundFor(widget.session, widget.mySeat);
+    final current = widget.session.currentSeat;
+    final typed = _controller.text.trim();
+    final startsRight = required.isEmpty || (typed.isNotEmpty && typed[0].toUpperCase() == required);
+    final canSubmit = _myTurn && !_busy && typed.length >= 2 && startsRight;
+
+    String status;
+    if (!widget.session.isInProgress) {
+      status = 'Game over';
+    } else if (_myTurn) {
+      status = required.isEmpty ? 'Your turn — start the chain with any word' : 'Your turn — a word starting with "$required"';
+    } else {
+      final name = current >= 0 && current < widget.session.seats.length ? widget.session.seats[current].displayName : 'Someone';
+      status = '$name is thinking of a word…';
+    }
 
     return Column(
       children: [
-        TurnIndicator(
-          text: widget.session.isInProgress
-              ? myTurn
-                  ? (requiredLetter != null
-                      ? 'Your turn — word must start with "$requiredLetter"'
-                      : 'Your turn — say any word to start!')
-                  : 'Waiting for ${_currentName()}…'
-              : 'Game over',
-          highlight: myTurn,
-          icon: Icons.text_fields,
+        TurnIndicator(text: status, highlight: _myTurn, icon: Icons.abc_rounded),
+        const SizedBox(height: 8),
+        // Players with hearts.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              for (var i = 0; i < players.length && i < widget.session.seats.length; i++)
+                Expanded(
+                  child: _PlayerTile(
+                    name: i == widget.mySeat ? 'You' : widget.session.seats[i].displayName,
+                    lives: (players[i]['lives'] as num?)?.toInt() ?? 0,
+                    alive: players[i]['alive'] != false,
+                    active: widget.session.isInProgress && current == i,
+                    winner: widget.session.winnerSeat == i,
+                    skin: TableSkins.pieceSkin(widget.session.cosmeticsOf(i).piece),
+                    seat: i,
+                    palette: TableSkins.paletteFor(widget.session, i),
+                  ),
+                ),
+            ],
+          ),
         ),
-        const SizedBox(height: 10),
-        TableSurface(
+        const SizedBox(height: 8),
+        Playground(
+          skin: playground,
+          padding: const EdgeInsets.all(12),
           child: Column(
             children: [
-              if (lastWord.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.electricPurple.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    lastWord,
-                    style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: Colors.white),
-                  ),
-                )
-              else
-                const Text('No word yet — start the chain!',
-                    style: TextStyle(color: AppColors.textSecondary)),
-              if (requiredLetter != null) ...[
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Next word starts with', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                    const SizedBox(width: 8),
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: AppColors.softCyan,
-                      child: Text(requiredLetter.toUpperCase(),
-                          style: const TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w900, fontSize: 18)),
+              // The chain.
+              SizedBox(
+                height: 64,
+                child: chain.isEmpty
+                    ? Center(
+                        child: Text('The chain starts here…', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontWeight: FontWeight.w600)),
+                      )
+                    : ListView.builder(
+                        controller: _chainScroll,
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        itemCount: chain.length,
+                        itemBuilder: (context, i) {
+                          final word = chain[i];
+                          final latest = i == chain.length - 1;
+                          return Row(
+                            children: [
+                              _WordTiles(word: word, accent: playground.accent, glow: latest ? playground.glow : null, linkLast: latest),
+                              if (!latest) Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.35), size: 18),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: 14),
+              // Required letter + typed preview.
+              Row(
+                children: [
+                  _LetterTile(letter: required.isEmpty ? '?' : required, size: 64, accent: playground.accent, glow: playground.glow, big: true),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          required.isEmpty ? 'Any word to start' : 'Next word must start with',
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          lastWord.isEmpty ? '—' : 'after "${lastWord.toUpperCase()}"',
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 6),
+                        Text('${chain.length} word${chain.length == 1 ? '' : 's'} in the chain', style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11)),
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Input.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                decoration: BoxDecoration(
+                  color: AppColors.glassFill,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: !_myTurn ? AppColors.glassStroke : (typed.isEmpty ? playground.accent.withValues(alpha: 0.6) : (startsRight ? AppColors.success : AppColors.coral)),
+                    width: _myTurn ? 1.6 : 1,
+                  ),
                 ),
-              ],
-              const SizedBox(height: 16),
-              if (myTurn)
-                Row(
+                child: Row(
                   children: [
+                    const SizedBox(width: 12),
+                    if (required.isNotEmpty)
+                      Text(required, style: TextStyle(color: startsRight || typed.isEmpty ? playground.accent : AppColors.coral, fontSize: 20, fontWeight: FontWeight.w900)),
                     Expanded(
                       child: TextField(
                         controller: _controller,
-                        enabled: !_busy,
-                        autofocus: true,
+                        focusNode: _focus,
+                        enabled: _myTurn && !_busy,
+                        autocorrect: false,
                         textCapitalization: TextCapitalization.none,
-                        style: const TextStyle(color: AppColors.textPrimary),
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => canSubmit ? _submit() : null,
+                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 1.2),
                         decoration: InputDecoration(
-                          hintText: requiredLetter != null ? 'Word starting with $requiredLetter…' : 'Type a word…',
-                          filled: true,
-                          fillColor: AppColors.surfaceElevated,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                          hintText: _myTurn ? (required.isEmpty ? 'type any word' : 'type a word starting with $required') : 'wait for your turn…',
+                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14, letterSpacing: 0),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
                         ),
-                        onSubmitted: (_) => _submit(),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    FilledButton(
-                      style: FilledButton.styleFrom(backgroundColor: AppColors.electricPurple),
-                      onPressed: _busy ? null : _submit,
-                      child: const Text('Play'),
-                    ),
+                    if (typed.isNotEmpty && !startsRight)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 10),
+                        child: Icon(Icons.error_outline_rounded, color: AppColors.coral, size: 18),
+                      ),
                   ],
-                )
-              else if (widget.session.isInProgress)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text('Wait for your turn…', style: TextStyle(color: AppColors.textMuted)),
                 ),
-              if (myTurn)
-                TextButton(
-                  onPressed: _busy ? null : _pass,
-                  child: const Text('Pass (lose a life)', style: TextStyle(color: AppColors.danger)),
-                ),
-              const SizedBox(height: 8),
-              const Divider(color: AppColors.glassStroke),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                alignment: WrapAlignment.center,
-                children: List.generate(players.length, (i) {
-                  final p = Map<String, dynamic>.from(players[i] as Map);
-                  final alive = p['alive'] == true;
-                  final lives = (p['lives'] as num?)?.toInt() ?? 0;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: i == widget.mySeat ? AppColors.electricPurple.withOpacity(0.3) : AppColors.glassFill,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color: widget.session.currentSeat == i && alive
-                              ? AppColors.softCyan
-                              : AppColors.glassStroke),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(i == widget.mySeat ? 'You' : widget.session.seats[i].displayName,
-                            style: TextStyle(
-                                color: alive ? AppColors.textPrimary : AppColors.textMuted,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                decoration: alive ? null : TextDecoration.lineThrough)),
-                        const SizedBox(width: 8),
-                        Text('❤️' * lives, style: const TextStyle(fontSize: 12)),
-                      ],
-                    ),
-                  );
-                }),
               ),
-              if (chain.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 34,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    reverse: true,
-                    children: chain.reversed
-                        .take(10)
-                        .map((w) => Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Chip(
-                                label: Text(w, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-                                backgroundColor: AppColors.surfaceElevated,
-                              ),
-                            ))
-                        .toList(),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: ActionButton(label: 'Play word', icon: Icons.send_rounded, onPressed: canSubmit ? _submit : null),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: ActionButton(
+                      label: 'Pass (−❤️)',
+                      icon: Icons.heart_broken_rounded,
+                      color: AppColors.surfaceElevated,
+                      onPressed: _myTurn && !_busy ? _pass : null,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ],
     );
-  }
-
-  String _currentName() {
-    final seat = widget.session.currentSeat;
-    if (seat < 0 || seat >= widget.session.seats.length) return '…';
-    return seat == widget.mySeat ? 'you' : widget.session.seats[seat].displayName;
   }
 
   Future<void> _submit() async {
@@ -206,7 +253,143 @@ class _WordChainBoardState extends State<WordChainBoard> {
 
   Future<void> _pass() async {
     setState(() => _busy = true);
+    GameFeedback.tap();
     await widget.onAction('pass', {});
     if (mounted) setState(() => _busy = false);
+  }
+}
+
+class _PlayerTile extends StatelessWidget {
+  const _PlayerTile({
+    required this.name,
+    required this.lives,
+    required this.alive,
+    required this.active,
+    required this.winner,
+    required this.skin,
+    required this.seat,
+    required this.palette,
+  });
+  final String name;
+  final int lives;
+  final bool alive;
+  final bool active;
+  final bool winner;
+  final PieceSkin skin;
+  final int seat;
+  final PiecePalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: active ? palette.base.withValues(alpha: 0.2) : AppColors.glassFill,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: active ? palette.light : AppColors.glassStroke, width: active ? 1.6 : 1),
+        boxShadow: active ? [BoxShadow(color: palette.glow.withValues(alpha: 0.3), blurRadius: 12)] : null,
+      ),
+      child: Opacity(
+        opacity: alive ? 1 : 0.45,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SkinnedPiece(skin: skin, seat: seat, size: 16, dim: !alive),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w700, decoration: alive ? null : TextDecoration.lineThrough),
+                  ),
+                ),
+                if (winner) const Text(' 🏆', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < 3; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1),
+                    child: Icon(i < lives ? Icons.favorite_rounded : Icons.favorite_border_rounded, size: 14, color: i < lives ? AppColors.coral : AppColors.textMuted),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WordTiles extends StatelessWidget {
+  const _WordTiles({required this.word, required this.accent, required this.glow, required this.linkLast});
+  final String word;
+  final Color accent;
+  final Color? glow;
+  final bool linkLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final letters = word.toUpperCase().split('');
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < letters.length; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1),
+            child: _LetterTile(
+              letter: letters[i],
+              size: 30,
+              accent: accent,
+              glow: glow,
+              // The last letter of the latest word is the link to the next word.
+              big: linkLast && i == letters.length - 1,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _LetterTile extends StatelessWidget {
+  const _LetterTile({required this.letter, required this.size, required this.accent, this.glow, this.big = false});
+  final String letter;
+  final double size;
+  final Color accent;
+  final Color? glow;
+  final bool big;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size * 1.12,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size * 0.2),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: big ? [Color.lerp(accent, Colors.white, 0.3)!, accent] : const [Color(0xFFFFF8E7), Color(0xFFE8DCC0)],
+        ),
+        border: Border.all(color: big ? Colors.white.withValues(alpha: 0.7) : const Color(0xFFB79E6E), width: big ? 1.5 : 1),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 4, offset: const Offset(0, 2)),
+          if (glow != null) BoxShadow(color: glow!.withValues(alpha: big ? 0.6 : 0.3), blurRadius: big ? 14 : 8),
+        ],
+      ),
+      child: Text(
+        letter,
+        style: TextStyle(color: big ? Colors.white : const Color(0xFF2A2340), fontSize: size * 0.55, fontWeight: FontWeight.w900, height: 1),
+      ),
+    );
   }
 }
