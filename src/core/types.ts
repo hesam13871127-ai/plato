@@ -18,6 +18,8 @@ export interface PlayerSlot {
 export interface GameConfig {
   slots: PlayerSlot[];
   seed: number;
+  /** UI language for word games (defaults to 'fa') */
+  lang?: 'fa' | 'en';
 }
 
 /**

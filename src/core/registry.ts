@@ -14,12 +14,18 @@ import { diceMeta } from '../games/dice/meta';
 import { backgammonMeta } from '../games/backgammon/meta';
 import { mancalaMeta } from '../games/mancala/meta';
 import { bowlingMeta } from '../games/bowling/meta';
+import { triviaMeta } from '../games/trivia/meta';
+import { emojiMeta } from '../games/emoji/meta';
+import { chainMeta } from '../games/chain/meta';
+import { memoryMeta } from '../games/memory/meta';
+import { sketchMeta } from '../games/sketch/meta';
 
 /**
  * The game catalog — rebuilt from scratch, wave by wave.
  * Wave 1: Dominoes, Ludo, Ocho, Connect 4, Checkers.
  * Wave 2: Chess, 8-Ball Pool, Carrom, Dots & Boxes, Snakes & Ladders.
  * Wave 3: Bingo, Dice Party, Backgammon, Mancala, Bowling.
+ * Wave 4: Trivia, Emoji Charades, Word Chain, Memory, Sketch.
  */
 export const games: GameMeta[] = [
   dominoesMeta,
@@ -37,6 +43,11 @@ export const games: GameMeta[] = [
   backgammonMeta,
   mancalaMeta,
   bowlingMeta,
+  triviaMeta,
+  emojiMeta,
+  chainMeta,
+  memoryMeta,
+  sketchMeta,
 ];
 
 export function getGame(id: string): GameMeta {

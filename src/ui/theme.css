@@ -355,3 +355,47 @@ input { font-family: inherit; }
 .f-rolls { display: block; font-size: 12px; font-weight: 700; min-height: 14px; }
 .f-score { display: block; font-size: 11px; color: #c9b8ff; }
 .bowling-sheet-wrap { width: min(430px, 52vw); }
+
+/* ---------- quiz games (trivia / emoji) ---------- */
+.quiz-answers { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; max-width: min(720px, 92vw); }
+.qa-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 9px 14px; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.qa-btn:hover { border-color: var(--accent); background: rgba(139, 92, 246, 0.16); transform: translateY(-1px); }
+.qa-letter {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 7px;
+  background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 900; flex: none;
+}
+
+/* ---------- word chain ---------- */
+.chain-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.chain-input {
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 9px 14px; font-size: 15px; font-weight: 600; min-width: 220px;
+  font-family: inherit; outline: none;
+}
+.chain-input:focus { border-color: var(--accent); }
+.chain-error { color: var(--danger); font-size: 13px; font-weight: 700; }
+
+/* ---------- sketch ---------- */
+.sketch-pad-wrap {
+  position: absolute; top: 76px; inset-inline-start: 16px; z-index: 6;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sketch-pad-title {
+  background: rgba(16, 11, 30, 0.88); border: 1px solid var(--border);
+  border-radius: 10px; padding: 7px 12px; font-size: 13.5px; font-weight: 700; color: var(--text);
+}
+.sketch-pad {
+  width: min(460px, 44vw); height: min(460px, 44vw);
+  border-radius: 14px; border: 2px solid var(--accent);
+  box-shadow: var(--shadow); cursor: crosshair; touch-action: none;
+  background: #f6efe0;
+}
+.sketch-toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }

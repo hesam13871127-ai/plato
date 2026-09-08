@@ -39,7 +39,7 @@ export function SetupPage({
       ...s,
       name: s.name.trim() || (s.id === 0 ? myName.trim() || t('setup.you') : `${BOT_NAMES[lang][i] ?? 'Bot'} ${i}`),
     }));
-    onStart({ slots: chosen, seed: (Date.now() % 2 ** 31) | 1 });
+    onStart({ slots: chosen, seed: (Date.now() % 2 ** 31) | 1, lang });
   };
 
   return (
