@@ -1,183 +1,80 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/board_skins.dart';
 import '../../domain/entities/game_entities.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
 
-/// Impostor Light: crew knows the secret location, the impostor does not.
-/// Discuss, then vote out a suspect during the voting phase.
+/// Impostor Light — word cards with hidden role reveal, discussion + vote.
 class ImpostorLightBoard extends StatefulWidget {
   const ImpostorLightBoard({super.key, required this.session, required this.mySeat, required this.onAction});
-
-  final GameSessionView session;
-  final int mySeat;
-  final Future<void> Function(String type, Map<String, dynamic> payload) onAction;
-
-  @override
-  State<ImpostorLightBoard> createState() => _ImpostorLightBoardState();
+  final GameSessionView session; final int mySeat; final Future<void> Function(String type, Map<String, dynamic> payload) onAction;
+  @override State<ImpostorLightBoard> createState()=> _ImpostorLightBoardState();
 }
 
 class _ImpostorLightBoardState extends State<ImpostorLightBoard> {
-  Timer? _tick;
-  int _now = DateTime.now().millisecondsSinceEpoch;
-  bool _voted = false;
-
-  Map<String, dynamic> get b => widget.session.board;
-
+  Timer? _t; int _now=DateTime.now().millisecondsSinceEpoch; String _skin='cosmic';
+  @override void initState(){ super.initState(); _t=Timer.periodic(const Duration(milliseconds:300), (_){ if(mounted) setState(()=> _now=DateTime.now().millisecondsSinceEpoch);});}
+  @override void dispose(){ _t?.cancel(); super.dispose();}
+  Map<String,dynamic> get b=> widget.session.board;
   @override
-  void initState() {
-    super.initState();
-    _tick = Timer.periodic(const Duration(milliseconds: 250), (_) {
-      if (mounted) setState(() => _now = DateTime.now().millisecondsSinceEpoch);
-    });
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final phase = b['phase']?.toString() ?? 'discussion';
-    final isVoting = phase == 'voting';
-    final isResolution = phase == 'resolution';
-    final location = b['location']?.toString();
-    final iAmImpostor = b['youAreImpostor'] == true;
-    final message = b['message']?.toString() ?? '';
-    final players = ((b['players'] as List?) ?? const []);
-    final results = ((b['results'] as List?) ?? const []);
-    final endsAt = DateTime.tryParse((b['phaseEndsAt'] as String?) ?? '')?.millisecondsSinceEpoch ?? _now;
-    final remain = ((endsAt - _now) / 1000).clamp(0, 60).toStringAsFixed(0);
-
-    return Column(
-      children: [
-        TurnIndicator(
-          text: widget.session.isInProgress
-              ? isVoting
-                  ? 'Vote for the impostor! ⏳ ${remain}s'
-                  : isResolution
-                      ? 'Voting closed…'
-                      : 'Discussion — blend in! ⏳ ${remain}s'
-              : 'Game over',
-          highlight: isVoting && !_voted && widget.session.isInProgress,
-          icon: Icons.theater_comedy,
-        ),
-        const SizedBox(height: 10),
-        TableSurface(
-          child: Column(
-            children: [
-              // Secret card.
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: iAmImpostor
-                        ? [AppColors.danger.withOpacity(0.3), AppColors.surfaceElevated]
-                        : [AppColors.electricPurple.withOpacity(0.3), AppColors.softCyan.withOpacity(0.1)],
+  Widget build(BuildContext context){
+    final phase=(b['phase'] as String?)??'discuss'; final word=b['word'] as String?; final hint=b['hint'] as String?;
+    final isImpostor=b['isImpostor'] as bool? ?? false; final votes=((b['votes'] as Map?)??const{}).map((k,v)=> MapEntry(int.tryParse('$k')??-1, (v as num).toInt()));
+    final players=((b['players'] as List?)??const[]); final endsAt=DateTime.tryParse((b['phaseEndsAt'] as String?)??'')?.millisecondsSinceEpoch; final remain= ((endsAt ?? _now) - _now)/1000; final skin=BoardSkin.byId(_skin);
+    return Column(children:[
+      TurnIndicator(text: widget.session.isCompleted ? 'Game over' : phase=='reveal' ? '👁️ Remember your word!' : phase=='discuss' ? '💬 Discuss the word' : '🗳️ Vote the impostor!', highlight: widget.session.isInProgress, icon: phase=='reveal' ? Icons.visibility_rounded : phase=='discuss' ? Icons.chat_bubble_rounded : Icons.how_to_vote_rounded),
+      const SizedBox(height:4),
+      SizedBox(height:26, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: BoardSkin.all.length, separatorBuilder: (_, __)=> const SizedBox(width:6), itemBuilder: (_, i){ final s=BoardSkin.all[i]; final sel=s.id==_skin; return GestureDetector(onTap:(){ GameFeedback.tap(); setState(()=>_skin=s.id); }, child: Container(padding: const EdgeInsets.symmetric(horizontal:10), decoration: BoxDecoration(color: sel ? s.accent.withOpacity(0.9) : AppColors.glassFill, borderRadius: BorderRadius.circular(14), border: Border.all(color: sel ? Colors.white70 : AppColors.glassStroke)), alignment: Alignment.center, child: Text(s.name, style: TextStyle(color: sel ? Colors.white : AppColors.textSecondary, fontSize:11, fontWeight: FontWeight.w700)))); })),
+      const SizedBox(height:6),
+      if(widget.session.isInProgress) Text('${remain.clamp(0,99).toStringAsFixed(0)}s left', style: const TextStyle(color: AppColors.warning, fontSize:12, fontWeight: FontWeight.w700)),
+      const SizedBox(height:8),
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), gradient: LinearGradient(colors: [Color.lerp(skin.edge, Colors.white, 0.12)!, skin.edge, Color.lerp(skin.edge, Colors.black, 0.42)!], begin: Alignment.topLeft, end: Alignment.bottomRight), border: Border.all(color: Colors.white.withOpacity(0.12)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius:22, offset: const Offset(0,10))]),
+        child: Column(children:[
+          // secret card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(14,16,14,14),
+            decoration: BoxDecoration(
+              gradient: isImpostor ? const LinearGradient(colors:[Color(0xFFEF4444), Color(0xFF7F1D1D)], begin: Alignment.topLeft, end: Alignment.bottomRight) : AppColors.auroraGradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: (isImpostor ? AppColors.danger : AppColors.electricPurple).withOpacity(0.35), blurRadius:14)],
+              border: Border.all(color: Colors.white.withOpacity(0.9), width:1.2),
+            ),
+            child: Column(children:[
+              Icon(isImpostor ? Icons.help_outline_rounded : Icons.lightbulb_rounded, color: Colors.white, size:28),
+              const SizedBox(height:8),
+              Text(isImpostor ? 'You are the IMPOSTOR' : (word ?? '—'), style: const TextStyle(color: Colors.white, fontSize:22, fontWeight: FontWeight.w900, shadows: [Shadow(color: Colors.black38, blurRadius:4)]), textAlign: TextAlign.center),
+              if(hint!=null && !isImpostor) Padding(padding: const EdgeInsets.only(top:6), child: Text('Hint: $hint', style: const TextStyle(color: Colors.white70, fontSize:12, fontWeight: FontWeight.w600))),
+              if(isImpostor) const Padding(padding: EdgeInsets.only(top:6), child: Text('Blend in — you don’t know the word!', style: TextStyle(color: Colors.white70, fontSize:12, fontWeight: FontWeight.w600))),
+            ]),
+          ),
+          const SizedBox(height:10),
+          GridView.count(
+            crossAxisCount:4, shrinkWrap:true, physics: const NeverScrollableScrollPhysics(), mainAxisSpacing:8, crossAxisSpacing:8, childAspectRatio:0.92,
+            children:[
+              for(var i=0;i<players.length;i++)
+                GestureDetector(
+                  onTap: phase=='vote' && widget.session.isInProgress ? (){ GameFeedback.tap(); widget.onAction('vote', {'target':i}); } : null,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(color: i==widget.mySeat ? AppColors.electricPurple.withOpacity(0.22) : AppColors.glassFill, borderRadius: BorderRadius.circular(14), border: Border.all(color: i==widget.mySeat ? AppColors.electricPurple.withOpacity(0.6) : AppColors.glassStroke)),
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children:[
+                      CircleAvatar(radius:18, backgroundColor: AppColors.softCyan.withOpacity(0.18), child: Icon(Icons.person_rounded, color: AppColors.softCyan, size:18)),
+                      const SizedBox(height:4),
+                      Text(i==widget.mySeat ? 'You' : widget.session.seats[i].displayName, maxLines:1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textPrimary, fontSize:11, fontWeight: FontWeight.w700)),
+                      if(votes.values.where((v)=> v==i).isNotEmpty) Container(margin: const EdgeInsets.only(top:3), padding: const EdgeInsets.symmetric(horizontal:6, vertical:2), decoration: BoxDecoration(color: AppColors.warning.withOpacity(0.22), borderRadius: BorderRadius.circular(8)), child: Text('${votes.values.where((v)=> v==i).length} votes', style: const TextStyle(color: AppColors.warning, fontSize:9, fontWeight: FontWeight.w900))),
+                    ]),
                   ),
-                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Column(
-                  children: [
-                    Icon(iAmImpostor ? Icons.visibility_off : Icons.place,
-                        color: iAmImpostor ? AppColors.danger : AppColors.softCyan, size: 30),
-                    const SizedBox(height: 8),
-                    Text(
-                      iAmImpostor ? 'You are the IMPOSTOR' : 'Category: ${b['category'] ?? ''}',
-                      style: TextStyle(
-                          color: iAmImpostor ? AppColors.danger : AppColors.softCyan,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      iAmImpostor
-                          ? 'Blend in — you don\'t know the location!'
-                          : (location ?? ''),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              if (message.isNotEmpty)
-                Text(message,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 14),
-              ...List.generate(players.length, (i) {
-                final p = Map<String, dynamic>.from(players[i] as Map);
-                final seat = (p['seat'] as num?)?.toInt() ?? i;
-                final name = p['name']?.toString() ?? widget.session.seats[seat].displayName;
-                final alive = p['alive'] == true;
-                final votes = results
-                    .whereType<Map>()
-                    .where((r) => (r['seat'] as num?)?.toInt() == seat)
-                    .map((r) => (r['votes'] as num?)?.toInt() ?? 0)
-                    .fold<int>(0, (a, c) => a + c);
-                final canVote = isVoting && alive && seat != widget.mySeat && !_voted;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: canVote ? () => _vote(seat) : null,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: canVote ? AppColors.electricPurple.withOpacity(0.15) : AppColors.glassFill,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: canVote ? AppColors.electricPurple : AppColors.glassStroke),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(alive ? Icons.person : Icons.person_off,
-                                size: 18, color: alive ? AppColors.textPrimary : AppColors.textMuted),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                seat == widget.mySeat ? '$name (You)' : name,
-                                style: TextStyle(
-                                    color: alive ? AppColors.textPrimary : AppColors.textMuted,
-                                    decoration: alive ? null : TextDecoration.lineThrough,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            if (votes > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.electricPurple,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text('$votes',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _vote(int target) async {
-    setState(() => _voted = true);
-    GameFeedback.move();
-    await widget.onAction('vote', {'target': target});
+        ]),
+      ),
+    ]);
   }
 }

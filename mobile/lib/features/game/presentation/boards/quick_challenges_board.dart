@@ -1,270 +1,108 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/board_skins.dart';
 import '../../domain/entities/game_entities.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
 
-/// Quick Challenges: rapid rounds — rapid tapping, reaction test, target-number
-/// taps and arrow-direction reflexes.
+/// Quick Challenges — 6 micro-games with 3D progress and tap targets.
 class QuickChallengesBoard extends StatefulWidget {
   const QuickChallengesBoard({super.key, required this.session, required this.mySeat, required this.onAction});
-
-  final GameSessionView session;
-  final int mySeat;
-  final Future<void> Function(String type, Map<String, dynamic> payload) onAction;
-
-  @override
-  State<QuickChallengesBoard> createState() => _QuickChallengesBoardState();
+  final GameSessionView session; final int mySeat; final Future<void> Function(String type, Map<String, dynamic> payload) onAction;
+  @override State<QuickChallengesBoard> createState()=> _QuickChallengesBoardState();
 }
 
 class _QuickChallengesBoardState extends State<QuickChallengesBoard> {
-  Timer? _tick;
-  int _now = DateTime.now().millisecondsSinceEpoch;
-  int _taps = 0;
-
-  Map<String, dynamic> get b => widget.session.board;
-
+  Timer? _t; int _now=DateTime.now().millisecondsSinceEpoch; String _skin='midnight';
+  @override void initState(){ super.initState(); _t=Timer.periodic(const Duration(milliseconds:200), (_){ if(mounted) setState(()=> _now=DateTime.now().millisecondsSinceEpoch);});}
+  @override void dispose(){ _t?.cancel(); super.dispose();}
+  Map<String,dynamic> get b=> widget.session.board;
   @override
-  void initState() {
-    super.initState();
-    _tick = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      if (mounted) setState(() => _now = DateTime.now().millisecondsSinceEpoch);
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant QuickChallengesBoard old) {
-    super.didUpdateWidget(old);
-    // Reset local tap counter at the start of each new tap round.
-    final oldType = old.session.board['type'];
-    final newType = widget.session.board['type'];
-    if (oldType != newType || widget.session.board['round'] != old.session.board['round']) {
-      _taps = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final type = b['type']?.toString() ?? 'tap';
-    final phase = b['phase']?.toString() ?? 'ready';
-    final round = (b['round'] as num?)?.toInt() ?? 1;
-    final target = (b['target'] as num?)?.toInt() ?? 6;
-    final instruction = b['instruction']?.toString() ?? '';
-    final players = ((b['players'] as List?) ?? const []);
-    final active = phase == 'active' && widget.session.isInProgress;
-
-    return Column(
-      children: [
-        TurnIndicator(
-          text: widget.session.isInProgress ? 'Round $round of $target' : 'Game over',
-          highlight: active,
-          icon: Icons.bolt,
-        ),
-        const SizedBox(height: 6),
-        Text(instruction, textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800, fontSize: 16)),
-        const SizedBox(height: 12),
-        TableSurface(
-          child: Column(
-            children: [
-              SizedBox(height: 150, child: _challengeArea(type, phase, active)),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                alignment: WrapAlignment.center,
-                children: List.generate(players.length, (i) {
-                  final p = Map<String, dynamic>.from(players[i] as Map);
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: i == widget.mySeat ? AppColors.electricPurple.withOpacity(0.3) : AppColors.glassFill,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.glassStroke),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(i == widget.mySeat ? 'You' : widget.session.seats[i].displayName,
-                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 8),
-                        Text('${(p['score'] as num?)?.toInt() ?? 0}',
-                            style: const TextStyle(color: AppColors.softCyan, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ],
+  Widget build(BuildContext context){
+    final challenge=(b['currentChallenge'] as String?)?? 'tap'; final idx=(b['challengeIndex'] as num?)?.toInt() ?? 0;
+    final total=(b['totalChallenges'] as num?)?.toInt() ?? 6; final endsAt=DateTime.tryParse((b['endsAt'] as String?)??'')?.millisecondsSinceEpoch ?? _now;
+    final remain=((endsAt-_now)/1000).clamp(0,20).toStringAsFixed(1); final scores=((b['scores'] as List?)??const[]).whereType<num>().map((n)=>n.toInt()).toList();
+    final skin=BoardSkin.byId(_skin);
+    return Column(children:[
+      TurnIndicator(text: widget.session.isInProgress ? 'Challenge ${idx+1} of $total — $challenge' : 'Game over', highlight: widget.session.isInProgress, icon: Icons.bolt_rounded),
+      const SizedBox(height:4),
+      SizedBox(height:26, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: BoardSkin.all.length, separatorBuilder: (_, __)=> const SizedBox(width:6), itemBuilder: (_, i){ final s=BoardSkin.all[i]; final sel=s.id==_skin; return GestureDetector(onTap:(){ GameFeedback.tap(); setState(()=>_skin=s.id); }, child: Container(padding: const EdgeInsets.symmetric(horizontal:10), decoration: BoxDecoration(color: sel ? s.accent.withOpacity(0.9) : AppColors.glassFill, borderRadius: BorderRadius.circular(14), border: Border.all(color: sel ? Colors.white70 : AppColors.glassStroke)), alignment: Alignment.center, child: Text(s.name, style: TextStyle(color: sel ? Colors.white : AppColors.textSecondary, fontSize:11, fontWeight: FontWeight.w700)))); })),
+      const SizedBox(height:6),
+      Container(padding: const EdgeInsets.symmetric(horizontal:12, vertical:6), decoration: BoxDecoration(color: AppColors.warning.withOpacity(0.14), borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.warning.withOpacity(0.35))), child: Text('⏳ $remain s', style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w800, fontSize:12))),
+      const SizedBox(height:8),
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), gradient: LinearGradient(colors: [Color.lerp(skin.edge, Colors.white, 0.12)!, skin.edge, Color.lerp(skin.edge, Colors.black, 0.42)!], begin: Alignment.topLeft, end: Alignment.bottomRight), border: Border.all(color: Colors.white.withOpacity(0.12)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius:22, offset: const Offset(0,10))]),
+        child: Column(children:[
+          // progress dots
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(total, (i)=> Container(margin: const EdgeInsets.symmetric(horizontal:4), width: idx==i ? 22:10, height:10, decoration: BoxDecoration(color: i<idx ? AppColors.success : i==idx ? AppColors.softCyan : Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(6), boxShadow: i==idx ? [BoxShadow(color: AppColors.softCyan.withOpacity(0.6), blurRadius:8)] : null)))),
+          const SizedBox(height:12),
+          // challenge card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(14,18,14,16),
+            decoration: BoxDecoration(gradient: AppColors.auroraGradient, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: AppColors.electricPurple.withOpacity(0.35), blurRadius:14)], border: Border.all(color: Colors.white.withOpacity(0.9), width:1.2)),
+            child: Column(children:[
+              Icon(_iconFor(challenge), color: Colors.white, size:36),
+              const SizedBox(height:8),
+              Text(_titleFor(challenge), style: const TextStyle(color: Colors.white, fontSize:18, fontWeight: FontWeight.w900), textAlign: TextAlign.center),
+              const SizedBox(height:4),
+              Text(_descFor(challenge), style: const TextStyle(color: Colors.white70, fontSize:12, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+            ]),
           ),
-        ),
-      ],
-    );
+          const SizedBox(height:12),
+          // action area depends on challenge
+          _ActionForChallenge(challenge: challenge, onTap: (){ GameFeedback.tap(); widget.onAction('tap', {}); }),
+          const SizedBox(height:10),
+          Wrap(spacing:8, runSpacing:6, alignment: WrapAlignment.center, children: List.generate(scores.length, (i){
+            return Container(padding: const EdgeInsets.symmetric(horizontal:10, vertical:7), decoration: BoxDecoration(color: i==widget.mySeat ? AppColors.electricPurple.withOpacity(0.18) : AppColors.glassFill, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.glassStroke)), child: Row(mainAxisSize: MainAxisSize.min, children:[ Text(i==widget.mySeat ? 'You' : widget.session.seats[i].displayName, style: const TextStyle(color: AppColors.textPrimary, fontSize:12, fontWeight: FontWeight.w700)), const SizedBox(width:8), Container(padding: const EdgeInsets.symmetric(horizontal:7, vertical:2), decoration: BoxDecoration(color: AppColors.cosmicGold.withOpacity(0.18), borderRadius: BorderRadius.circular(8)), child: Text('${scores[i]}', style: const TextStyle(color: AppColors.cosmicGold, fontWeight: FontWeight.w900, fontSize:12)))]));
+          })),
+        ]),
+      ),
+    ]);
   }
-
-  Widget _challengeArea(String type, String phase, bool active) {
-    if (phase == 'ready') {
-      return const Center(child: Icon(Icons.hourglass_top, color: AppColors.warning, size: 44));
-    }
-    if (phase == 'reveal') {
-      return const Center(child: Icon(Icons.check_circle, color: AppColors.success, size: 44));
-    }
-    switch (type) {
-      case 'reaction':
-        return _reactionArea(active);
-      case 'target_number':
-        return _targetNumberArea(active);
-      case 'direction':
-        return _directionArea(active);
-      case 'tap':
-      default:
-        return _tapArea(active);
+  IconData _iconFor(String c){
+    switch(c){
+      case 'tap': return Icons.touch_app_rounded;
+      case 'swipe': return Icons.swipe_rounded;
+      case 'shake': return Icons.vibration_rounded;
+      case 'memory': return Icons.psychology_rounded;
+      default: return Icons.bolt_rounded;
     }
   }
+  String _titleFor(String c){
+    switch(c){
+      case 'tap': return 'TAP FRENZY';
+      case 'swipe': return 'SWIPE RUSH';
+      case 'shake': return 'SHAKE IT';
+      case 'memory': return 'RECALL';
+      default: return c.toUpperCase();
+    }
+  }
+  String _descFor(String c){
+    switch(c){
+      case 'tap': return 'Tap as fast as you can!';
+      case 'swipe': return 'Swipe in the shown direction!';
+      case 'shake': return 'Shake your phone!';
+      default: return 'React quickly!';
+    }
+  }
+}
 
-  Widget _tapArea(bool active) {
-    final goal = (b['tapGoal'] as num?)?.toInt() ?? 20;
-    final players = ((b['players'] as List?) ?? const []);
-    final me = widget.mySeat >= 0 && widget.mySeat < players.length
-        ? Map<String, dynamic>.from(players[widget.mySeat] as Map)
-        : null;
-    final serverTaps = (me?['value'] as num?)?.toInt() ?? 0;
-    final shown = serverTaps > _taps ? serverTaps : _taps;
+class _ActionForChallenge extends StatelessWidget {
+  const _ActionForChallenge({required this.challenge, required this.onTap});
+  final String challenge; final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context){
     return GestureDetector(
-      onTapDown: active ? (_) => _tap() : null,
+      onTap: onTap,
       child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppColors.electricPurple, AppColors.softCyan]),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('$shown',
-                style: const TextStyle(fontSize: 56, fontWeight: FontWeight.w900, color: Colors.white)),
-            Text('TAP! goal $goal',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-          ],
-        ),
+        width: double.infinity, height:86,
+        decoration: BoxDecoration(gradient: const LinearGradient(colors:[Color(0xFF22D3EE), Color(0xFF8B5CF6)], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.9), width:1.4), boxShadow: [BoxShadow(color: AppColors.electricPurple.withOpacity(0.35), blurRadius:14), BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius:8, offset: const Offset(0,4))]),
+        child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.ads_click_rounded, color: Colors.white, size:28), const SizedBox(width:10), Text(challenge=='tap' ? 'TAP!' : 'GO!', style: const TextStyle(color: Colors.white, fontSize:24, fontWeight: FontWeight.w900, letterSpacing:1.2))])),
       ),
     );
-  }
-
-  Widget _reactionArea(bool active) {
-    final goAt = DateTime.tryParse((b['reactStartAt'] as String?) ?? '')?.millisecondsSinceEpoch ?? 0;
-    final go = _now >= goAt;
-    return GestureDetector(
-      onTapDown: active
-          ? (_) {
-              GameFeedback.move();
-              widget.onAction('react', {});
-            }
-          : null,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: go ? AppColors.success : AppColors.danger,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Center(
-          child: Text(
-            go ? 'GO! TAP!' : 'Wait for green…',
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _targetNumberArea(bool active) {
-    final items = ((b['items'] as List?) ?? const []).map((e) => (e as num).toInt()).toList();
-    final target = (b['targetNumber'] as num?)?.toInt() ?? 0;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text('Target: $target',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.softCyan)),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: items.map((n) {
-            final isTarget = n == target;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: SizedBox(
-                width: 64,
-                height: 64,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: isTarget ? AppColors.electricPurple : AppColors.surfaceElevated,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  onPressed: active
-                      ? () {
-                          GameFeedback.tap();
-                          widget.onAction('order_tap', {'number': n});
-                        }
-                      : null,
-                  child: Text('$n', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _directionArea(bool active) {
-    final pointer = b['pointer']?.toString() ?? 'up';
-    final dirs = {
-      'up': {'icon': Icons.arrow_upward, 'label': 'UP'},
-      'down': {'icon': Icons.arrow_downward, 'label': 'DOWN'},
-      'left': {'icon': Icons.arrow_back, 'label': 'LEFT'},
-      'right': {'icon': Icons.arrow_forward, 'label': 'RIGHT'},
-    };
-    final target = dirs[pointer] ?? dirs['up']!;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(target['icon'] as IconData, size: 56, color: AppColors.softCyan),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          children: dirs.entries.map((e) {
-            return FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: e.key == pointer ? AppColors.electricPurple : AppColors.surfaceElevated,
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(16),
-              ),
-              onPressed: active
-                  ? () {
-                      GameFeedback.tap();
-                      widget.onAction('direction_tap', {'dir': e.key});
-                    }
-                  : null,
-              child: Icon(e.value['icon'] as IconData),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  void _tap() {
-    setState(() => _taps++);
-    GameFeedback.tap();
-    widget.onAction('tap', {});
   }
 }
