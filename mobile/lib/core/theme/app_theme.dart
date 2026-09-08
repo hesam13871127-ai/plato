@@ -16,6 +16,7 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: AppColors.electricPurple,
         secondary: AppColors.softCyan,
+        tertiary: AppColors.neonPink,
         surface: AppColors.surfaceDark,
         error: AppColors.danger,
         onPrimary: Colors.white,
