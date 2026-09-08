@@ -47,6 +47,22 @@ class AppColors {
   static const Color lightTextSecondary = Color(0xFF475569);
   static const Color lightTextMuted = Color(0xFF94A3B8);
 
+  // Theme-aware helpers — call with BuildContext to get the right token.
+  static Color textPrimaryOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? textPrimary : lightTextPrimary;
+  static Color textSecondaryOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? textSecondary : lightTextSecondary;
+  static Color textMutedOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? textMuted : lightTextMuted;
+  static Color glassFillOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? glassFill : lightGlassFill;
+  static Color glassStrokeOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? glassStroke : lightGlassStroke;
+  static Color surfaceElevatedOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? surfaceElevated : lightSurfaceElevated;
+  static Color scaffoldOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? deepNavy : lightBackground;
+
   static const LinearGradient lightNavyGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,

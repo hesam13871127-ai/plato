@@ -15,7 +15,7 @@ class OpenRoomsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final roomsAsync = ref.watch(openRoomsProvider);
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

@@ -23,7 +23,7 @@ class GameHubScreen extends ConsumerWidget {
     final roomsAsync = ref.watch(openRoomsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.softCyan,

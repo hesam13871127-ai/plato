@@ -67,7 +67,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen> {
     final state = ref.watch(matchmakingNotifierProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: Padding(

@@ -82,7 +82,7 @@ class _RoomLobbyScreenState extends ConsumerState<RoomLobbyScreen> {
     final room = _room;
 
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

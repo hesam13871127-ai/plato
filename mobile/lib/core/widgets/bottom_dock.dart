@@ -37,13 +37,18 @@ class BottomDock extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xD91C2B54), Color(0xB30E1830)],
+              colors: Theme.of(context).brightness == Brightness.dark
+                  ? const [Color(0xD91C2B54), Color(0xB30E1830)]
+                  : const [Color(0xE6FFFFFF), Color(0xCCEFF2FF)],
             ),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: AppColors.glassStroke),
+            border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.glassStroke
+                    : AppColors.lightGlassStroke),
             boxShadow: [
               BoxShadow(
                 color: AppColors.electricPurple.withValues(alpha: 0.25),
@@ -91,7 +96,11 @@ class BottomDock extends ConsumerWidget {
                           child: Icon(
                             item.icon,
                             size: 23,
-                            color: active ? AppColors.softCyan : AppColors.textSecondary,
+                            color: active
+                                ? AppColors.electricPurple
+                                : Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.textSecondary
+                                    : AppColors.lightTextSecondary,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -99,7 +108,13 @@ class BottomDock extends ConsumerWidget {
                           l10n.t(item.labelKey),
                           maxLines: 1,
                           style: TextStyle(
-                            color: active ? AppColors.textPrimary : AppColors.textMuted,
+                            color: active
+                                ? Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.textPrimary
+                                    : AppColors.lightTextPrimary
+                                : Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.textMuted
+                                    : AppColors.lightTextMuted,
                             fontSize: 10.5,
                             fontWeight: active ? FontWeight.w800 : FontWeight.w600,
                           ),

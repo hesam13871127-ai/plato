@@ -17,7 +17,7 @@ class GroupsScreen extends ConsumerWidget {
     final groups = ref.watch(groupsListProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

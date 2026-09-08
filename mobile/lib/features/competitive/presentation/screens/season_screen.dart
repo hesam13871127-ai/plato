@@ -42,7 +42,7 @@ class _SeasonScreenState extends ConsumerState<SeasonScreen> with SingleTickerPr
     final myRankAsync = ref.watch(myRankingsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

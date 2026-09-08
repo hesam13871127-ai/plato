@@ -47,16 +47,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           orElse: () => false,
         );
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: isDark ? AppColors.deepNavy : AppColors.lightBackground,
       extendBody: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(0.8, -0.9),
-            radius: 1.5,
-            colors: [Color(0xFF1B2350), AppColors.deepNavy],
-          ),
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const RadialGradient(
+                  center: Alignment(0.8, -0.9),
+                  radius: 1.5,
+                  colors: [Color(0xFF1B2350), AppColors.deepNavy],
+                )
+              : const RadialGradient(
+                  center: Alignment(0.8, -0.9),
+                  radius: 1.5,
+                  colors: [Color(0xFFE8ECFF), AppColors.lightBackground],
+                ),
         ),
         child: SafeArea(
           bottom: false,

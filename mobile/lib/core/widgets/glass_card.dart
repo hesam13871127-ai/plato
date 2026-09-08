@@ -28,6 +28,7 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(borderRadius);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final content = ClipRRect(
       borderRadius: radius,
@@ -38,12 +39,15 @@ class GlassCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: radius,
             gradient: gradient ??
-                const LinearGradient(
+                LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0x26FFFFFF), Color(0x0DFFFFFF)],
+                  colors: isDark
+                      ? const [Color(0x26FFFFFF), Color(0x0DFFFFFF)]
+                      : const [Color(0xB3FFFFFF), Color(0x66FFFFFF)],
                 ),
-            border: Border.all(color: AppColors.glassStroke, width: 1),
+            border: Border.all(
+                color: isDark ? AppColors.glassStroke : AppColors.lightGlassStroke, width: 1),
           ),
           child: child,
         ),
