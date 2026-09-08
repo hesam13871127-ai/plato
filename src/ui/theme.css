@@ -441,3 +441,90 @@ input { font-family: inherit; }
 .golf-score .row { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; }
 .golf-score .row.on { color: var(--accent); font-weight: 900; }
 .power-slider { width: 200px; accent-color: var(--accent); }
+
+/* ---- wave 6: go fish + skeeball chrome ---- */
+
+.fish-hand {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 8px 12px;
+}
+
+.fish-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 88px;
+  border-radius: 10px;
+  border: 2px solid rgba(148, 163, 184, 0.5);
+  background: linear-gradient(160deg, #f8fafc, #e2e8f0);
+  color: #0f172a;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s;
+}
+
+.fish-card:hover:not(:disabled) {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.35);
+}
+
+.fish-card.picked {
+  border-color: #38bdf8;
+  transform: translateY(-10px);
+  box-shadow: 0 10px 22px rgba(56, 189, 248, 0.45);
+}
+
+.fish-card.idle,
+.fish-card:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.fish-card .rank {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.fish-card .suits {
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.fish-card .count {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.fish-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.skee-controls {
+  align-items: center;
+}
+
+.skee-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.skee-slider span {
+  font-size: 15px;
+}
+
+.skee-slider input[type='range'] {
+  width: 130px;
+  accent-color: #fbbf24;
+}

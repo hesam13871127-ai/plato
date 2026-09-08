@@ -24,6 +24,11 @@ import { impostorMeta } from '../games/impostor/meta';
 import { bankrollMeta } from '../games/bankroll/meta';
 import { minigolfMeta } from '../games/minigolf/meta';
 import { dartsMeta } from '../games/darts/meta';
+import { seaMeta } from '../games/seabattle/meta';
+import { reversiMeta } from '../games/reversi/meta';
+import { gofishMeta } from '../games/gofish/meta';
+import { minesMeta } from '../games/mines/meta';
+import { skeeMeta } from '../games/skee/meta';
 
 /**
  * The game catalog — rebuilt from scratch, wave by wave.
@@ -32,6 +37,7 @@ import { dartsMeta } from '../games/darts/meta';
  * Wave 3: Bingo, Dice Party, Backgammon, Mancala, Bowling.
  * Wave 4: Trivia, Emoji Charades, Word Chain, Memory, Sketch.
  * Wave 5: Werewolf, Impostor, Bankroll, Mini Golf, Darts.
+ * Wave 6: Sea Battle, Reversi, Go Fish, Minesweepers, Skeeball.
  */
 export const games: GameMeta[] = [
   dominoesMeta,
@@ -59,6 +65,11 @@ export const games: GameMeta[] = [
   bankrollMeta,
   minigolfMeta,
   dartsMeta,
+  seaMeta,
+  reversiMeta,
+  gofishMeta,
+  minesMeta,
+  skeeMeta,
 ];
 
 export function getGame(id: string): GameMeta {
