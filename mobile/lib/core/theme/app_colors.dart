@@ -37,6 +37,22 @@ class AppColors {
   static const Color textSecondary = Color(0xFF9AA7C7);
   static const Color textMuted = Color(0xFF5E6B8F);
 
+  // ── Light theme companions (same brand accents, light canvas) ──────────
+  static const Color lightBackground = Color(0xFFF1F5FF);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightSurfaceElevated = Color(0xFFF8FAFF);
+  static const Color lightGlassFill = Color(0x0F0F172A); // near-black @ 6%
+  static const Color lightGlassStroke = Color(0x1A0F172A); // near-black @ 10%
+  static const Color lightTextPrimary = Color(0xFF0F172A);
+  static const Color lightTextSecondary = Color(0xFF475569);
+  static const Color lightTextMuted = Color(0xFF94A3B8);
+
+  static const LinearGradient lightNavyGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFFF8FAFF), Color(0xFFE8ECFF)],
+  );
+
   // Gradients.
   static const LinearGradient brandGradient = LinearGradient(
     begin: Alignment.topLeft,

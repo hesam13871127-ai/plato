@@ -6,6 +6,7 @@ import 'core/i18n/app_localizations.dart';
 import 'core/i18n/locale_controller.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 import 'features/social/presentation/providers/social_providers.dart';
 import 'features/social/presentation/widgets/game_invite_listener.dart';
 
@@ -16,6 +17,7 @@ class VibeTableApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
     final language = ref.watch(localeControllerProvider);
+    final themeMode = ref.watch(themeControllerProvider);
 
     // Start the social real-time service (game invites, friend events) and keep
     // the shared socket alive for the authenticated session.
@@ -27,9 +29,9 @@ class VibeTableApp extends ConsumerWidget {
       child: MaterialApp.router(
         title: 'VibeTable',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark,
+        theme: AppTheme.light,
         darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.dark,
+        themeMode: themeMode.material,
         locale: Locale(language == AppLanguage.persian ? 'fa' : 'en'),
         supportedLocales: const [Locale('en'), Locale('fa')],
         localizationsDelegates: const [
