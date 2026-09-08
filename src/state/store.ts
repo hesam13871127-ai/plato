@@ -62,12 +62,12 @@ export const useProfile = create<ProfileState>()(
 );
 
 /** Standard seat colors (Ludo boards override with their own palette). */
-export const SEAT_COLORS = ['#8b5cf6', '#f59e0b', '#22d3ee', '#fb7185'];
+export const SEAT_COLORS = ['#8b5cf6', '#f59e0b', '#22d3ee', '#fb7185', '#a3e635', '#f472b6', '#38bdf8', '#fbbf24'];
 
 /** Bot display names, localized when a game config is built. */
 export const BOT_NAMES: Record<Lang, string[]> = {
-  fa: ['آرش', 'رستم', 'سهراب', 'شیرین'],
-  en: ['Arash', 'Rostam', 'Sohrab', 'Shirin'],
+  fa: ['آرش', 'رستم', 'سهراب', 'شیرین', 'کاوه', 'تهمینه', 'فرهاد', 'گودرز'],
+  en: ['Arash', 'Rostam', 'Sohrab', 'Shirin', 'Kaveh', 'Tahmineh', 'Farhad', 'Goudarz'],
 };
 
 /** Coin reward for a win, scaled by the strongest bot at the table. */

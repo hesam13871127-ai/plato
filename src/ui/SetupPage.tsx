@@ -4,6 +4,15 @@ import { useI18n } from '../i18n';
 import { BOT_NAMES, SEAT_COLORS, useProfile } from '../state/store';
 import { Button } from './components';
 
+function buildSlots(maxPlayers: number, lang: 'fa' | 'en'): PlayerSlot[] {
+  return Array.from({ length: Math.min(Math.max(maxPlayers, 2), 8) }, (_, id) => ({
+    id,
+    kind: id === 0 ? ('human' as const) : ('bot' as const),
+    name: id === 0 ? '' : BOT_NAMES[lang][id] ?? `Bot ${id}`,
+    difficulty: 'medium' as const,
+  }));
+}
+
 export function SetupPage({
   meta,
   onBack,
@@ -17,12 +26,7 @@ export function SetupPage({
   const myName = useProfile((s) => s.name);
   const [count, setCount] = useState(2);
   const [slots, setSlots] = useState<PlayerSlot[]>(() =>
-    [0, 1, 2, 3].map((id) => ({
-      id,
-      kind: id === 0 ? 'human' : 'bot',
-      name: id === 0 ? '' : BOT_NAMES[lang][id] ?? `Bot ${id}`,
-      difficulty: 'medium' as const,
-    })),
+    buildSlots(meta.maxPlayers, lang),
   );
 
   const update = (id: number, patch: Partial<PlayerSlot>) =>

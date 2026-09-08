@@ -19,6 +19,11 @@ import { emojiMeta } from '../games/emoji/meta';
 import { chainMeta } from '../games/chain/meta';
 import { memoryMeta } from '../games/memory/meta';
 import { sketchMeta } from '../games/sketch/meta';
+import { werewolfMeta } from '../games/werewolf/meta';
+import { impostorMeta } from '../games/impostor/meta';
+import { bankrollMeta } from '../games/bankroll/meta';
+import { minigolfMeta } from '../games/minigolf/meta';
+import { dartsMeta } from '../games/darts/meta';
 
 /**
  * The game catalog — rebuilt from scratch, wave by wave.
@@ -26,6 +31,7 @@ import { sketchMeta } from '../games/sketch/meta';
  * Wave 2: Chess, 8-Ball Pool, Carrom, Dots & Boxes, Snakes & Ladders.
  * Wave 3: Bingo, Dice Party, Backgammon, Mancala, Bowling.
  * Wave 4: Trivia, Emoji Charades, Word Chain, Memory, Sketch.
+ * Wave 5: Werewolf, Impostor, Bankroll, Mini Golf, Darts.
  */
 export const games: GameMeta[] = [
   dominoesMeta,
@@ -48,6 +54,11 @@ export const games: GameMeta[] = [
   chainMeta,
   memoryMeta,
   sketchMeta,
+  werewolfMeta,
+  impostorMeta,
+  bankrollMeta,
+  minigolfMeta,
+  dartsMeta,
 ];
 
 export function getGame(id: string): GameMeta {
