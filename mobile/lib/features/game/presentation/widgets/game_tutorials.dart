@@ -315,5 +315,74 @@ class GameTutorials {
         bodyFa: 'به مظنون رای بدهید؛ خائن را پیدا کنید برنده‌اید، وگرنه خائن می‌برد!',
       ),
     ],
+    'snakes_ladders': [
+      TutorialStep(
+        emoji: '🐍',
+        titleEn: 'Snakes bite',
+        titleFa: 'مارها می‌گزند',
+        bodyEn: 'Land on a snake’s head and slide down to its tail. Watch out!',
+        bodyFa: 'روی سر مار بیفتی تا دمش سر می‌خوری!',
+      ),
+      TutorialStep(
+        emoji: '🪜',
+        titleEn: 'Ladders climb',
+        titleFa: 'نردبان‌ها بالا می‌برند',
+        bodyEn: 'Hit the bottom of a ladder to rocket to the top.',
+        bodyFa: 'پای نردبان را بگیری تا بالایش پرتاب شوی.',
+      ),
+      TutorialStep(
+        emoji: '🎲',
+        titleEn: 'Roll to 100',
+        titleFa: 'تا ۱۰۰ برو',
+        bodyEn: 'Roll the die, move your token. First to exactly 100 wins — sixes roll again (three sixes lose a turn).',
+        bodyFa: 'تاس بریز و حرکت کن؛ اول کسی که دقیق به ۱۰۰ برسد برنده است — سه شش پشت هم نوبت را می‌سوزاند.',
+      ),
+    ],
+    'checkers': [
+      TutorialStep(
+        emoji: '⛂',
+        titleEn: 'Diagonal moves',
+        titleFa: 'حرکت مورب',
+        bodyEn: 'Men move one step diagonally forward; kings move forward or back.',
+        bodyFa: 'سرباز یک خانه مورب جلو، شاه هر دو جهت حرکت می‌کند.',
+      ),
+      TutorialStep(
+        emoji: '💥',
+        titleEn: 'Must capture',
+        titleFa: 'زدن اجباری',
+        bodyEn: 'If you can capture, you must — chain jumps continue with the same piece.',
+        bodyFa: 'اگر می‌توانی بزنی باید بزنی؛ پرش‌های زنجیره‌ای با همان مهره ادامه دارد.',
+      ),
+      TutorialStep(
+        emoji: '👑',
+        titleEn: 'King me',
+        titleFa: 'شاه شدن',
+        bodyEn: 'Reach the far side to crown a king. Clear the opponent or block them to win.',
+        bodyFa: 'به آخر صفحه برس تا شاه شوی؛ حریف را پاک یا قفل کن تا ببری.',
+      ),
+    ],
+    'dots_boxes': [
+      TutorialStep(
+        emoji: '🔲',
+        titleEn: 'Draw edges',
+        titleFa: 'خط بکش',
+        bodyEn: 'Tap a faint edge between two dots to draw it in your colour.',
+        bodyFa: 'روی یک خط کم‌رنگ بین دو نقطه بزن تا به رنگ تو پر شود.',
+      ),
+      TutorialStep(
+        emoji: '⬣',
+        titleEn: 'Claim boxes',
+        titleFa: 'مربع بساز',
+        bodyEn: 'Complete the fourth edge of a box to claim it — you get an extra turn!',
+        bodyFa: 'چهارمین ضلع یک مربع را کامل کن تا مال تو شود و یک نوبت اضافه بگیری!',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Most boxes wins',
+        titleFa: 'بیشترین مربع برنده است',
+        bodyEn: 'When every box is claimed, the player with the most boxes wins.',
+        bodyFa: 'وقتی همه‌ی مربع‌ها پر شد، کسی که بیشترین مربع را دارد برنده است.',
+      ),
+    ],
   };
 }

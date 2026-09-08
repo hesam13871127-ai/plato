@@ -17,6 +17,9 @@ import { WordChainEngine } from './word-chain.engine';
 import { MemoryRaceEngine } from './memory-race.engine';
 import { ImpostorLightEngine } from './impostor-light.engine';
 import { QuickChallengesEngine } from './quick-challenges.engine';
+import { SnakesLaddersEngine } from './snakes-ladders.engine';
+import { CheckersEngine } from './checkers.engine';
+import { DotsBoxesEngine } from './dots-boxes.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -44,6 +47,9 @@ export class EngineRegistry {
     memoryRace: MemoryRaceEngine,
     impostorLight: ImpostorLightEngine,
     quickChallenges: QuickChallengesEngine,
+    snakesLadders: SnakesLaddersEngine,
+    checkers: CheckersEngine,
+    dotsBoxes: DotsBoxesEngine,
   ) {
     this.register(dominoes);
     this.register(connect4);
@@ -62,6 +68,9 @@ export class EngineRegistry {
     this.register(memoryRace);
     this.register(impostorLight);
     this.register(quickChallenges);
+    this.register(snakesLadders);
+    this.register(checkers);
+    this.register(dotsBoxes);
   }
 
   register(engine: BaseGameEngine): void {

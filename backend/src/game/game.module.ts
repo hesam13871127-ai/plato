@@ -38,6 +38,9 @@ import { WordChainEngine } from './engine/word-chain.engine';
 import { MemoryRaceEngine } from './engine/memory-race.engine';
 import { ImpostorLightEngine } from './engine/impostor-light.engine';
 import { QuickChallengesEngine } from './engine/quick-challenges.engine';
+import { SnakesLaddersEngine } from './engine/snakes-ladders.engine';
+import { CheckersEngine } from './engine/checkers.engine';
+import { DotsBoxesEngine } from './engine/dots-boxes.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -80,6 +83,9 @@ const ENTITIES = [
     MemoryRaceEngine,
     ImpostorLightEngine,
     QuickChallengesEngine,
+    SnakesLaddersEngine,
+    CheckersEngine,
+    DotsBoxesEngine,
     EngineRegistry,
     // Services
     BotService,

@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/game_entities.dart';
 import 'bingo_board.dart';
 import 'carrom_board.dart';
+import 'checkers_board.dart';
 import 'chess_board.dart';
 import 'connect4_board.dart';
 import 'dice_party_board.dart';
 import 'dominoes_board.dart';
+import 'dots_boxes_board.dart';
 import 'ludo_board.dart';
 import 'ocho_board.dart';
 import 'pool_board.dart';
 import 'sketch_board.dart';
+import 'snakes_ladders_board.dart';
 import 'werewolf_board.dart';
 import 'trivia_board.dart';
 import 'emoji_charades_board.dart';
@@ -73,6 +76,12 @@ class GameBoardDispatcher extends StatelessWidget {
         return ImpostorLightBoard(session: session, mySeat: mySeat, onAction: onAction);
       case 'quick_challenges':
         return QuickChallengesBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'snakes_ladders':
+        return SnakesLaddersBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'checkers':
+        return CheckersBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'dots_boxes':
+        return DotsBoxesBoard(session: session, mySeat: mySeat, onAction: onAction);
       default:
         return _UnknownBoard(slug: session.gameSlug);
     }
