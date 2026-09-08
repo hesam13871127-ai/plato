@@ -12,7 +12,7 @@ const strings: Record<string, Localized> = {
   'hub.shop': { fa: 'فروشگاه', en: 'Shop' },
   'hub.players': { fa: 'بازیکن', en: 'players' },
   'hub.new': { fa: 'جدید', en: 'NEW' },
-  'hub.progress': { fa: 'موج ۱ از ۵ · ۵ بازی از ۲۵', en: 'Wave 1 of 5 · 5 of 25 games' },
+  'hub.progress': { fa: 'موج ۲ از ۵ · ۱۰ بازی از ۲۵', en: 'Wave 2 of 5 · 10 of 25 games' },
   'hub.coins': { fa: 'سکه', en: 'coins' },
   'setup.title': { fa: 'آماده‌سازی بازی', en: 'Game setup' },
   'setup.players': { fa: 'تعداد بازیکن', en: 'Players' },

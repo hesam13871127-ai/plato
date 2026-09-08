@@ -248,7 +248,178 @@ export function cardBackTexture(skinKey: string, colors: { bg: string; fg: strin
   });
 }
 
-/* ---------------- connect 4 panel ---------------- */
+/* ---------------- pool balls ---------------- */
+
+/** Standard ball colors (1–8 solids, 9–15 stripes). */
+const POOL_BALL_COLORS: Record<number, string> = {
+  1: '#fcc203', 2: '#1a3a82', 3: '#c8102e', 4: '#5b2c83', 5: '#f57a20',
+  6: '#157944', 7: '#6d1a36', 8: '#151515',
+  9: '#fcc203', 10: '#1a3a82', 11: '#c8102e', 12: '#5b2c83', 13: '#f57a20',
+  14: '#157944', 15: '#6d1a36',
+};
+
+/** Sphere texture for a pool ball: solid, striped or the cue. */
+export function ballTexture(num: number): THREE.CanvasTexture {
+  return cached(`ball-${num}`, 256, 128, (ctx) => {
+    const stripe = num >= 9;
+    const color = POOL_BALL_COLORS[num] ?? '#ffffff';
+    // base
+    ctx.fillStyle = num === 0 ? '#f8f6f2' : stripe ? '#f8f6f2' : color;
+    ctx.fillRect(0, 0, 256, 128);
+    if (num !== 0 && stripe) {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 34, 256, 60);
+    }
+    if (num !== 0) {
+      // number circle
+      ctx.fillStyle = '#f8f6f2';
+      ctx.beginPath();
+      ctx.arc(64, 64, 26, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#151515';
+      ctx.font = '900 34px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(num), 64, 66);
+    } else {
+      // tiny red dot on the cue
+      ctx.fillStyle = '#d33';
+      ctx.beginPath();
+      ctx.arc(64, 64, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // subtle shading bands
+    const grad = ctx.createLinearGradient(0, 0, 0, 128);
+    grad.addColorStop(0, 'rgba(255,255,255,0.16)');
+    grad.addColorStop(0.5, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.2)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 256, 128);
+  });
+}
+
+/* ---------------- snakes & ladders board ---------------- */
+
+export function snakesBoardTexture(
+  colors: { light: string; dark: string; line: string },
+  snakes: Record<number, number>,
+  ladders: Record<number, number>,
+): THREE.CanvasTexture {
+  return cached(`snakes-board-${colors.light}-${colors.dark}`, 1024, 1024, (ctx) => {
+    const cell = 1024 / 10;
+    const rc = (n: number): [number, number] => {
+      const i = n - 1;
+      const row = Math.floor(i / 10);
+      const col = i % 10;
+      return [9 - row, row % 2 === 0 ? col : 9 - col]; // canvas coords (top-left origin)
+    };
+    const center = (n: number): [number, number] => {
+      const [r, c] = rc(n);
+      return [(c + 0.5) * cell, (r + 0.5) * cell];
+    };
+
+    // cells
+    for (let n = 1; n <= 100; n++) {
+      const [r, c] = rc(n);
+      ctx.fillStyle = (r + c) % 2 === 0 ? colors.light : colors.dark;
+      ctx.fillRect(c * cell, r * cell, cell, cell);
+      ctx.fillStyle = 'rgba(20,15,40,0.75)';
+      ctx.font = `700 ${cell * 0.3}px Vazirmatn, Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(n), (c + 0.5) * cell, (r + 0.18) * cell);
+    }
+
+    // ladders
+    for (const [from, to] of Object.entries(ladders)) {
+      const [x1, y1] = center(Number(from));
+      const [x2, y2] = center(Number(to));
+      const nx = -(y2 - y1);
+      const ny = x2 - x1;
+      const len = Math.hypot(nx, ny) || 1;
+      const ox = (nx / len) * cell * 0.16;
+      const oy = (ny / len) * cell * 0.16;
+      ctx.strokeStyle = '#d9a441';
+      ctx.lineWidth = cell * 0.075;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1 - ox, y1 - oy);
+      ctx.lineTo(x2 - ox, y2 - oy);
+      ctx.moveTo(x1 + ox, y1 + oy);
+      ctx.lineTo(x2 + ox, y2 + oy);
+      ctx.stroke();
+      // rungs
+      const steps = Math.max(3, Math.round(Math.hypot(x2 - x1, y2 - y1) / (cell * 0.38)));
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const px = x1 + (x2 - x1) * t;
+        const py = y1 + (y2 - y1) * t;
+        ctx.lineWidth = cell * 0.05;
+        ctx.beginPath();
+        ctx.moveTo(px - ox, py - oy);
+        ctx.lineTo(px + ox, py + oy);
+        ctx.stroke();
+      }
+    }
+
+    // snakes (wavy bezier with a head)
+    const snakeColors = ['#e05252', '#52b788', '#e08fd0', '#7a9cc6', '#c98a3d'];
+    let si = 0;
+    for (const [from, to] of Object.entries(snakes)) {
+      const [x1, y1] = center(Number(from));
+      const [x2, y2] = center(Number(to));
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.hypot(dx, dy);
+      const px = -dy / (len || 1);
+      const py = dx / (len || 1);
+      const col = snakeColors[si++ % snakeColors.length]!;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = cell * 0.13;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      const waves = 3;
+      for (let i = 1; i <= waves; i++) {
+        const t0 = (i - 1) / waves;
+        const t1 = i / waves;
+        const mx = x1 + dx * (t0 + t1) / 2 + px * cell * (i % 2 === 0 ? 0.45 : -0.45);
+        const my = y1 + dy * (t0 + t1) / 2 + py * cell * (i % 2 === 0 ? 0.45 : -0.45);
+        ctx.quadraticCurveTo(mx, my, x1 + dx * t1, y1 + dy * t1);
+      }
+      ctx.stroke();
+      // head
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(x1, y1, cell * 0.17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(x1 - cell * 0.06, y1 - cell * 0.04, cell * 0.035, 0, Math.PI * 2);
+      ctx.arc(x1 + cell * 0.06, y1 - cell * 0.04, cell * 0.035, 0, Math.PI * 2);
+      ctx.fill();
+      // tail tip
+      ctx.beginPath();
+      ctx.arc(x2, y2, cell * 0.09, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // grid lines
+    ctx.strokeStyle = colors.line;
+    ctx.lineWidth = 2;
+    for (let i = 0; i <= 10; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * cell, 0);
+      ctx.lineTo(i * cell, 1024);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, i * cell);
+      ctx.lineTo(1024, i * cell);
+      ctx.stroke();
+    }
+  });
+}
+
 
 /** Blue panel with 7×6 transparent holes (alpha-tested). */
 export function c4PanelTexture(frameColor: string): THREE.CanvasTexture {
