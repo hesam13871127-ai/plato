@@ -89,7 +89,7 @@ class _PoolBoardState extends State<PoolBoard> {
                 borderRadius: BorderRadius.circular(12),
                 gradient: LinearGradient(colors: [Color.lerp(skin.feltTop, Colors.white, 0.10)!, skin.feltTop, skin.feltBottom], begin: Alignment.topCenter, end: Alignment.bottomCenter),
                 border: Border.all(color: Colors.white.withOpacity(0.10)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 12, inset: true)],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 12)],
               ),
               child: Stack(
                 children: [

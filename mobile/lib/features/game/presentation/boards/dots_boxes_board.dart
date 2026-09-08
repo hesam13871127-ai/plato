@@ -53,7 +53,7 @@ class _DotsBoxesBoardState extends State<DotsBoxesBoard> {
           AspectRatio(aspectRatio:1, child: Container(
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), color: Color.lerp(skin.feltTop, Colors.white, 0.05), border: Border.all(color: Colors.white.withOpacity(0.08))),
             child: LayoutBuilder(builder: (context, c){
-              final pad=16.0; final w=c.maxWidth - pad*2; final h=c.maxHeight - pad*2; final cellW=w/size; final cellH=h/size;
+              final pad=16.0; final bw=c.maxWidth - pad*2; final bh=c.maxHeight - pad*2; final cellW=bw/size; final cellH=bh/size;
               return Stack(children:[
                 // box fills
                 for(var r=0;r<size;r++) for(var c2=0;c2<size;c2++)
