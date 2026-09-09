@@ -125,7 +125,7 @@ class MatchFoundModel extends MatchFound {
     return MatchFoundModel(
       sessionId: json['sessionId'] as String? ?? '',
       channel: json['channel'] as String? ?? '',
-      gameSlug: json['gameSlug'] as String? ?? 'dominoes',
+      gameSlug: json['gameSlug'] as String? ?? '',
       isRanked: json['isRanked'] as bool? ?? false,
       waitSeconds: (json['waitSeconds'] as num?)?.toInt() ?? 0,
     );

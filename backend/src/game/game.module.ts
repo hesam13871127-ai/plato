@@ -21,26 +21,6 @@ import { GameSessionService } from './game-session.service';
 import { MatchmakingService } from './matchmaking.service';
 import { ResultsService } from './results.service';
 import { RoomService } from './room.service';
-import { DominoesEngine } from './engine/dominoes.engine';
-import { Connect4Engine } from './engine/connect4.engine';
-import { OchoEngine } from './engine/ocho.engine';
-import { LudoEngine } from './engine/ludo.engine';
-import { ChessEngine } from './engine/chess.engine';
-import { BingoEngine } from './engine/bingo.engine';
-import { DicePartyEngine } from './engine/dice-party.engine';
-import { WerewolfEngine } from './engine/werewolf.engine';
-import { SketchEngine } from './engine/sketch.engine';
-import { PoolEngine } from './engine/pool.engine';
-import { CarromEngine } from './engine/carrom.engine';
-import { TriviaEngine } from './engine/trivia.engine';
-import { EmojiCharadesEngine } from './engine/emoji-charades.engine';
-import { WordChainEngine } from './engine/word-chain.engine';
-import { MemoryRaceEngine } from './engine/memory-race.engine';
-import { ImpostorLightEngine } from './engine/impostor-light.engine';
-import { QuickChallengesEngine } from './engine/quick-challenges.engine';
-import { SnakesLaddersEngine } from './engine/snakes-ladders.engine';
-import { CheckersEngine } from './engine/checkers.engine';
-import { DotsBoxesEngine } from './engine/dots-boxes.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -65,27 +45,7 @@ const ENTITIES = [
   imports: [JwtModule.register({}), TypeOrmModule.forFeature(ENTITIES), EconomyModule],
   controllers: [GameController],
   providers: [
-    // Engines
-    DominoesEngine,
-    Connect4Engine,
-    OchoEngine,
-    LudoEngine,
-    ChessEngine,
-    BingoEngine,
-    DicePartyEngine,
-    WerewolfEngine,
-    SketchEngine,
-    PoolEngine,
-    CarromEngine,
-    TriviaEngine,
-    EmojiCharadesEngine,
-    WordChainEngine,
-    MemoryRaceEngine,
-    ImpostorLightEngine,
-    QuickChallengesEngine,
-    SnakesLaddersEngine,
-    CheckersEngine,
-    DotsBoxesEngine,
+    // Engines — registered per wave as games are rebuilt (see EngineRegistry).
     EngineRegistry,
     // Services
     BotService,

@@ -59,30 +59,6 @@ class GameSeat extends Equatable {
   List<Object?> get props => [seatNumber, playerId, displayName, connected, score];
 }
 
-/// Domino-specific board data (redacted server-side: a player only sees their
-/// own hand plus opponents' hand sizes; spectators see no hands).
-class DominoBoardView extends Equatable {
-  const DominoBoardView({
-    required this.chain,
-    required this.ends,
-    required this.boneyard,
-    required this.handSizes,
-    required this.myHand,
-  });
-
-  /// Played tiles in order, each `{ tile: [a,b], openEnds: [l,r] }`.
-  final List<Map<String, dynamic>> chain;
-  final List<int>? ends;
-  final int boneyard;
-  final List<int> handSizes;
-
-  /// Tiles in the viewing player's hand as `[a,b]` pairs (empty for spectators).
-  final List<List<int>> myHand;
-
-  @override
-  List<Object?> get props => [chain, ends, boneyard, handSizes, myHand];
-}
-
 /// The full synchronised state of a live game session.
 class GameSessionView extends Equatable {
   const GameSessionView({
@@ -99,38 +75,21 @@ class GameSessionView extends Equatable {
   });
 
   final String sessionId;
-  final String gameSlug; // engine slug ('connect4', 'chess', …) driving the board UI
+  final String gameSlug; // engine slug ('connect4', 'dominoes', …) driving the board UI
   final String phase; // 'in_progress' | 'completed' | 'abandoned' | 'setup'
   final int turn;
   final int currentSeat;
   final int version;
   final List<GameSeat> seats;
+
+  /// Game-specific board payload. Each 3D board parses its own slice of this
+  /// map (self-contained per game), so the shared entity stays generic.
   final Map<String, dynamic> board;
   final int? winnerSeat;
   final List<int> scores;
 
   bool get isCompleted => phase == 'completed';
   bool get isInProgress => phase == 'in_progress';
-
-  /// Parsed domino board when the game slug is dominoes.
-  DominoBoardView? get dominoBoard {
-    if (board.isEmpty) return null;
-    final rawHand = (board['hand'] as List?) ?? const [];
-    final rawSizes = (board['handSizes'] as List?) ?? const [];
-    final rawChain = (board['chain'] as List?) ?? const [];
-    final rawEnds = board['ends'] as List?;
-    return DominoBoardView(
-      chain: rawChain.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList(),
-      ends: rawEnds?.whereType<num>().map((n) => n.toInt()).toList(),
-      boneyard: (board['boneyard'] as num?)?.toInt() ?? 0,
-      handSizes: rawSizes.whereType<num>().map((n) => n.toInt()).toList(),
-      myHand: rawHand
-          .whereType<List>()
-          .map((t) => t.whereType<num>().map((n) => n.toInt()).toList())
-          .where((t) => t.length == 2)
-          .toList(),
-    );
-  }
 
   @override
   List<Object?> get props => [sessionId, phase, turn, currentSeat, version, winnerSeat];

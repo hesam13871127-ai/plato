@@ -117,7 +117,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen> {
                   const SizedBox(height: 10),
                   Text(
                     'Matching by skill, language and region.\n'
-                    '${widget.gameSlug == 'dominoes' ? 'Dominoes' : widget.gameSlug} · '
+                    '${_prettySlug(widget.gameSlug)} · '
                     '${widget.isRanked ? 'Ranked' : 'Casual'}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
@@ -190,4 +190,13 @@ class _StatusRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Turns a game slug into a readable title (e.g. 'pool_8ball' → 'Pool 8 Ball').
+String _prettySlug(String slug) {
+  if (slug.isEmpty) return 'Game';
+  return slug
+      .split('_')
+      .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
 }

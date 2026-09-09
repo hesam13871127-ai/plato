@@ -127,7 +127,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                     controller: _nameController,
                     style: const TextStyle(color: AppColors.textPrimary),
                     decoration: InputDecoration(
-                      hintText: 'e.g. Friday night dominoes',
+                      hintText: 'e.g. Friday night games',
                       hintStyle: const TextStyle(color: AppColors.textMuted),
                       filled: true,
                       fillColor: AppColors.glassFill,

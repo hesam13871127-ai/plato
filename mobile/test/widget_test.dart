@@ -7,9 +7,9 @@ import 'package:vibetable/core/widgets/gradient_button.dart';
 void main() {
   group('AppColors', () {
     test('uses the brand palette', () {
-      expect(AppColors.deepNavy, const Color(0xFF0B1426));
-      expect(AppColors.electricPurple, const Color(0xFF7B5CFF));
-      expect(AppColors.softCyan, const Color(0xFF00E5FF));
+      expect(AppColors.deepNavy, const Color(0xFF060A1E));
+      expect(AppColors.electricPurple, const Color(0xFF8B5CF6));
+      expect(AppColors.softCyan, const Color(0xFF22D3EE));
     });
   });
 

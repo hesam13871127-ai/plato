@@ -1,77 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { BaseGameEngine } from './base-game.engine';
-import { DominoesEngine } from './dominoes.engine';
-import { Connect4Engine } from './connect4.engine';
-import { OchoEngine } from './ocho.engine';
-import { LudoEngine } from './ludo.engine';
-import { ChessEngine } from './chess.engine';
-import { BingoEngine } from './bingo.engine';
-import { DicePartyEngine } from './dice-party.engine';
-import { WerewolfEngine } from './werewolf.engine';
-import { SketchEngine } from './sketch.engine';
-import { PoolEngine } from './pool.engine';
-import { CarromEngine } from './carrom.engine';
-import { TriviaEngine } from './trivia.engine';
-import { EmojiCharadesEngine } from './emoji-charades.engine';
-import { WordChainEngine } from './word-chain.engine';
-import { MemoryRaceEngine } from './memory-race.engine';
-import { ImpostorLightEngine } from './impostor-light.engine';
-import { QuickChallengesEngine } from './quick-challenges.engine';
-import { SnakesLaddersEngine } from './snakes-ladders.engine';
-import { CheckersEngine } from './checkers.engine';
-import { DotsBoxesEngine } from './dots-boxes.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
  * the system (matchmaking, rooms, gateway) stays generic.
+ *
+ * The catalogue is being rebuilt wave by wave (logic + 3D board + shop items
+ * per game), so the registry starts empty and fills up as each wave lands:
+ * engines are injected here and registered in the constructor.
  */
 @Injectable()
 export class EngineRegistry {
   private readonly engines = new Map<string, BaseGameEngine>();
-
-  constructor(
-    dominoes: DominoesEngine,
-    connect4: Connect4Engine,
-    ocho: OchoEngine,
-    ludo: LudoEngine,
-    chess: ChessEngine,
-    bingo: BingoEngine,
-    diceParty: DicePartyEngine,
-    werewolf: WerewolfEngine,
-    sketch: SketchEngine,
-    pool: PoolEngine,
-    carrom: CarromEngine,
-    trivia: TriviaEngine,
-    emojiCharades: EmojiCharadesEngine,
-    wordChain: WordChainEngine,
-    memoryRace: MemoryRaceEngine,
-    impostorLight: ImpostorLightEngine,
-    quickChallenges: QuickChallengesEngine,
-    snakesLadders: SnakesLaddersEngine,
-    checkers: CheckersEngine,
-    dotsBoxes: DotsBoxesEngine,
-  ) {
-    this.register(dominoes);
-    this.register(connect4);
-    this.register(ocho);
-    this.register(ludo);
-    this.register(chess);
-    this.register(bingo);
-    this.register(diceParty);
-    this.register(werewolf);
-    this.register(sketch);
-    this.register(pool);
-    this.register(carrom);
-    this.register(trivia);
-    this.register(emojiCharades);
-    this.register(wordChain);
-    this.register(memoryRace);
-    this.register(impostorLight);
-    this.register(quickChallenges);
-    this.register(snakesLadders);
-    this.register(checkers);
-    this.register(dotsBoxes);
-  }
 
   register(engine: BaseGameEngine): void {
     this.engines.set(engine.slug, engine);

@@ -6,13 +6,13 @@
 SET NAMES utf8mb4;
 
 -- ── Games catalogue ────────────────────────────────────────────────────────
-INSERT INTO games (id, slug, name, description, icon_url, min_players, max_players, avg_duration_minutes, supports_bots, ranked_enabled, status)
-VALUES
-  ('11111111-0000-4000-8800-000000000001', 'backgammon', 'Backgammon', 'The classic race-and-bear-off board game.', NULL, 2, 2, 12, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000002', 'dominoes',    'Dominoes',    'Match tiles and score the board.',        NULL, 2, 4, 15, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000003', 'ludo',        'Ludo',        'Race your tokens home in this party hit.', NULL, 2, 4, 20, 1, 0, 'active'),
-  ('11111111-0000-4000-8000-000000000004', 'chess',       'Chess',       'The timeless strategy duel (coming soon).', NULL, 2, 2, 25, 0, 1, 'coming_soon')
-ON DUPLICATE KEY UPDATE name = VALUES(name);
+-- The catalogue is rebuilt wave by wave (engine + 3D board + shop items per
+-- game). Rows are appended below as each game lands; the API's runtime
+-- GameCatalogSeeder is the source of truth and seeds the same list on boot.
+-- INSERT INTO games (id, slug, name, description, icon_url, min_players, max_players, avg_duration_minutes, supports_bots, ranked_enabled, status)
+-- VALUES
+--   (...)
+-- ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
 INSERT INTO seasons (id, name, season_number, starts_at, ends_at, status, rewards)

@@ -77,7 +77,7 @@ class GameHubScreen extends ConsumerWidget {
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
                 data: (rooms) {
-                  final open = rooms.where((r) => r.gameSlug == 'dominoes').take(4).toList();
+                  final open = rooms.take(4).toList();
                   if (open.isEmpty) {
                     return GlassCard(
                       child: Row(
@@ -254,34 +254,49 @@ class _GameCard extends ConsumerWidget {
 }
 
 /// Fallback emoji per slug for games whose 3D logo asset is not bundled.
+/// Games ship a bundled 3D logo as they are rebuilt, so this map only needs
+/// entries for slugs without artwork.
 String _gameEmoji(String slug) {
   switch (slug) {
-    case 'connect4':
-      return '🔴';
-    case 'bingo':
-      return '🎱';
-    case 'carrom':
-      return '⚪';
-    case 'chess':
-      return '♟️';
-    case 'dice_party':
-      return '🎲';
-    case 'dominoes':
-      return '🁢';
-    case 'emoji_charades':
-      return '😂';
-    case 'impostor_light':
-      return '🕵️';
-    case 'ludo':
-      return '🟥';
-    case 'memory_race':
-      return '🃏';
-    case 'ocho':
-      return '🃏';
-    case 'pool_8ball':
-      return '🎱';
     default:
       return '🎮';
+  }
+}
+
+/// Shown while the catalogue is between rebuild waves — never an error.
+class _EmptyCatalog extends StatelessWidget {
+  const _EmptyCatalog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 34),
+      decoration: BoxDecoration(
+        color: AppColors.glassFill,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.glassStroke),
+      ),
+      child: Column(
+        children: [
+          const Text('🛠️', style: TextStyle(fontSize: 40)),
+          const SizedBox(height: 12),
+          Text(
+            'The arcade is being rebuilt',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Games return wave by wave — each one fully playable, with 3D boards and fresh cosmetics.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.5),
+          ),
+        ],
+      ),
+    );
   }
 }
 

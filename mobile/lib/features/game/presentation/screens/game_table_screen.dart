@@ -28,19 +28,19 @@ class GameTableScreen extends ConsumerStatefulWidget {
 class _GameTableScreenState extends ConsumerState<GameTableScreen> {
   bool _muted = false;
 
-  static const _titles = {
-    'dominoes': 'Dominoes',
-    'connect4': '4 in a Row',
-    'ocho': 'Ocho',
-    'ludo': 'Ludo',
-    'chess': 'Chess',
-    'bingo': 'Bingo',
-    'dice_party': 'Dice Party',
-    'werewolf': 'Werewolf',
-    'sketch_guess': 'Sketch & Guess',
-    'pool_8ball': 'Pool 8-Ball',
-    'carrom': 'Carrom',
-  };
+  /// Per-slug display titles. Games register their title as they are rebuilt
+  /// wave by wave; unknown slugs get a prettified name as fallback.
+  static const _titles = <String, String>{};
+
+  static String _titleFor(String slug) {
+    final known = _titles[slug];
+    if (known != null) return known;
+    if (slug.isEmpty) return 'Game';
+    return slug
+        .split('_')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,21 +124,7 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
   /// Live games often allow several seats to act at once; turn-based games
   /// highlight only the active seat. Defaults to the session's current seat.
   Set<int> _activeSeats(GameSessionView session) {
-    final b = session.board;
-    switch (session.gameSlug) {
-      case 'pool_8ball':
-      case 'carrom':
-        final t = b['turnSeat'];
-        return t is num ? {t.toInt()} : {session.currentSeat};
-      case 'sketch_guess':
-        final d = b['drawerSeat'];
-        return d is num ? {d.toInt()} : {session.currentSeat};
-      case 'werewolf':
-        // Everyone alive is engaged; highlight all.
-        return <int>{for (var i = 0; i < session.seats.length; i++) i};
-      default:
-        return {session.currentSeat};
-    }
+    return {session.currentSeat};
   }
 }
 

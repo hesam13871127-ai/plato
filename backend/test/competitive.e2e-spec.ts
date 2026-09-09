@@ -38,6 +38,29 @@ describe('VibeTable competitive — seasons, rewards, leaderboards (e2e)', () =>
 
   const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 
+  /**
+   * A dedicated game row for ranking fixtures. The playable catalogue is
+   * rebuilt wave by wave (and is empty between waves), so competitive tests
+   * never depend on it: they own this row instead.
+   */
+  async function ensureTestGame(): Promise<GameEntity> {
+    const existing = await ds.getRepository(GameEntity).findOne({ where: { slug: 'competitive_fixture' } });
+    if (existing) return existing;
+    return ds.getRepository(GameEntity).save({
+      id: uuidv4(),
+      slug: 'competitive_fixture',
+      name: 'Competitive Fixture',
+      description: 'Self-contained game row for ranking tests.',
+      iconUrl: null,
+      minPlayers: 2,
+      maxPlayers: 2,
+      avgDurationMinutes: 5,
+      supportsBots: false,
+      rankedEnabled: true,
+      status: 'active',
+    } as Partial<GameEntity>);
+  }
+
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
@@ -79,8 +102,7 @@ describe('VibeTable competitive — seasons, rewards, leaderboards (e2e)', () =>
       const season = await seasons.activeSeason();
       expect(season).toBeTruthy();
 
-      const games = await ds.getRepository(GameEntity).find();
-      const game = games[0];
+      const game = await ensureTestGame();
       expect(game).toBeTruthy();
 
       // Two real players with different peak ratings; the stronger tops the board.
@@ -160,8 +182,7 @@ describe('VibeTable competitive — seasons, rewards, leaderboards (e2e)', () =>
   describe('leaderboard accuracy', () => {
     it('ranks players by rating and excludes bots', async () => {
       const season = await seasons.activeSeason();
-      const games = await ds.getRepository(GameEntity).find();
-      const game = games[0];
+      const game = await ensureTestGame();
 
       const a = await signUp('+15555550004', 'Alice Ace');
       const b = await signUp('+15555550005', 'Bob Bold');
@@ -188,8 +209,7 @@ describe('VibeTable competitive — seasons, rewards, leaderboards (e2e)', () =>
 
     it('friends board only contains the player + accepted friends', async () => {
       const season = await seasons.activeSeason();
-      const games = await ds.getRepository(GameEntity).find();
-      const game = games[0];
+      const game = await ensureTestGame();
       const me = await signUp('+15555550006', 'Friendly Fran');
       const friend = await signUp('+15555550007', 'Freddy Friend');
       const stranger = await signUp('+15555550008', 'Stranger Sam');

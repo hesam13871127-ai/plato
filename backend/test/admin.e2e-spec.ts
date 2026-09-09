@@ -126,17 +126,23 @@ describe('VibeTable admin panel (e2e)', () => {
     const admin = await signUp('+15559000008', 'AdminGames');
     await userRepo.update({ id: admin.userId }, { role: 'admin' });
 
+    // Pick any catalogued game dynamically — the catalogue is rebuilt in waves,
+    // so no slug is hard-coded here. Between waves there is nothing to toggle.
+    const list = await request(httpServer).get('/api/games').expect(200);
+    const game = (list.body.data.games as Array<{ slug: string }>)[0];
+    if (!game) return;
+
     const disable = await request(httpServer)
       .post('/api/admin/games/status')
       .set('Authorization', `Bearer ${admin.token}`)
-      .send({ slug: 'trivia', status: 'maintenance' });
+      .send({ slug: game.slug, status: 'maintenance' });
     expect(disable.status).toBe(201);
     expect(disable.body.data.status).toBe('maintenance');
 
     const enable = await request(httpServer)
       .post('/api/admin/games/status')
       .set('Authorization', `Bearer ${admin.token}`)
-      .send({ slug: 'trivia', status: 'active' });
+      .send({ slug: game.slug, status: 'active' });
     expect(enable.status).toBe(201);
     expect(enable.body.data.status).toBe('active');
   });

@@ -13,6 +13,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/wallet_chip.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/widgets/set_password_sheet.dart';
+import '../../../game/presentation/providers/game_providers.dart';
 import '../../../quests/presentation/providers/quests_providers.dart';
 
 /// Redesigned landing screen: a rich hero header, 3D glass cards for the main
@@ -138,7 +139,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _CategoryCard(
                     emoji: '🎲',
                     title: l10n.t('tab_games'),
-                    subtitle: '12',
+                    subtitle: 'Play now',
                     gradient: const LinearGradient(
                       colors: [Color(0xFF2E2480), Color(0xFF123B5A)],
                     ),
@@ -190,17 +191,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 14),
               SizedBox(
                 height: 128,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: const [
-                    _QuickGame(slug: 'dominoes', name: 'Dominoes', emoji: '🁢'),
-                    _QuickGame(slug: 'ludo', name: 'Ludo', emoji: '🟥'),
-                    _QuickGame(slug: 'chess', name: 'Chess', emoji: '♟️'),
-                    _QuickGame(slug: 'pool_8ball', name: '8 Ball', emoji: '🎱'),
-                    _QuickGame(slug: 'ocho', name: 'Ocho', emoji: '🃏'),
-                    _QuickGame(slug: 'connect4', name: 'Connect 4', emoji: '🔴'),
-                  ],
-                ),
+                child: ref.watch(gameCatalogProvider).maybeWhen(
+                      data: (games) => games.isEmpty
+                          ? Center(
+                              child: Text('Games return wave by wave 🛠️',
+                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                            )
+                          : ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: [
+                                for (final g in games.take(6))
+                                  _QuickGame(slug: g.slug, name: g.name, emoji: '🎮'),
+                              ],
+                            ),
+                      orElse: () => const Center(
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.softCyan),
+                        ),
+                      ),
+                    ),
               ),
             ],
           ),
