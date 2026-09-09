@@ -13,6 +13,7 @@ import { SnakesLaddersEngine } from '../src/game/engine/snakes-ladders.engine';
 import { BingoEngine } from '../src/game/engine/bingo.engine';
 import { DicePartyEngine } from '../src/game/engine/dice-party.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
+import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -39,6 +40,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'bingo', build: () => new BingoEngine() },
   { name: 'dice_party', build: () => new DicePartyEngine() },
   { name: 'backgammon', build: () => new BackgammonEngine(), players: 2 },
+  { name: 'mancala', build: () => new MancalaEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2077,6 +2079,110 @@ describe('backgammon rules', () => {
   });
 });
 
+describe('mancala rules', () => {
+  const engine = new MancalaEngine();
+
+  interface MancalaShape {
+    pits: number[]; // 0-5 seat0 pits, 6 store0, 7-12 seat1 pits, 13 store1
+    lastSow: { seat: number; pit: number; lastCup: number; captured: number; extraTurn: boolean } | null;
+    moveCount: number;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): MancalaShape {
+    return state.board as unknown as MancalaShape;
+  }
+
+  function craft(pits: number[], currentSeat = 0): GameState {
+    const state = start();
+    const b = board(state);
+    b.pits = [...pits];
+    state.currentSeat = currentSeat;
+    return state;
+  }
+
+  test('starts with four seeds in every pit and empty stores', () => {
+    const b = board(start());
+    expect(b.pits).toHaveLength(14);
+    expect(b.pits.slice(0, 6)).toEqual([4, 4, 4, 4, 4, 4]);
+    expect(b.pits[6]).toBe(0);
+    expect(b.pits.slice(7, 13)).toEqual([4, 4, 4, 4, 4, 4]);
+    expect(b.pits[13]).toBe(0);
+    expect(b.pits.reduce((a, v) => a + v, 0)).toBe(48);
+    expect(b.lastSow).toBeNull();
+  });
+
+  test('sowing walks counter-clockwise and crosses your own store', () => {
+    // Seat 0 sows pit 5 (4 seeds) → pit 6, own store, then opponent pits 1-2.
+    const next = engine.applyAction(start(), { seat: 0, type: 'sow', payload: { pit: 5 } });
+    const b = board(next);
+    expect(b.pits[4]).toBe(0); // emptied
+    expect(b.pits[5]).toBe(5); // own pit 6
+    expect(b.pits[6]).toBe(1); // own store — passed but not the last cup
+    expect(b.pits[7]).toBe(5); // opponent pit 1
+    expect(b.pits[8]).toBe(5); // opponent pit 2
+    expect(next.currentSeat).toBe(1); // turn passes
+    expect(b.lastSow).toMatchObject({ seat: 0, pit: 5, lastCup: 8, captured: 0, extraTurn: false });
+  });
+
+  test('the last seed in your own store grants another turn', () => {
+    const state = craft([6, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0]);
+    const next = engine.applyAction(state, { seat: 0, type: 'sow', payload: { pit: 1 } });
+    const b = board(next);
+    expect(b.pits[6]).toBe(1);
+    expect(b.lastSow).toMatchObject({ lastCup: 6, extraTurn: true });
+    expect(next.currentSeat).toBe(0); // sow again
+    // The first sow left pit 2 holding five; sowing it ends on cup 10 — no repeat.
+    const second = engine.applyAction(next, { seat: 0, type: 'sow', payload: { pit: 6 } });
+    expect(second.currentSeat).toBe(1);
+    expect(board(second).pits[6]).toBe(2); // another seed reached the store
+  });
+
+  test('the last seed in your own empty pit captures the opposite pit', () => {
+    // Seat 0 pit 4 holds one seed; own pit 5 is empty; opposite cup 8 has five.
+    const state = craft([4, 4, 4, 1, 0, 4, 0, 4, 5, 4, 4, 4, 4, 0]);
+    const next = engine.applyAction(state, { seat: 0, type: 'sow', payload: { pit: 4 } });
+    const b = board(next);
+    expect(b.pits[4]).toBe(0); // the landing pit is swept
+    expect(b.pits[8]).toBe(0); // opposite swept too
+    expect(b.pits[6]).toBe(6); // 1 + 5 captured
+    expect(b.lastSow).toMatchObject({ lastCup: 4, captured: 6, extraTurn: false });
+    expect(next.currentSeat).toBe(1);
+  });
+
+  test('emptying a side ends the game and the other side sweeps its seeds', () => {
+    // Seat 0 has one seed left in pit 6; landing it in the store empties the
+    // side → seat 1 sweeps their 12 and wins 27 to 21.
+    const state = craft([0, 0, 0, 0, 0, 1, 20, 0, 0, 0, 12, 0, 0, 15]);
+    const next = engine.applyAction(state, { seat: 0, type: 'sow', payload: { pit: 6 } });
+    const b = board(next);
+    expect(next.phase).toBe('completed');
+    expect(next.winnerSeat).toBe(1);
+    expect(b.pits[6]).toBe(21);
+    expect(b.pits[13]).toBe(27);
+    expect(next.scores).toEqual([21, 27]);
+    expect(b.pits.slice(0, 6).every((v) => v === 0)).toBe(true);
+    expect(b.pits.slice(7, 13).every((v) => v === 0)).toBe(true);
+  });
+
+  test('only your own non-empty pits are playable', () => {
+    const state = craft([0, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0]);
+    expect(
+      engine.validate(state, { seat: 0, type: 'sow', payload: { pit: 1 } }).ok,
+    ).toBe(false); // empty pit
+    expect(
+      engine.validate(state, { seat: 0, type: 'sow', payload: { pit: 7 } }).ok,
+    ).toBe(false); // not one of your six
+    expect(
+      engine.validate(state, { seat: 1, type: 'sow', payload: { pit: 1 } }).ok,
+    ).toBe(false); // not your turn
+    expect(engine.legalMoves(state)).toEqual([2, 3, 4, 5, 6]);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -2093,9 +2199,10 @@ describe('engine registry', () => {
       new BingoEngine(),
       new DicePartyEngine(),
       new BackgammonEngine(),
+      new MancalaEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -2104,7 +2211,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

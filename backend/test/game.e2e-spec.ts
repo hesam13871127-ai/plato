@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module';
 import { GameSessionService } from '../src/game/game-session.service';
 import { ChessEngine } from '../src/game/engine/chess.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
+import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
 
@@ -474,6 +475,12 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'mancala') {
+    const legal = new MancalaEngine().legalMoves(session.state);
+    if (legal.length === 0) return null;
+    return { type: 'sow', payload: { pit: legal[0] } };
   }
 
   if (slug === 'backgammon') {

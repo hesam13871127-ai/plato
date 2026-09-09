@@ -429,6 +429,36 @@ class GameTutorials {
         bodyEn: 'Gather all fifteen checkers in your home board, then bear them off. First to clear everything wins — gammons score double!',
         bodyFa: 'هر پانزده مهره را در خانهٔ خودت جمع کن و بعد تخلیه‌شان کن. اولین تخلیه‌کننده برنده است — گامون دو برابر امتیاز دارد!',
       ),
+    ]
+    'mancala': [
+      TutorialStep(
+        emoji: '🫘',
+        titleEn: 'Sow your seeds',
+        titleFa: 'دانه‌ها را بکار',
+        bodyEn: 'Tap one of your six pits to sow its seeds counter-clockwise, one per cup.',
+        bodyFa: 'روی یکی از شش گودی خودت بزن تا دانه‌هایش پادساعتگرد کاشته شوند، در هر حفره یکی.',
+      ),
+      TutorialStep(
+        emoji: '⭐',
+        titleEn: 'Free turns',
+        titleFa: 'نوبت اضافه',
+        bodyEn: 'If the last seed lands in your store you immediately sow again.',
+        bodyFa: 'اگر آخرین دانه در انبار خودت بیفتد، بلافاصله یک‌بار دیگر می‌کاری.',
+      ),
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'Captures',
+        titleFa: 'غنیمت',
+        bodyEn: 'End with the last seed in your own empty pit to capture it plus everything in the pit opposite.',
+        bodyFa: 'آخرین دانه را در گودی خالی خودت فرود بیاور تا آن دانه و همهٔ دانه‌های روبه‌رو را غنیمت بگیری.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Hoard to win',
+        titleFa: 'انبار کن و ببر',
+        bodyEn: 'When either side runs empty, both sweep their leftovers. The bigger store takes the game!',
+        bodyFa: 'وقتی یک سمت خالی شود، هر دو باقی‌ماندهٔ خود را جمع می‌کنند. انبار بزرگ‌تر برنده است!',
+      ),
     ],
   };
 }

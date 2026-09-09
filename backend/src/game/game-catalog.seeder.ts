@@ -154,6 +154,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'mancala',
+    name: 'Mancala',
+    description: 'Sow, capture and hoard — the classic seed-counting duel of Kalah.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

@@ -284,6 +284,8 @@ String _gameEmoji(String slug) {
       return '🎲';
     case 'backgammon':
       return '♟️';
+    case 'mancala':
+      return '🫘';
     default:
       return '🎮';
   }
