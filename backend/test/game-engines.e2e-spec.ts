@@ -20,6 +20,7 @@ import { WordChainEngine, WORD_CHAIN_DICT } from '../src/game/engine/word-chain.
 import { EmojiCharadesEngine, EMOJI_RIDDLES } from '../src/game/engine/emoji-charades.engine';
 import { MemoryEngine, MEMORY_SYMBOLS } from '../src/game/engine/memory.engine';
 import { SketchEngine } from '../src/game/engine/sketch.engine';
+import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -53,6 +54,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'emoji_charades', build: () => new EmojiCharadesEngine() },
   { name: 'memory', build: () => new MemoryEngine() },
   { name: 'sketch', build: () => new SketchEngine() },
+  { name: 'werewolf', build: () => new WerewolfEngine(), players: 5 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2909,6 +2911,167 @@ describe('sketch rules', () => {
   });
 });
 
+
+describe('werewolf rules', () => {
+  const engine = new WerewolfEngine();
+
+  interface WwShape {
+    players: Array<{ role: 'werewolf' | 'villager' | 'seer' | 'hidden'; alive: boolean }>;
+    phase: 'night_kill' | 'night_seer' | 'day_vote';
+    day: number;
+    killTarget: number | null;
+    seerNotes: Array<{ night: number; seat: number; isWolf: boolean }>;
+    votes: Record<number, number>;
+    pendingVoters: number[];
+    log: string[];
+  }
+
+  function start(players = 5): GameState {
+    return engine.createInitialState(makeConfig(engine, players));
+  }
+
+  function board(state: GameState): WwShape {
+    return state.board as unknown as WwShape;
+  }
+
+  function wolfSeat(state: GameState): number {
+    return board(state).players.findIndex((p) => p.role === 'werewolf');
+  }
+
+  function seerSeat(state: GameState): number {
+    return board(state).players.findIndex((p) => p.role === 'seer');
+  }
+
+  test('deals one wolf and a seer to five players, two wolves to seven', () => {
+    const b = board(start(5));
+    expect(b.players).toHaveLength(5);
+    expect(b.players.filter((p) => p.role === 'werewolf')).toHaveLength(1);
+    expect(b.players.filter((p) => p.role === 'seer')).toHaveLength(1);
+    expect(b.players.filter((p) => p.role === 'villager')).toHaveLength(3);
+    expect(b.players.every((p) => p.alive)).toBe(true);
+    expect(b.phase).toBe('night_kill');
+    expect(board(start(7)).players.filter((p) => p.role === 'werewolf')).toHaveLength(2);
+  });
+
+  test('night flows: wolves strike, the seer peeks, dawn names the victim', () => {
+    const state = start(5);
+    const wolf = wolfSeat(state);
+    const seer = seerSeat(state);
+    expect(state.currentSeat).toBe(wolf);
+
+    const victim = board(state).players.findIndex((p, i) => i !== wolf && i !== seer);
+    let next = engine.applyAction(state, { seat: wolf, type: 'kill', payload: { target: victim } });
+    expect(board(next).phase).toBe('night_seer');
+    expect(next.currentSeat).toBe(seer);
+
+    const peek = board(next).players.findIndex((p, i) => i !== seer && i !== victim);
+    next = engine.applyAction(next, { seat: seer, type: 'check', payload: { target: peek } });
+    const b = board(next);
+    expect(b.phase).toBe('day_vote'); // dawn broke
+    expect(b.players[victim].alive).toBe(false);
+    expect(b.seerNotes).toEqual([{ night: 1, seat: peek, isWolf: peek === wolf }]);
+    expect(next.currentSeat).toBeGreaterThanOrEqual(0); // voting opens
+    expect(b.log.some((l) => l.includes('mourns'))).toBe(true);
+  });
+
+  test('the day vote banishes the majority suspect; ties spare everyone', () => {
+    const state = start(5);
+    const wolf = wolfSeat(state);
+    const b = board(state);
+    b.players.forEach((p) => (p.alive = true));
+    b.phase = 'day_vote';
+    b.votes = {};
+    b.pendingVoters = [0, 1, 2, 3, 4];
+    state.currentSeat = 0;
+
+    // Everyone piles on seat 3.
+    let s = state;
+    for (const voter of [0, 1, 2]) {
+      s = engine.applyAction(s, { seat: voter, type: 'vote', payload: { target: 3 } });
+    }
+    s = engine.applyAction(s, { seat: 3, type: 'vote', payload: { target: 2 } });
+    s = engine.applyAction(s, { seat: 4, type: 'vote', payload: { target: 3 } });
+    expect(board(s).players[3].alive).toBe(false); // 3 votes banish
+    expect(board(s).phase).toBe('night_kill');
+    expect(board(s).day).toBe(2);
+    void wolf;
+  });
+
+  test('roles, kills and seer notes stay sealed until the story ends', () => {
+    const state = start(5);
+    const wolf = wolfSeat(state);
+    const seer = seerSeat(state);
+    const villager = board(state).players.findIndex((p) => p.role === 'villager');
+
+    // Wolf view: sees self and nothing else about roles.
+    const wolfView = engine.playerView(state, wolf) as GameState;
+    const wb = (wolfView.board as unknown as WwShape).players;
+    expect(wb[wolf].role).toBe('werewolf');
+    expect(wb[seer].role).toBe('hidden');
+    expect(wb[villager].role).toBe('hidden');
+
+    // Villager view: own role only; no kill target.
+    const vView = engine.playerView(state, villager) as GameState;
+    const vb = (vView.board as unknown as WwShape);
+    expect(vb.players[villager].role).toBe('villager');
+    expect(vb.players[wolf].role).toBe('hidden');
+    expect(vb.killTarget).toBeNull();
+    expect(vb.seerNotes).toEqual([]);
+
+    // Seer keeps their ledger private.
+    let next = engine.applyAction(state, { seat: wolf, type: 'kill', payload: { target: villager } });
+    next = engine.applyAction(next, { seat: seer, type: 'check', payload: { target: villager } });
+    const seerView = engine.playerView(next, seer) as GameState;
+    expect((seerView.board as unknown as WwShape).seerNotes).toHaveLength(1);
+    const otherView = engine.playerView(next, villager) as GameState;
+    expect((otherView.board as unknown as WwShape).seerNotes).toEqual([]);
+  });
+
+  test('the village wins when the last wolf is banished', () => {
+    const state = start(5);
+    const wolf = wolfSeat(state);
+    const b = board(state);
+    // Only the wolf and two villagers left, day vote.
+    const others = [0, 1, 2, 3, 4].filter((i) => i !== wolf);
+    const alive = others.slice(0, 2);
+    b.players.forEach((p) => (p.alive = false));
+    alive.forEach((i) => (b.players[i].alive = true));
+    b.players[wolf].alive = true;
+    b.phase = 'day_vote';
+    b.votes = {};
+    b.pendingVoters = [wolf, ...alive];
+    state.currentSeat = wolf;
+
+    let s = state;
+    s = engine.applyAction(s, { seat: wolf, type: 'vote', payload: { target: alive[0] } });
+    s = engine.applyAction(s, { seat: alive[0], type: 'vote', payload: { target: wolf } });
+    s = engine.applyAction(s, { seat: alive[1], type: 'vote', payload: { target: wolf } });
+    expect(s.phase).toBe('completed');
+    expect(s.winnerSeat).toBeNull();
+    expect(s.winnerSeats).toEqual(others); // the whole village faction
+    expect(s.scores[alive[0]]).toBe(1);
+    expect(s.scores[wolf]).toBe(0);
+  });
+
+  test('the wolves win at parity', () => {
+    const state = start(5);
+    const wolf = wolfSeat(state);
+    const seer = seerSeat(state);
+    const b = board(state);
+    b.players.forEach((p) => (p.alive = false));
+    b.players[wolf].alive = true;
+    const last = [0, 1, 2, 3, 4].find((i) => i !== wolf && i !== seer)!;
+    b.players[last].alive = true;
+    b.phase = 'night_kill';
+    b.killTarget = null;
+    state.currentSeat = wolf;
+
+    const next = engine.applyAction(state, { seat: wolf, type: 'kill', payload: { target: last } });
+    expect(next.phase).toBe('completed');
+    expect(next.winnerSeats).toEqual([wolf]);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -2932,9 +3095,10 @@ describe('engine registry', () => {
       new EmojiCharadesEngine(),
       new MemoryEngine(),
       new SketchEngine(),
+      new WerewolfEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -2943,7 +3107,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

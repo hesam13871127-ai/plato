@@ -87,6 +87,7 @@ class GameSessionModel extends GameSessionView {
       seats: rawSeats.whereType<Map>().map((e) => GameSeatModel.fromJson(_asMap(e))).toList(),
       board: _asMap(source['board']),
       winnerSeat: (source['winnerSeat'] as num?)?.toInt(),
+      winnerSeats: (source['winnerSeats'] as List?)?.whereType<num>().map((n) => n.toInt()).toList(),
       scores: rawScores.whereType<num>().map((n) => n.toInt()).toList(),
     );
   }

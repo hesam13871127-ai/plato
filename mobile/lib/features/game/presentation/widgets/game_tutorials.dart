@@ -639,6 +639,36 @@ class GameTutorials {
         bodyEn: 'A correct guess banks ten for the guesser and five for the artist. Everyone takes the brush before the gallery closes.',
         bodyFa: 'حدس درست ده امتیاز برای حدس‌زننده و پنج امتیاز برای نقاش دارد. همه قبل از بسته‌شدن گالری قلم‌مو به دست می‌گیرند.',
       ),
+    ]
+    'werewolf': [
+      TutorialStep(
+        emoji: '🐺',
+        titleEn: 'Secret roles',
+        titleFa: 'نقش‌های مخفی',
+        bodyEn: 'Five to eight players, hidden cards: werewolves hunt, one seer sees the truth, the rest are villagers.',
+        bodyFa: 'پنج تا هشت بازیکن با کارت‌های مخفی: گرگ‌ها شکار می‌کنند، یک فالگیر حقیقت را می‌بیند و بقیه روستایی‌اند.',
+      ),
+      TutorialStep(
+        emoji: '🌙',
+        titleEn: 'Night falls',
+        titleFa: 'شب می‌شود',
+        bodyEn: 'Each night the wolves quietly choose a victim and the seer peers into one soul. Nobody else wakes.',
+        bodyFa: 'هر شب گرگ‌ها بی‌صدا قربانی را انتخاب می‌کنند و فالگیر به یک روح نگاه می‌کند. هیچ‌کس دیگر بیدار نمی‌شود.',
+      ),
+      TutorialStep(
+        emoji: '☀️',
+        titleEn: 'Day and the vote',
+        titleFa: 'روز و رأی‌گیری',
+        bodyEn: 'At dawn the village mourns, argues and votes one suspect out. Ties spare everyone.',
+        bodyFa: 'هنگام سحر روستا عزاداری می‌کند، بحث می‌کند و یک مظنون را رأی به اخراج می‌دهد. تساوی یعنی هیچ‌کس اخراج نمی‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Two ways to win',
+        titleFa: 'دو راه بردن',
+        bodyEn: 'The village wins by banishing every wolf; the wolves win the moment they match the survivors.',
+        bodyFa: 'روستا با اخراج همهٔ گرگ‌ها می‌برد؛ گرگ‌ها به محض رسیدن به تعداد بازماندگان برنده می‌شوند.',
+      ),
     ],
   };
 }

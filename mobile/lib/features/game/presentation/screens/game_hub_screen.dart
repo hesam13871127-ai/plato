@@ -298,6 +298,8 @@ String _gameEmoji(String slug) {
       return '🃏';
     case 'sketch':
       return '✏️';
+    case 'werewolf':
+      return '🐺';
     default:
       return '🎮';
   }

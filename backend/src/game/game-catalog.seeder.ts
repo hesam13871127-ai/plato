@@ -224,6 +224,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'werewolf',
+    name: 'Werewolf',
+    description: 'Night falls, the village sleeps — find the wolves before the wolves find you.',
+    minPlayers: 5,
+    maxPlayers: 8,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

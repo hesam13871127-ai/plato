@@ -71,6 +71,7 @@ class GameSessionView extends Equatable {
     required this.board,
     required this.winnerSeat,
     required this.scores,
+    this.winnerSeats,
     this.gameSlug = '',
   });
 
@@ -86,13 +87,17 @@ class GameSessionView extends Equatable {
   /// map (self-contained per game), so the shared entity stays generic.
   final Map<String, dynamic> board;
   final int? winnerSeat;
+
+  /// Team winners (e.g. the whole village faction in Werewolf); null for
+  /// single-winner games.
+  final List<int>? winnerSeats;
   final List<int> scores;
 
   bool get isCompleted => phase == 'completed';
   bool get isInProgress => phase == 'in_progress';
 
   @override
-  List<Object?> get props => [sessionId, phase, turn, currentSeat, version, winnerSeat];
+  List<Object?> get props => [sessionId, phase, turn, currentSeat, version, winnerSeat, winnerSeats];
 }
 
 /// Matchmaking queue progress reported over the socket.
