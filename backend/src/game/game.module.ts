@@ -43,6 +43,7 @@ import { MemoryEngine } from './engine/memory.engine';
 import { SketchEngine } from './engine/sketch.engine';
 import { WerewolfEngine } from './engine/werewolf.engine';
 import { ImpostorEngine } from './engine/impostor.engine';
+import { DartsEngine } from './engine/darts.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -90,6 +91,7 @@ const ENTITIES = [
     SketchEngine,
     WerewolfEngine,
     ImpostorEngine,
+    DartsEngine,
     EngineRegistry,
     // Services
     BotService,

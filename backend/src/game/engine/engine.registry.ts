@@ -22,6 +22,7 @@ import { MemoryEngine } from './memory.engine';
 import { SketchEngine } from './sketch.engine';
 import { WerewolfEngine } from './werewolf.engine';
 import { ImpostorEngine } from './impostor.engine';
+import { DartsEngine } from './darts.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -57,6 +58,7 @@ export class EngineRegistry {
     sketch: SketchEngine,
     werewolf: WerewolfEngine,
     impostor: ImpostorEngine,
+    darts: DartsEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -80,6 +82,7 @@ export class EngineRegistry {
     this.register(sketch);
     this.register(werewolf);
     this.register(impostor);
+    this.register(darts);
   }
 
   register(engine: BaseGameEngine): void {

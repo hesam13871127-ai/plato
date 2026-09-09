@@ -699,6 +699,36 @@ class GameTutorials {
         bodyEn: 'Caught impostors get one guess at the location — name it right and steal the win from the gallows!',
         bodyFa: 'جاسوسِ لو رفته یک شانس حدس مکان دارد — درست بگو و برد را از چالهٔ داروغه بقاپ!',
       ),
+    ]
+    'darts': [
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'The clock board',
+        titleFa: 'صفحهٔ ساعت',
+        bodyEn: 'Twenty numbered segments, doubles on the outer ring, trebles in the middle band, red bull for fifty.',
+        bodyFa: 'بیست خانهٔ شماره‌دار، دابل روی حلقهٔ بیرونی، تریبل در نوار میانی و گاوهٔ قرمز پنجاه امتیاز.',
+      ),
+      TutorialStep(
+        emoji: '👆',
+        titleEn: 'Aim and throw',
+        titleFa: 'نشانه بگیر و پرتاب کن',
+        bodyEn: 'Tap the board to aim, choose your power, and throw. Soft arms drop the dart low.',
+        bodyFa: 'روی صفحه بزن تا نشانه بگیری، قدرت را انتخاب کن و پرتاب کن. بازوی ضعیف دارت را پایین می‌اندازد.',
+      ),
+      TutorialStep(
+        emoji: '🪶',
+        titleEn: 'Three a visit',
+        titleFa: 'سه‌تا در هر نوبت',
+        bodyEn: 'You throw three darts per visit, five visits each. Watch your darts stick where they land.',
+        bodyFa: 'در هر نوبت سه دارت پرتاب می‌کنی، پنج نوبت برای هر نفر. دارت‌هایت همان‌جا می‌چسبند که فرود بیایند.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Game shot',
+        titleFa: 'شاتِ پایانی',
+        bodyEn: 'After fifteen darts the highest total wins — hunt the treble twenty and the bullseye.',
+        bodyFa: 'بعد از پانزده دارت، بیشترین امتیاز برنده است — تریبلِ بیست و گاوه را شکار کن.',
+      ),
     ],
   };
 }

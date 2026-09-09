@@ -23,6 +23,7 @@ import 'memory_board.dart';
 import 'sketch_board.dart';
 import 'werewolf_board.dart';
 import 'impostor_board.dart';
+import 'darts_board.dart';
 
 typedef BoardAction = Future<void> Function(String type, Map<String, dynamic> payload);
 
@@ -85,6 +86,8 @@ class GameBoardDispatcher extends StatelessWidget {
         return WerewolfBoard(session: session, mySeat: mySeat, onAction: onAction);
       case 'impostor':
         return ImpostorBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'darts':
+        return DartsBoard(session: session, mySeat: mySeat, onAction: onAction);
       default:
         return _UnknownBoard(slug: session.gameSlug);
     }

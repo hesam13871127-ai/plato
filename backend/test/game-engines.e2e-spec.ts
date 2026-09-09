@@ -22,6 +22,7 @@ import { MemoryEngine, MEMORY_SYMBOLS } from '../src/game/engine/memory.engine';
 import { SketchEngine } from '../src/game/engine/sketch.engine';
 import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
 import { ImpostorEngine, IMPOSTOR_LOCATIONS } from '../src/game/engine/impostor.engine';
+import { DartsEngine, scoreDart } from '../src/game/engine/darts.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -57,6 +58,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'sketch', build: () => new SketchEngine() },
   { name: 'werewolf', build: () => new WerewolfEngine(), players: 5 },
   { name: 'impostor', build: () => new ImpostorEngine(), players: 4 },
+  { name: 'darts', build: () => new DartsEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -3229,6 +3231,90 @@ describe('impostor rules', () => {
   }
 });
 
+
+describe('darts rules', () => {
+  const engine = new DartsEngine();
+
+  interface DartShape {
+    round: number;
+    dartsLeft: number;
+    thrower: number;
+    throws: Array<{ seat: number; landing: [number, number]; points: number; label: string }>;
+    lastThrow: { seat: number; landing: [number, number]; points: number; label: string } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): DartShape {
+    return state.board as unknown as DartShape;
+  }
+
+  function throwDart(state: GameState, seat: number, aimX: number, aimY: number, power = 1): GameState {
+    return engine.applyAction(state, { seat, type: 'throw', payload: { aimX, aimY, power } });
+  }
+
+  test('the board scores segments, rings and bulls exactly', () => {
+    expect(scoreDart(0, 0)).toEqual({ points: 50, label: 'BULLSEYE' });
+    expect(scoreDart(0, 0.09)).toEqual({ points: 25, label: 'OUTER BULL' });
+    expect(scoreDart(0, 0.57)).toEqual({ points: 60, label: 'T20' }); // treble twenty at the top
+    expect(scoreDart(0, 0.94)).toEqual({ points: 40, label: 'D20' }); // double twenty
+    expect(scoreDart(0, 0.3)).toEqual({ points: 20, label: '20' }); // single twenty
+    expect(scoreDart(0, -0.57)).toEqual({ points: 9, label: 'T3' }); // treble three (3 × 3) at the bottom
+    expect(scoreDart(0.57, 0)).toEqual({ points: 18, label: 'T6' }); // treble six at the right
+    expect(scoreDart(-0.57, 0)).toEqual({ points: 33, label: 'T11' }); // treble eleven at the left
+    expect(scoreDart(1.2, 0)).toEqual({ points: 0, label: 'MISS' }); // off the board
+  });
+
+  test('three darts a turn, five rounds, then the highest total wins', () => {
+    let state = start();
+    const seatOrder: number[] = [];
+    let guard = 0;
+    while (state.phase === 'in_progress' && guard++ < 40) {
+      seatOrder.push(state.currentSeat);
+      state = throwDart(state, state.currentSeat, 0, 0, 0.85);
+    }
+    expect(guard).toBe(30); // 2 seats × 5 rounds × 3 darts
+    expect(seatOrder.filter((s) => s === 0)).toHaveLength(15);
+    expect(state.phase).toBe('completed');
+    expect(state.winnerSeat).not.toBeNull();
+    expect(board(state).round).toBe(5);
+  });
+
+  test('a weak arm drops the dart below the aim', () => {
+    // Deterministic wobble aside, a soft throw lands clearly lower than aim.
+    const state = throwDart(start(), 0, 0, 0.6, 0.2);
+    const lt = board(state).lastThrow!;
+    expect(lt.landing[1]).toBeLessThan(0.6);
+  });
+
+  test('throws are validated by shape and seat', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 0, type: 'throw', payload: { aimX: 1.5, aimY: 0, power: 0.8 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'throw', payload: { aimX: 0, aimY: 0, power: 0.1 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 1, type: 'throw', payload: { aimX: 0, aimY: 0, power: 0.8 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'toss', payload: { aimX: 0, aimY: 0, power: 0.8 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'throw', payload: { aimX: 0.2, aimY: 0.4, power: 0.9 } }).ok).toBe(true);
+  });
+
+  test('bots aim at the treble or the bull', () => {
+    const state = start();
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(move.action.type).toBe('throw');
+      const x = Number(move.action.payload.aimX);
+      const y = Number(move.action.payload.aimY);
+      expect(Math.abs(x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(y)).toBeLessThanOrEqual(1);
+      // Hard darts cluster near the two targets.
+      if (difficulty === 'expert') {
+        expect(Math.hypot(x, y - 0.57) < 0.2 || Math.hypot(x, y) < 0.2).toBe(true);
+      }
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -3254,9 +3340,10 @@ describe('engine registry', () => {
       new SketchEngine(),
       new WerewolfEngine(),
       new ImpostorEngine(),
+      new DartsEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -3265,7 +3352,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

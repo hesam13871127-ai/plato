@@ -244,6 +244,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'darts',
+    name: 'Darts',
+    description: 'Fifteen darts at the clock board — trebles, bulls and bruised egos.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 6,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

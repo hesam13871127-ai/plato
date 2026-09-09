@@ -302,6 +302,8 @@ String _gameEmoji(String slug) {
       return '🐺';
     case 'impostor':
       return '🕵️';
+    case 'darts':
+      return '🎯';
     default:
       return '🎮';
   }
