@@ -214,6 +214,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'sketch',
+    name: 'Sketch',
+    description: 'Grab the brush, paint the secret word and let the table race to read your mind.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

@@ -10,6 +10,7 @@ import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import { WordChainEngine } from '../src/game/engine/word-chain.engine';
 import { EmojiCharadesEngine } from '../src/game/engine/emoji-charades.engine';
 import { MemoryEngine } from '../src/game/engine/memory.engine';
+import { SketchEngine } from '../src/game/engine/sketch.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -478,6 +479,24 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'sketch') {
+    if ((board.subPhase as string | undefined) === 'draw') {
+      return {
+        type: 'draw',
+        payload: {
+          strokes: [
+            { color: '#22D3EE', points: [0.2, 0.2, 0.5, 0.5, 0.8, 0.3] },
+            { color: '#FACC15', points: [0.3, 0.7, 0.7, 0.4] },
+          ],
+        },
+      };
+    }
+    // Acting with full server sight: read the secret and call it.
+    const word = board.word as string | undefined;
+    if (!word) return null;
+    return { type: 'guess', payload: { word } };
   }
 
   if (slug === 'memory') {

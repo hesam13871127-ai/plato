@@ -19,6 +19,7 @@ import { TriviaEngine, TRIVIA_BANK } from '../src/game/engine/trivia.engine';
 import { WordChainEngine, WORD_CHAIN_DICT } from '../src/game/engine/word-chain.engine';
 import { EmojiCharadesEngine, EMOJI_RIDDLES } from '../src/game/engine/emoji-charades.engine';
 import { MemoryEngine, MEMORY_SYMBOLS } from '../src/game/engine/memory.engine';
+import { SketchEngine } from '../src/game/engine/sketch.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -51,6 +52,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'word_chain', build: () => new WordChainEngine() },
   { name: 'emoji_charades', build: () => new EmojiCharadesEngine() },
   { name: 'memory', build: () => new MemoryEngine() },
+  { name: 'sketch', build: () => new SketchEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2784,6 +2786,129 @@ describe('memory rules', () => {
   });
 });
 
+describe('sketch rules', () => {
+  const engine = new SketchEngine();
+
+  interface SketchShape {
+    order: number[];
+    round: number;
+    totalRounds: number;
+    artist: number;
+    word: string;
+    subPhase: 'draw' | 'guess';
+    strokes: Array<{ color: string; points: number[] }>;
+    wrongs: number[];
+    guesses: Array<{ seat: number; word: string; correct: boolean }>;
+    history: Array<{ round: number; artist: number; word: string; winner: number | null }>;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): SketchShape {
+    return state.board as unknown as SketchShape;
+  }
+
+  const doodle = [
+    { color: '#22D3EE', points: [0.1, 0.1, 0.5, 0.5, 0.9, 0.2] },
+    { color: '#FACC15', points: [0.2, 0.8, 0.8, 0.3] },
+  ];
+
+  function draw(state: GameState, strokes = doodle): GameState {
+    return engine.applyAction(state, { seat: board(state).artist, type: 'draw', payload: { strokes } });
+  }
+
+  test('crowns the first artist with a shuffled word and four rounds for two', () => {
+    const b = board(start());
+    expect(b.round).toBe(0);
+    expect(b.totalRounds).toBe(4); // two players draw twice each
+    expect(b.artist).toBe(0);
+    expect(b.subPhase).toBe('draw');
+    expect(b.word).toMatch(/^[a-z]+$/);
+    expect(b.strokes).toEqual([]);
+    expect(b.wrongs).toEqual([0, 0]);
+  });
+
+  test('the artwork goes public and the brush hands over to the guessers', () => {
+    const fresh = start();
+    const word = board(fresh).word;
+    const state = draw(fresh);
+    const b = board(state);
+    expect(b.subPhase).toBe('guess');
+    expect(b.strokes).toHaveLength(2);
+    expect(state.currentSeat).toBe(1); // the other seat guesses
+    expect(b.word).toBe(word); // unchanged
+  });
+
+  test('a correct guess pays both the guesser and the artist', () => {
+    const state = draw(start());
+    const word = board(state).word;
+    const next = engine.applyAction(state, { seat: 1, type: 'guess', payload: { word } });
+    const b = board(next);
+    expect(next.scores[1]).toBe(10);
+    expect(next.scores[0]).toBe(5);
+    expect(b.history).toEqual([{ round: 0, artist: 0, word, winner: 1 }]);
+    expect(b.round).toBe(1); // next round, next artist
+    expect(b.artist).toBe(1);
+    expect(b.subPhase).toBe('draw');
+    expect(next.currentSeat).toBe(1); // the new artist
+  });
+
+  test('two wrong guesses bench a guesser; a benched table reveals the word', () => {
+    const state = draw(start());
+    const word = board(state).word;
+    const decoys = ['banana', 'rocket', 'cactus'].filter((w) => w !== word);
+    const wrong1 = engine.applyAction(state, { seat: 1, type: 'guess', payload: { word: decoys[0] } });
+    expect(board(wrong1).wrongs[1]).toBe(1);
+    expect(wrong1.currentSeat).toBe(1); // still their shot
+    const wrong2 = engine.applyAction(wrong1, { seat: 1, type: 'guess', payload: { word: decoys[1] } });
+    const b = board(wrong2);
+    expect(b.wrongs[1]).toBe(0); // reset for the fresh round
+    expect(b.history).toEqual([{ round: 0, artist: 0, word, winner: null }]);
+    expect(b.round).toBe(1); // everyone benched — reveal and move on
+    expect(wrong2.scores).toEqual([0, 0]);
+  });
+
+  test('guesses are case-insensitive and validated; the artist cannot guess', () => {
+    const state = draw(start());
+    const word = board(state).word;
+    const next = engine.applyAction(state, { seat: 1, type: 'guess', payload: { word: word.toUpperCase() } });
+    expect(board(next).history[0].winner).toBe(1);
+
+    const fresh = draw(start());
+    expect(engine.validate(fresh, { seat: 0, type: 'guess', payload: { word: 'cat' } }).ok).toBe(false);
+    expect(engine.validate(fresh, { seat: 1, type: 'guess', payload: { word: 'nope123' } }).ok).toBe(false);
+    expect(engine.validate(start(), { seat: 0, type: 'draw', payload: { strokes: [] } }).ok).toBe(false);
+    expect(engine.validate(start(), { seat: 1, type: 'draw', payload: { strokes: doodle } }).ok).toBe(false);
+    expect(
+      engine.validate(start(), {
+        seat: 0,
+        type: 'draw',
+        payload: { strokes: [{ color: '#22D3EE', points: [0.5, 0.5, 1.5, 0.5] }] },
+      }).ok,
+    ).toBe(false); // off-canvas
+  });
+
+  test('the secret stays sealed for guessers until the round closes; bots behave', () => {
+    const state = start();
+    const word = board(state).word;
+    const artistView = engine.playerView(state, 0);
+    expect((artistView.board as unknown as SketchShape).word).toBe(word);
+    const guesserView = engine.playerView(state, 1);
+    expect((guesserView.board as unknown as SketchShape).word).toBe('?');
+
+    const afterDraw = draw(state);
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const botDraw = engine.chooseBotMove(start(), 0, difficulty);
+      expect(botDraw.action.type).toBe('draw');
+      const botGuess = engine.chooseBotMove(afterDraw, 1, difficulty);
+      expect(botGuess.action.type).toBe('guess');
+      expect(String(botGuess.action.payload.word)).toMatch(/^[a-z]+$/);
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -2806,9 +2931,10 @@ describe('engine registry', () => {
       new WordChainEngine(),
       new EmojiCharadesEngine(),
       new MemoryEngine(),
+      new SketchEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -2817,7 +2943,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

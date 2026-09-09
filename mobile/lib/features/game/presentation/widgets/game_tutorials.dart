@@ -609,6 +609,36 @@ class GameTutorials {
         bodyEn: 'When the last pair is claimed, the player holding the most pairs takes the game.',
         bodyFa: 'وقتی آخرین جفت برداشته شود، کسی که بیشترین جفت را دارد بازی را می‌برد.',
       ),
+    ]
+    'sketch': [
+      TutorialStep(
+        emoji: '✏️',
+        titleEn: 'Your word, your brush',
+        titleFa: 'کلمهٔ تو، قلم‌مو تو',
+        bodyEn: 'Each round one player becomes the artist and gets a secret word to paint on the shared canvas.',
+        bodyFa: 'در هر دور یکی از بازیکن‌ها نقاش می‌شود و یک کلمهٔ مخفی می‌گیرد که روی بوم مشترک نقاشی‌اش کند.',
+      ),
+      TutorialStep(
+        emoji: '🎨',
+        titleEn: 'Four colours, no letters',
+        titleFa: 'چهار رنگ، بدون حرف',
+        bodyEn: 'Paint with four colours — but no writing letters or numbers. Let the picture do the talking.',
+        bodyFa: 'با چهار رنگ نقاشی کن — ولی نوشتن حروف و اعداد ممنوع. بگذار تصویر حرف بزند.',
+      ),
+      TutorialStep(
+        emoji: '💬',
+        titleEn: 'Guessers strike',
+        titleFa: 'حدس‌زن‌ها می‌کوبند',
+        bodyEn: 'Once the brush goes down the table guesses in turns — two misses and you are out for the round.',
+        bodyFa: 'به محض پایان نقاشی، میز نوبتی حدس می‌زند — دو خطا و تا پایان دور کنار می‌روی.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Points for both sides',
+        titleFa: 'امتیاز برای هر دو طرف',
+        bodyEn: 'A correct guess banks ten for the guesser and five for the artist. Everyone takes the brush before the gallery closes.',
+        bodyFa: 'حدس درست ده امتیاز برای حدس‌زننده و پنج امتیاز برای نقاش دارد. همه قبل از بسته‌شدن گالری قلم‌مو به دست می‌گیرند.',
+      ),
     ],
   };
 }
