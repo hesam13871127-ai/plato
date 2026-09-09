@@ -270,6 +270,8 @@ String _gameEmoji(String slug) {
       return '⚪';
     case 'chess':
       return '♞';
+    case 'pool':
+      return '🎱';
     default:
       return '🎮';
   }

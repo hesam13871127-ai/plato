@@ -6,6 +6,7 @@ import { OchoEngine } from '../src/game/engine/ocho.engine';
 import { Connect4Engine } from '../src/game/engine/connect4.engine';
 import { CheckersEngine } from '../src/game/engine/checkers.engine';
 import { ChessEngine } from '../src/game/engine/chess.engine';
+import { PoolEngine } from '../src/game/engine/pool.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -25,6 +26,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'connect4', build: () => new Connect4Engine(), players: 2 },
   { name: 'checkers', build: () => new CheckersEngine(), players: 2 },
   { name: 'chess', build: () => new ChessEngine(), players: 2 },
+  { name: 'pool', build: () => new PoolEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -985,6 +987,227 @@ describe('chess rules', () => {
   });
 });
 
+describe('pool rules', () => {
+  const engine = new PoolEngine();
+
+  interface BallShape {
+    n: number;
+    x: number;
+    y: number;
+    potted: boolean;
+  }
+
+  interface PoolShape {
+    balls: BallShape[];
+    openTable: boolean;
+    groups: [number | null, number | null];
+    ballInHand: boolean;
+    shotCount: number;
+    lastShot: {
+      seat: number;
+      angle: number;
+      power: number;
+      potted: number[];
+      firstHit: number | null;
+      cuePotted: boolean;
+      foul: boolean;
+      reason: string | null;
+      frames: number[][];
+    } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): PoolShape {
+    return state.board as unknown as PoolShape;
+  }
+
+  /** A quiet table with the given balls and clean bookkeeping. */
+  function craft(
+    balls: Array<[number, number, number]>,
+    opts?: Partial<PoolShape> & { currentSeat?: number },
+  ): GameState {
+    const state = start();
+    const b = board(state);
+    b.balls = balls.map(([n, x, y]) => ({ n, x, y, potted: false }));
+    b.openTable = opts?.openTable ?? false;
+    b.groups = opts?.groups ?? [null, null];
+    b.ballInHand = opts?.ballInHand ?? false;
+    b.shotCount = opts?.shotCount ?? 5;
+    b.lastShot = null;
+    state.currentSeat = opts?.currentSeat ?? 0;
+    return state;
+  }
+
+  test('racks a 15-ball triangle with the 8 in the middle and ball-in-hand break', () => {
+    const state = start();
+    const b = board(state);
+    expect(b.balls).toHaveLength(16);
+    expect(b.balls[0].n).toBe(0);
+    const eight = b.balls.find((ball) => ball.n === 8);
+    expect(eight).toBeDefined();
+    expect(Math.abs(eight!.x - 160.5)).toBeLessThan(0.8); // third row, centred
+    expect(Math.abs(eight!.y - 50)).toBeLessThan(0.01);
+    expect(b.balls.every((ball) => !ball.potted)).toBe(true);
+    expect(b.openTable).toBe(true);
+    expect(b.groups).toEqual([null, null]);
+    expect(b.ballInHand).toBe(true);
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('placement is validated, and a straight pot assigns groups and keeps the turn', () => {
+    const placing = craft(
+      [
+        [0, 100, 50],
+        [1, 160, 20],
+        [8, 30, 80],
+      ],
+      { ballInHand: true, openTable: true, shotCount: 0 },
+    );
+    expect(
+      engine.validate(placing, { seat: 0, type: 'place', payload: { x: 160, y: 20 } }).ok,
+    ).toBe(false); // overlapping an object ball
+    const placed = engine.applyAction(placing, {
+      seat: 0,
+      type: 'place',
+      payload: { x: 100, y: 50 },
+    });
+    expect(board(placed).ballInHand).toBe(false);
+    expect(placed.currentSeat).toBe(0); // placer keeps the turn
+
+    // Straight line cue → 1 → corner pocket (200, 0).
+    const shooting = craft(
+      [
+        [0, 119.76, 40.12],
+        [1, 160, 20],
+        [8, 30, 80],
+      ],
+      { openTable: true, shotCount: 0 },
+    );
+    const shot = engine.applyAction(shooting, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle: Math.atan2(20 - 40.12, 160 - 119.76), power: 0.8 },
+    });
+    const sb = board(shot);
+    expect(sb.lastShot?.firstHit).toBe(1);
+    expect(sb.lastShot?.potted).toContain(1);
+    expect(sb.lastShot?.foul).toBe(false);
+    expect(sb.groups).toEqual([0, 1]); // first legal pot assigns solids to seat 0
+    expect(sb.openTable).toBe(false);
+    expect(shot.currentSeat).toBe(0); // potted own ball — stays at the table
+    expect(shot.phase).toBe('in_progress');
+    expect(sb.lastShot!.frames.length).toBeGreaterThan(2);
+  });
+
+  test('hitting nothing is a foul: ball-in-hand for the opponent', () => {
+    const state = craft(
+      [
+        [0, 20, 50],
+        [1, 180, 90],
+        [8, 170, 10],
+      ],
+      { openTable: true, shotCount: 0 },
+    );
+    const shot = engine.applyAction(state, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle: -Math.PI / 2, power: 0.3 }, // straight up into open felt
+    });
+    const sb = board(shot);
+    expect(sb.lastShot?.firstHit).toBeNull();
+    expect(sb.lastShot?.foul).toBe(true);
+    expect(sb.ballInHand).toBe(true);
+    expect(shot.currentSeat).toBe(1);
+    expect(shot.phase).toBe('in_progress');
+  });
+
+  test('potting the cue ball is a foul and leaves it potted until placed', () => {
+    const state = craft(
+      [
+        [0, 190, 20],
+        [1, 50, 80],
+        [8, 50, 20],
+      ],
+      { openTable: true, shotCount: 0 },
+    );
+    const shot = engine.applyAction(state, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle: Math.atan2(-20, 10), power: 0.6 }, // rolls into the corner pocket
+    });
+    const sb = board(shot);
+    expect(sb.lastShot?.cuePotted).toBe(true);
+    expect(sb.lastShot?.foul).toBe(true);
+    expect(sb.balls.find((b) => b.n === 0)?.potted).toBe(true);
+    expect(sb.ballInHand).toBe(true);
+    expect(shot.currentSeat).toBe(1);
+    // The opponent rescues the cue and keeps the turn.
+    const rescued = engine.applyAction(shot, {
+      seat: 1,
+      type: 'place',
+      payload: { x: 60, y: 50 },
+    });
+    expect(board(rescued).balls.find((b) => b.n === 0)?.potted).toBe(false);
+    expect(board(rescued).ballInHand).toBe(false);
+    expect(rescued.currentSeat).toBe(1);
+  });
+
+  test('the 8-ball wins the game when your group is clear — and loses it early', () => {
+    const common: Array<[number, number, number]> = [
+      [0, 119.76, 40.12],
+      [8, 160, 20],
+      [3, 100, 80],
+    ];
+    const angle = Math.atan2(20 - 40.12, 160 - 119.76);
+
+    // Group cleared (the 3 is already down): potting the 8 wins.
+    const cleared = craft(common, { groups: [0, 1], shotCount: 9 });
+    board(cleared).balls.find((b) => b.n === 3)!.potted = true;
+    const winner = engine.applyAction(cleared, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle, power: 0.8 },
+    });
+    expect(winner.phase).toBe('completed');
+    expect(winner.winnerSeat).toBe(0);
+
+    // Group NOT cleared: the early 8 hands the win to the opponent.
+    const loser = engine.applyAction(
+      craft(common, { groups: [0, 1], shotCount: 9 }),
+      { seat: 0, type: 'shoot', payload: { angle, power: 0.8 } },
+    );
+    expect(loser.phase).toBe('completed');
+    expect(loser.winnerSeat).toBe(1);
+  });
+
+  test('the 8-ball potted on the break re-spots instead of ending the game', () => {
+    const state = craft(
+      [
+        [0, 119.76, 40.12],
+        [8, 160, 20],
+        [5, 50, 90],
+      ],
+      { openTable: true, shotCount: 0 },
+    );
+    const shot = engine.applyAction(state, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle: Math.atan2(20 - 40.12, 160 - 119.76), power: 0.8 },
+    });
+    const sb = board(shot);
+    expect(shot.phase).toBe('in_progress');
+    const eight = sb.balls.find((b) => b.n === 8);
+    expect(eight?.potted).toBe(false);
+    expect(Math.abs(eight!.x - 150)).toBeLessThan(0.01); // back on the foot spot
+    expect(Math.abs(eight!.y - 50)).toBeLessThan(0.01);
+    expect(sb.openTable).toBe(true); // no group assigned by the respot
+    expect(shot.currentSeat).toBe(1); // nothing potted — turn passes
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -994,9 +1217,10 @@ describe('engine registry', () => {
       new Connect4Engine(),
       new CheckersEngine(),
       new ChessEngine(),
+      new PoolEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -1005,7 +1229,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

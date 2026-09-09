@@ -220,5 +220,35 @@ class GameTutorials {
         bodyFa: 'پات، تکرار سه‌بارهٔ موقعیت، پنجاه حرکت بی‌صدا یا شاه‌های تنها همه مساوی تمام می‌شوند — گاهی دست‌دادن بهترین برد است.',
       ),
     ],
+    'pool': [
+      TutorialStep(
+        emoji: '🎱',
+        titleEn: 'Smash the break',
+        titleFa: 'شکستن پیک',
+        bodyEn: 'Place the cue ball, drag on the felt to aim, charge the power slider and crack the rack open.',
+        bodyFa: 'توپ سفید را بگذار، روی میز بکش تا نشانه بگیری، قدرت را تنظیم کن و پیک را با قدرت بشکن.',
+      ),
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'Claim your colours',
+        titleFa: 'رنگ خودت را بگیر',
+        bodyEn: 'The first ball you legally sink assigns your group — solids or stripes. Keep potting yours to stay at the table.',
+        bodyFa: 'اولین توپی که قانونی جا می‌زنی گروهت را مشخص می‌کند — تک‌رنگ یا راه‌راه. تا توپ‌های خودت را می‌اندازی، نوبتت ادامه دارد.',
+      ),
+      TutorialStep(
+        emoji: '⚠️',
+        titleEn: 'Watch the fouls',
+        titleFa: 'مراقب خطاها باش',
+        bodyEn: 'Potting the cue, hitting nothing or touching the wrong colour first gives your rival ball-in-hand.',
+        bodyFa: 'افتادن توپ سفید، نخوردن هیچ توپی یا زدن رنگ حریف در اولین برخورد، توپ آزاد را به حریف می‌دهد.',
+      ),
+      TutorialStep(
+        emoji: '🖤',
+        titleEn: 'Crown the black',
+        titleFa: 'تاج سیاه',
+        bodyEn: 'Clear your whole group, then sink the 8-ball to win. Drop it early and the game is your rival’s!',
+        bodyFa: 'همهٔ گروهت را خالی کن، بعد توپ ۸ را جا بزن تا ببری. اگر زودتر بیفتد، بازی مال حریف می‌شود!',
+      ),
+    ],
   };
 }

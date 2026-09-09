@@ -352,6 +352,39 @@ function humanActionFor(
     return null;
   }
 
+  if (slug === 'pool') {
+    type PoolBall = { n: number; x: number; y: number; potted: boolean };
+    const balls = (board.balls as PoolBall[]) ?? [];
+    const cue = balls.find((b) => b.n === 0 && !b.potted);
+    if (board.ballInHand) {
+      const free = (x: number, y: number) =>
+        x > 3.5 && x < 196.5 && y > 3.5 && y < 96.5 &&
+        balls.every((b) => b.potted || b.n === 0 || Math.hypot(b.x - x, b.y - y) >= 6.2) &&
+        [[0, 0], [100, 0], [200, 0], [0, 100], [100, 100], [200, 100]].every(
+          ([px, py]) => Math.hypot(x - px, y - py) >= 9.2,
+        );
+      for (let x = 30; x <= 170; x += 10) {
+        for (let y = 15; y <= 85; y += 10) {
+          if (free(x, y)) return { type: 'place', payload: { x, y } };
+        }
+      }
+      return null;
+    }
+    if (!cue) return null;
+    const groups = board.groups as [number | null, number | null];
+    const open = board.openTable === true;
+    const mine = balls.filter(
+      (b) => !b.potted && b.n !== 0 && b.n !== 8 && (open || groups[seat] === (b.n < 8 ? 0 : 1)),
+    );
+    const onEight = !open && mine.length === 0;
+    const targets = onEight ? balls.filter((b) => !b.potted && b.n === 8) : mine;
+    if (targets.length === 0) return null;
+    const t = targets.reduce((a, b) =>
+      Math.hypot(a.x - cue.x, a.y - cue.y) < Math.hypot(b.x - cue.x, b.y - cue.y) ? a : b,
+    );
+    return { type: 'shoot', payload: { angle: Math.atan2(t.y - cue.y, t.x - cue.x), power: 0.9 } };
+  }
+
   if (slug === 'chess') {
     // Chess legality is non-trivial to mirror here, so the driver asks the
     // engine itself for the legal move list (the same rules clients use).

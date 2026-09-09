@@ -84,6 +84,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'pool',
+    name: 'Pool',
+    description: 'Arcade 8-ball — smash the break, sink your colours and crown the black.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 
