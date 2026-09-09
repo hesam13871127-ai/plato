@@ -353,8 +353,8 @@ function humanActionFor(
     return null;
   }
 
-  if (slug === 'snakes_ladders') {
-    return { type: 'roll', payload: {} };
+  if (slug === 'snakes_ladders' || slug === 'bingo') {
+    return { type: slug === 'bingo' ? 'draw' : 'roll', payload: {} };
   }
 
   if (slug === 'dots_and_boxes') {

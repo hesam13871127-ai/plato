@@ -10,6 +10,7 @@ import { PoolEngine } from './pool.engine';
 import { CarromEngine } from './carrom.engine';
 import { DotsAndBoxesEngine } from './dots-and-boxes.engine';
 import { SnakesLaddersEngine } from './snakes-ladders.engine';
+import { BingoEngine } from './bingo.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -33,6 +34,7 @@ export class EngineRegistry {
     carrom: CarromEngine,
     dots: DotsAndBoxesEngine,
     snakes: SnakesLaddersEngine,
+    bingo: BingoEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -44,6 +46,7 @@ export class EngineRegistry {
     this.register(carrom);
     this.register(dots);
     this.register(snakes);
+    this.register(bingo);
   }
 
   register(engine: BaseGameEngine): void {

@@ -10,6 +10,7 @@ import { PoolEngine } from '../src/game/engine/pool.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { DotsAndBoxesEngine } from '../src/game/engine/dots-and-boxes.engine';
 import { SnakesLaddersEngine } from '../src/game/engine/snakes-ladders.engine';
+import { BingoEngine } from '../src/game/engine/bingo.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -33,6 +34,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'carrom', build: () => new CarromEngine(), players: 2 },
   { name: 'dots_and_boxes', build: () => new DotsAndBoxesEngine(), players: 2 },
   { name: 'snakes_ladders', build: () => new SnakesLaddersEngine() },
+  { name: 'bingo', build: () => new BingoEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -1630,6 +1632,128 @@ describe('snakes & ladders rules', () => {
   });
 });
 
+describe('bingo rules', () => {
+  const engine = new BingoEngine();
+
+  interface BingoShape {
+    cards: number[][][];
+    marks: boolean[][][];
+    drawn: number[];
+    pool: number[];
+    lastBall: number | null;
+    lastWin: { seat: number; line: Array<[number, number]> } | null;
+  }
+
+  function start(players = 2): GameState {
+    return engine.createInitialState(makeConfig(engine, players));
+  }
+
+  function board(state: GameState): BingoShape {
+    return state.board as unknown as BingoShape;
+  }
+
+  /** Deterministic draw — one ball left in the cage. */
+  function draw(state: GameState, seat: number): GameState {
+    const b = board(state);
+    if (b.pool.length === 1) {
+      const only = b.pool[0];
+      const spy = jest.spyOn(Math, 'random').mockReturnValue(0);
+      const next = engine.applyAction(state, { seat, type: 'draw', payload: {} });
+      spy.mockRestore();
+      expect(board(next).lastBall).toBe(only);
+      return next;
+    }
+    return engine.applyAction(state, { seat, type: 'draw', payload: {} });
+  }
+
+  test('deals private 5×5 cards with column ranges and a marked FREE centre', () => {
+    const state = start(4);
+    const b = board(state);
+    expect(b.cards).toHaveLength(4);
+    for (const card of b.cards) {
+      expect(card).toHaveLength(5);
+      expect(card[2][2]).toBe(0);
+      expect(b.marks[b.cards.indexOf(card)][2][2]).toBe(true);
+      const ranges = [[1, 15], [16, 30], [31, 45], [46, 60], [61, 75]];
+      for (let c = 0; c < 5; c++) {
+        const seen = new Set<number>();
+        for (let r = 0; r < 5; r++) {
+          const v = card[r][c];
+          if (v === 0) continue;
+          expect(v).toBeGreaterThanOrEqual(ranges[c][0]);
+          expect(v).toBeLessThanOrEqual(ranges[c][1]);
+          expect(seen.has(v)).toBe(false); // unique per column
+          seen.add(v);
+        }
+      }
+    }
+    expect(b.drawn).toHaveLength(0);
+    expect(b.pool).toHaveLength(75);
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('a drawn ball dabs every card holding it and passes the turn', () => {
+    const state = start(2);
+    // Fix both cards so ball 7 is at (0,0) for seat 0 and (4,4) for seat 1.
+    const b = board(state);
+    b.cards[0][0][0] = 7;
+    b.cards[1][4][4] = 7;
+    b.pool.splice(b.pool.indexOf(7), 1);
+    b.pool = [7]; // deterministic: 7 is the only ball left
+    const moved = draw(state, 0);
+    const mb = board(moved);
+    expect(mb.lastBall).toBe(7);
+    expect(mb.drawn).toEqual([7]);
+    expect(mb.marks[0][0][0]).toBe(true);
+    expect(mb.marks[1][4][4]).toBe(true);
+    expect(moved.currentSeat).toBe(1);
+    expect(moved.phase).toBe('in_progress');
+  });
+
+  test('cards are hidden: other seats see no card, spectators see none', () => {
+    const state = start(3);
+    const mine = engine.playerView(state, 1);
+    const mb = mine.board as unknown as BingoShape;
+    expect(mb.cards[1]).toHaveLength(5); // own card visible
+    expect(mb.cards[0]).toEqual([]); // opponents hidden
+    expect(mb.cards[2]).toEqual([]);
+    expect(mb.drawn).toHaveLength(0); // drawn list public
+    const spec = engine.spectatorView(state);
+    const sb = spec.board as unknown as BingoShape;
+    expect(sb.cards.every((c) => c.length === 0)).toBe(true);
+  });
+
+  test('completing a line shouts BINGO and wins', () => {
+    const state = start(2);
+    const b = board(state);
+    // Seat 0's top row needs only cell (0,4) — ball 75 will be drawn next.
+    b.cards[0][0] = [1, 16, 31, 46, 75];
+    for (let c = 0; c < 4; c++) b.marks[0][0][c] = true;
+    b.pool = [75];
+    const moved = draw(state, 0);
+    expect(moved.phase).toBe('completed');
+    expect(moved.winnerSeat).toBe(0);
+    const mb = board(moved);
+    expect(mb.lastWin?.seat).toBe(0);
+    expect(mb.lastWin?.line).toHaveLength(5);
+    expect(moved.scores[0]).toBeGreaterThan(0);
+  });
+
+  test('the cage never runs dry — a full 75-ball game always finds a winner', () => {
+    const state = start(2);
+    const spy = jest.spyOn(Math, 'random').mockReturnValue(0.999);
+    let moved = state;
+    let guard = 0;
+    while (moved.phase === 'in_progress' && guard++ < 100) {
+      moved = engine.applyAction(moved, { seat: moved.currentSeat, type: 'draw', payload: {} });
+    }
+    spy.mockRestore();
+    expect(moved.phase).toBe('completed');
+    expect(moved.winnerSeat).not.toBeNull();
+    expect(board(moved).drawn.length).toBeLessThanOrEqual(75);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -1643,9 +1767,10 @@ describe('engine registry', () => {
       new CarromEngine(),
       new DotsAndBoxesEngine(),
       new SnakesLaddersEngine(),
+      new BingoEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -1654,7 +1779,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

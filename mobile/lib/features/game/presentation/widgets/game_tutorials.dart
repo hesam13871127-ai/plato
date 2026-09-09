@@ -340,5 +340,35 @@ class GameTutorials {
         bodyFa: 'باید دقیقاً به ۱۰۰ برسی — اگر بیشتر بیایی از خط پایان به عقب برمی‌گردی.',
       ),
     ],
+    'bingo': [
+      TutorialStep(
+        emoji: '🎱',
+        titleEn: 'Draw the balls',
+        titleFa: 'توپ‌ها را بکش',
+        bodyEn: 'Take turns drawing balls from the 75-ball cage — every card at the table dabs the number automatically.',
+        bodyFa: 'نوبتی از قفس ۷۵ توپی بکش — کارت همهٔ بازیکنان آن شماره را خودکار می‌زنند.',
+      ),
+      TutorialStep(
+        emoji: '📋',
+        titleEn: 'Your private card',
+        titleFa: 'کارت اختصاصی تو',
+        bodyEn: 'Your 5×5 card hides a FREE star in the middle. Rival cards stay secret — only yours matters to you.',
+        bodyFa: 'کارت ۵×۵ تو در وسط ستارهٔ آزاد دارد. کارت حریفان مخفی می‌ماند — فقط کارت خودت برایت مهم است.',
+      ),
+      TutorialStep(
+        emoji: '✨',
+        titleEn: 'Watch your lines',
+        titleFa: 'خطوطت را زیر نظر بگیر',
+        bodyEn: 'Rows, columns and diagonals all count. Get four dabbed in a line and hold your breath on the next ball.',
+        bodyFa: 'ردیف، ستون و قطر همه حساب می‌شوند. چهار خانهٔ یک خط را زدی؟ نفس‌ات را برای توپ بعدی حبس کن.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Shout BINGO!',
+        titleFa: 'بگو بینگو!',
+        bodyEn: 'Complete any line of five and the table shouts BINGO for you — first line wins the whole game.',
+        bodyFa: 'هر خط پنج‌خانه‌ای را کامل کن تا میز برایت بینگو می‌گوید — اولین خط کل بازی را می‌برد.',
+      ),
+    ],
   };
 }

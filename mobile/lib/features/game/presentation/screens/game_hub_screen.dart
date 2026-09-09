@@ -278,6 +278,8 @@ String _gameEmoji(String slug) {
       return '🔹';
     case 'snakes_ladders':
       return '🐍';
+    case 'bingo':
+      return '🎱';
     default:
       return '🎮';
   }

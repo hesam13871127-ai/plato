@@ -124,6 +124,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'bingo',
+    name: 'Bingo',
+    description: 'Balls roll, cards dab, five in a row shouts BINGO! Luck at its loudest.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 5,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

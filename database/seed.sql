@@ -21,7 +21,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000010', 'pool', 'Pool', 'Arcade 8-ball — smash the break, sink your colours and crown the black.', NULL, 2, 2, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000011', 'carrom', 'Carrom', 'Flick, clack, pocket — classic carrom duels with the red queen.', NULL, 2, 2, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000012', 'dots_and_boxes', 'Dots & Boxes', 'Draw lines, steal squares, chain the board — tiny grid, huge mind games.', NULL, 2, 2, 6, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000013', 'snakes_ladders', 'Snakes & Ladders', 'Climb the ladders, dodge the fangs — pure dice drama for the whole table.', NULL, 2, 4, 7, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000013', 'snakes_ladders', 'Snakes & Ladders', 'Climb the ladders, dodge the fangs — pure dice drama for the whole table.', NULL, 2, 4, 7, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000014', 'bingo', 'Bingo', 'Balls roll, cards dab, five in a row shouts BINGO! Luck at its loudest.', NULL, 2, 4, 5, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -71,6 +72,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9210-000000000019', 'Hologram Grid', 'Glass hologram board with refracting square washes.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 107, JSON_OBJECT('game', 'dots_and_boxes', 'felt', '#101A33', 'accent', '#22D3EE')),
   ('44444444-0000-4000-9101-000000000020', 'Jade Serpent Tokens', 'Carved jade racing tokens with gold inlay.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 108, JSON_OBJECT('game', 'snakes_ladders', 'piece', 'jade')),
   ('44444444-0000-4000-9211-000000000020', 'Jungle Temple Board', 'Vine-woven temple board with gilded snakes.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 109, JSON_OBJECT('game', 'snakes_ladders', 'felt', '#1E4029', 'accent', '#2E9E5B')),
+  ('44444444-0000-4000-9101-000000000021', 'Gilded Dabber Set', 'Gold-cap daubers that stamp glowing royal marks.', 'game_piece', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 112, JSON_OBJECT('game', 'bingo', 'piece', 'gilded')),
+  ('44444444-0000-4000-9212-000000000021', 'Vegas Neon Hall', 'Casino-floor bingo hall with neon cage lights.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 113, JSON_OBJECT('game', 'bingo', 'felt', '#3B1060', 'accent', '#EC4899')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),
