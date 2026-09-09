@@ -29,6 +29,7 @@ import { CheckersEngine } from './engine/checkers.engine';
 import { ChessEngine } from './engine/chess.engine';
 import { PoolEngine } from './engine/pool.engine';
 import { CarromEngine } from './engine/carrom.engine';
+import { DotsAndBoxesEngine } from './engine/dots-and-boxes.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -62,6 +63,7 @@ const ENTITIES = [
     ChessEngine,
     PoolEngine,
     CarromEngine,
+    DotsAndBoxesEngine,
     EngineRegistry,
     // Services
     BotService,

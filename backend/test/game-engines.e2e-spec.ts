@@ -8,6 +8,7 @@ import { CheckersEngine } from '../src/game/engine/checkers.engine';
 import { ChessEngine } from '../src/game/engine/chess.engine';
 import { PoolEngine } from '../src/game/engine/pool.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
+import { DotsAndBoxesEngine } from '../src/game/engine/dots-and-boxes.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -29,6 +30,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'chess', build: () => new ChessEngine(), players: 2 },
   { name: 'pool', build: () => new PoolEngine(), players: 2 },
   { name: 'carrom', build: () => new CarromEngine(), players: 2 },
+  { name: 'dots_and_boxes', build: () => new DotsAndBoxesEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -1416,6 +1418,126 @@ describe('carrom rules', () => {
   });
 });
 
+describe('dots & boxes rules', () => {
+  const engine = new DotsAndBoxesEngine();
+
+  interface DnbShape {
+    size: number;
+    h: number[][];
+    v: number[][];
+    boxes: number[][];
+    lastEdge: { kind: string; r: number; c: number; seat: number } | null;
+    claimed: number;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): DnbShape {
+    return state.board as unknown as DnbShape;
+  }
+
+  test('starts with an empty 5×5 grid (25 boxes, no ties)', () => {
+    const state = start();
+    const b = board(state);
+    expect(b.size).toBe(5);
+    expect(b.h).toHaveLength(6);
+    expect(b.h[0]).toHaveLength(5);
+    expect(b.v).toHaveLength(5);
+    expect(b.v[0]).toHaveLength(6);
+    expect(b.boxes.flat().every((o) => o === -1)).toBe(true);
+    expect(b.claimed).toBe(0);
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('drawn edges cannot be drawn again', () => {
+    const state = start();
+    const drawn = engine.applyAction(state, { seat: 0, type: 'edge', payload: { kind: 'h', r: 0, c: 0 } });
+    expect(board(drawn).h[0][0]).toBe(0);
+    expect(drawn.currentSeat).toBe(1); // no box — turn passes
+    expect(
+      engine.validate(drawn, { seat: 1, type: 'edge', payload: { kind: 'h', r: 0, c: 0 } }).ok,
+    ).toBe(false);
+  });
+
+  test('completing a box claims it and earns another line', () => {
+    const state = start();
+    const b = board(state);
+    // Three sides of box (2,2).
+    b.h[2][2] = 0;
+    b.h[3][2] = 1;
+    b.v[2][2] = 1;
+    state.currentSeat = 0;
+    const moved = engine.applyAction(state, {
+      seat: 0,
+      type: 'edge',
+      payload: { kind: 'v', r: 2, c: 3 },
+    });
+    const mb = board(moved);
+    expect(mb.boxes[2][2]).toBe(0);
+    expect(mb.claimed).toBe(1);
+    expect(moved.currentSeat).toBe(0); // chain turn
+  });
+
+  test('one line can complete two boxes at once', () => {
+    const state = start();
+    const b = board(state);
+    // Boxes (2,2) and (2,3) both miss only v[2][3].
+    b.h[2][2] = 0;
+    b.h[3][2] = 1;
+    b.v[2][2] = 1;
+    b.h[2][3] = 1;
+    b.h[3][3] = 0;
+    b.v[2][4] = 0;
+    state.currentSeat = 0;
+    const moved = engine.applyAction(state, {
+      seat: 0,
+      type: 'edge',
+      payload: { kind: 'v', r: 2, c: 3 },
+    });
+    const mb = board(moved);
+    expect(mb.boxes[2][2]).toBe(0);
+    expect(mb.boxes[2][3]).toBe(0);
+    expect(mb.claimed).toBe(2);
+    expect(moved.currentSeat).toBe(0);
+  });
+
+  test('a fully drawn grid settles by box count with 25 claimed', () => {
+    let state = start();
+    let guard = 0;
+    while (state.phase === 'in_progress' && guard++ < 100) {
+      const b = board(state);
+      const seat = state.currentSeat;
+      let played = false;
+      outer: for (let r = 0; r <= b.size; r++) {
+        for (let c = 0; c < b.size; c++) {
+          if (b.h[r][c] === -1) {
+            state = engine.applyAction(state, { seat, type: 'edge', payload: { kind: 'h', r, c } });
+            played = true;
+            break outer;
+          }
+        }
+      }
+      if (played) continue;
+      for (let r = 0; r < b.size; r++) {
+        for (let c = 0; c <= b.size; c++) {
+          if (b.v[r][c] === -1) {
+            state = engine.applyAction(state, { seat, type: 'edge', payload: { kind: 'v', r, c } });
+            played = true;
+            break;
+          }
+        }
+        if (played) break;
+      }
+    }
+    expect(state.phase).toBe('completed');
+    expect(board(state).claimed).toBe(25);
+    expect(state.scores[0] + state.scores[1]).toBe(25);
+    expect(state.winnerSeat).toBe(state.scores[0] > state.scores[1] ? 0 : 1);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -1427,9 +1549,10 @@ describe('engine registry', () => {
       new ChessEngine(),
       new PoolEngine(),
       new CarromEngine(),
+      new DotsAndBoxesEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -1438,7 +1561,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

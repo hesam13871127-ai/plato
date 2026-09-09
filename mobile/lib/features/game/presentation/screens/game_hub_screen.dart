@@ -274,6 +274,8 @@ String _gameEmoji(String slug) {
       return '🎱';
     case 'carrom':
       return '🎯';
+    case 'dots_and_boxes':
+      return '🔹';
     default:
       return '🎮';
   }

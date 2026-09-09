@@ -280,5 +280,35 @@ class GameTutorials {
         bodyFa: 'افتادن استرایکر در جیب خطاست: یکی از مهره‌های انداخته‌شدهٔ تو به مرکز برمی‌گردد و نوبت می‌گذرد.',
       ),
     ],
+    'dots_and_boxes': [
+      TutorialStep(
+        emoji: '✏️',
+        titleEn: 'Draw one line',
+        titleFa: 'یک خط بکش',
+        bodyEn: 'Take turns tapping the gap between two dots to draw one edge of a square.',
+        bodyFa: 'نوبتی روی فاصلهٔ بین دو نقطه بزن تا یک ضلع از مربع کشیده شود.',
+      ),
+      TutorialStep(
+        emoji: '🔹',
+        titleEn: 'Close a square',
+        titleFa: 'مربع را ببند',
+        bodyEn: 'Draw the fourth side of a square to claim it — and immediately draw another line.',
+        bodyFa: 'ضلع چهارم مربع را بکش تا آن مربع مال تو شود — و بلافاصله یک خط دیگر بکش.',
+      ),
+      TutorialStep(
+        emoji: '⛓️',
+        titleEn: 'Chain reactions',
+        titleFa: 'واکنش زنجیره‌ای',
+        bodyEn: 'Claimed squares chain: keep closing while you can, but watch what you hand over.',
+        bodyFa: 'مربع‌ها زنجیره می‌شوند: تا می‌توانی ببند، اما مراقب باش چه چیزی به حریف می‌دهی.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Most squares wins',
+        titleFa: 'بیشترین مربع برنده',
+        bodyEn: 'When the grid is full, the player with more of the 25 squares takes the win.',
+        bodyFa: 'وقتی جدول پر شد، هرکس مربع‌های بیشتری از ۲۵ مربع دارد برنده است.',
+      ),
+    ],
   };
 }

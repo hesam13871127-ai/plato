@@ -104,6 +104,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'dots_and_boxes',
+    name: 'Dots & Boxes',
+    description: 'Draw lines, steal squares, chain the board — tiny grid, huge mind games.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 6,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

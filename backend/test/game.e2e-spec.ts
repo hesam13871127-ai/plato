@@ -353,6 +353,23 @@ function humanActionFor(
     return null;
   }
 
+  if (slug === 'dots_and_boxes') {
+    const size = (board.size as number) ?? 5;
+    const h = (board.h as number[][]) ?? [];
+    const v = (board.v as number[][]) ?? [];
+    for (let r = 0; r <= size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (h[r]?.[c] === -1) return { type: 'edge', payload: { kind: 'h', r, c } };
+      }
+    }
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c <= size; c++) {
+        if (v[r]?.[c] === -1) return { type: 'edge', payload: { kind: 'v', r, c } };
+      }
+    }
+    return null;
+  }
+
   if (slug === 'carrom') {
     type CarromPiece = { k: number; x: number; y: number; potted: boolean };
     const pieces = (board.pieces as CarromPiece[]) ?? [];

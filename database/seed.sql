@@ -19,7 +19,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000008', 'checkers', 'Checkers', 'Classic draughts — jump, king and capture! Tactical, fast and perfect for duels.', NULL, 2, 2, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000009', 'chess', 'Chess', 'The immortal duel — castle, fork and checkmate your rival on the 64 squares.', NULL, 2, 2, 12, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000010', 'pool', 'Pool', 'Arcade 8-ball — smash the break, sink your colours and crown the black.', NULL, 2, 2, 8, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000011', 'carrom', 'Carrom', 'Flick, clack, pocket — classic carrom duels with the red queen.', NULL, 2, 2, 8, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000011', 'carrom', 'Carrom', 'Flick, clack, pocket — classic carrom duels with the red queen.', NULL, 2, 2, 8, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000012', 'dots_and_boxes', 'Dots & Boxes', 'Draw lines, steal squares, chain the board — tiny grid, huge mind games.', NULL, 2, 2, 6, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -65,6 +66,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9208-000000000017', 'Midnight Baize', 'Deep midnight-green match baize with brass pockets.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 103, JSON_OBJECT('game', 'pool', 'felt', '#0B3D2E', 'accent', '#22D3EE')),
   ('44444444-0000-4000-9101-000000000018', 'Ivory Royale Men', 'Hand-carved ivory-tone carrom men with a gilded striker.', 'game_piece', 'epic', NULL, 2200, 'coins', 0, 1, 1, 1, 0, 104, JSON_OBJECT('game', 'carrom', 'piece', 'ivory')),
   ('44444444-0000-4000-9209-000000000018', 'Rosewood Arena', 'Tournament rosewood carrom board with silver inlay.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 105, JSON_OBJECT('game', 'carrom', 'felt', '#5C3A21', 'accent', '#F59E0B')),
+  ('44444444-0000-4000-9101-000000000019', 'Chrome Neon Nodes', 'Liquid-chrome dots with laser neon lines.', 'game_piece', 'epic', NULL, 1900, 'coins', 0, 1, 1, 1, 0, 106, JSON_OBJECT('game', 'dots_and_boxes', 'piece', 'chrome')),
+  ('44444444-0000-4000-9210-000000000019', 'Hologram Grid', 'Glass hologram board with refracting square washes.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 107, JSON_OBJECT('game', 'dots_and_boxes', 'felt', '#101A33', 'accent', '#22D3EE')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),
