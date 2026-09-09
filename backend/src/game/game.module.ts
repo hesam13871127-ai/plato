@@ -21,6 +21,7 @@ import { GameSessionService } from './game-session.service';
 import { MatchmakingService } from './matchmaking.service';
 import { ResultsService } from './results.service';
 import { RoomService } from './room.service';
+import { DominoesEngine } from './engine/dominoes.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -46,6 +47,7 @@ const ENTITIES = [
   controllers: [GameController],
   providers: [
     // Engines — registered per wave as games are rebuilt (see EngineRegistry).
+    DominoesEngine,
     EngineRegistry,
     // Services
     BotService,

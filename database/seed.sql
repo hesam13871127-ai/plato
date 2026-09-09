@@ -10,9 +10,10 @@ SET NAMES utf8mb4;
 -- game). Rows are appended below as each game lands; the API's runtime
 -- GameCatalogSeeder is the source of truth and seeds the same list on boot.
 -- INSERT INTO games (id, slug, name, description, icon_url, min_players, max_players, avg_duration_minutes, supports_bots, ranked_enabled, status)
--- VALUES
---   (...)
--- ON DUPLICATE KEY UPDATE name = VALUES(name);
+INSERT INTO games (id, slug, name, description, icon_url, min_players, max_players, avg_duration_minutes, supports_bots, ranked_enabled, status)
+VALUES
+  ('11111111-0000-4000-8000-000000000002', 'dominoes', 'Dominoes', 'Classic Draw Dominoes for 2-4 players. Empty your hand or block the table!', NULL, 2, 4, 10, 1, 1, 'active')
+ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
 INSERT INTO seasons (id, name, season_number, starts_at, ends_at, status, rewards)
@@ -41,6 +42,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('33333333-0000-4000-8400-000000000002', 'Ocean Theme',       'Soft cyan interface theme.',      'theme', 'rare',       NULL, 1000, 'coins', 20, 1, 1, 1, 0, 41, JSON_OBJECT('accent', '#00E5FF')),
   -- Game skins
   ('33333333-0000-4000-8500-000000000001', 'Neon Felt Table',   'Glowing purple table skin.',      'game_skin', 'epic',   NULL, 1500, 'coins', 0, 1, 1, 1, 0, 50, JSON_OBJECT('felt', '#7B5CFF')),
+  ('44444444-0000-4000-9101-000000000011', 'Obsidian Dominoes', 'Volcanic-black tiles with molten gold pips.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 81, JSON_OBJECT('game', 'dominoes', 'piece', 'obsidian')),
+  ('44444444-0000-4000-9202-000000000011', 'Domino Duel Felt',  'Sun-bleached terracotta domino felt.', 'game_skin', 'rare', NULL, 1300, 'coins', 10, 1, 1, 1, 0, 97, JSON_OBJECT('game', 'dominoes', 'felt', '#8A4B2E')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

@@ -30,7 +30,9 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
 
   /// Per-slug display titles. Games register their title as they are rebuilt
   /// wave by wave; unknown slugs get a prettified name as fallback.
-  static const _titles = <String, String>{};
+  static const _titles = <String, String>{
+    'dominoes': 'Dominoes',
+  };
 
   static String _titleFor(String slug) {
     final known = _titles[slug];

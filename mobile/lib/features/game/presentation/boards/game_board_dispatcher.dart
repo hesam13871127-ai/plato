@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/game_entities.dart';
+import 'dominoes_board.dart';
 
 typedef BoardAction = Future<void> Function(String type, Map<String, dynamic> payload);
 
@@ -25,6 +26,8 @@ class GameBoardDispatcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     switch (session.gameSlug) {
+      case 'dominoes':
+        return DominoesBoard(session: session, mySeat: mySeat, onAction: onAction);
       default:
         return _UnknownBoard(slug: session.gameSlug);
     }

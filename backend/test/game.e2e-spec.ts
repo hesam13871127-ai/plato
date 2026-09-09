@@ -279,14 +279,22 @@ function humanActionFor(
   const slug = session.config.gameSlug;
 
   if (slug === 'dominoes') {
-    const hands = board.hands as Array<Array<[number, number]>> | undefined;
-    const ends = board.ends as [number, number] | null | undefined;
+    const hands = board.hands as Array<Array<{ a: number; b: number }>> | undefined;
+    const endsObj = board.ends as { left: number; right: number } | null | undefined;
+    const left = endsObj?.left;
+    const right = endsObj?.right;
     const boneyard = (board.boneyard as unknown[]) ?? [];
     const hand = hands?.[seat] ?? [];
-    const playable = ends
-      ? hand.filter(([a, b]) => a === ends[0] || b === ends[0] || a === ends[1] || b === ends[1])
+    const playable = endsObj
+      ? hand.filter((t) => t.a === left || t.b === left || t.a === right || t.b === right)
       : hand;
-    if (playable.length > 0) return { type: 'play_tile', payload: { tile: playable[0] } };
+    if (playable.length > 0) {
+      const t = playable[0];
+      const fitsLeft = t.a === left || t.b === left;
+      const fitsRight = t.a === right || t.b === right;
+      const needsEnd = endsObj && fitsLeft && fitsRight && left !== right;
+      return { type: 'play_tile', payload: { tile: [t.a, t.b], ...(needsEnd ? { end: 'l' } : {}) } };
+    }
     if (boneyard.length > 0) return { type: 'draw', payload: {} };
     return { type: 'pass', payload: {} };
   }

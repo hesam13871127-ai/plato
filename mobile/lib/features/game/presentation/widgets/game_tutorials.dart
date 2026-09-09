@@ -46,5 +46,36 @@ class GameTutorials {
     ),
   ];
 
-  static const Map<String, List<TutorialStep>> _data = {};
+  static const Map<String, List<TutorialStep>> _data = {
+    'dominoes': [
+      TutorialStep(
+        emoji: '🁢',
+        titleEn: 'Match the ends',
+        titleFa: 'جفت‌کردن سرها',
+        bodyEn: 'Play a tile whose number matches an open end of the chain. Doubles sit crosswise on the table.',
+        bodyFa: 'مهره‌ای بگذار که عددش با یکی از دو سر زنجیره بخواند؛ جفت‌ها به‌صورت عمود روی میز می‌نشینند.',
+      ),
+      TutorialStep(
+        emoji: '🚪',
+        titleEn: 'Blocked? Draw',
+        titleFa: 'بسته؟ از انبار بکش',
+        bodyEn: 'If nothing fits, draw from the boneyard until a tile matches. Pass only when the boneyard is empty.',
+        bodyFa: 'اگر مهرهٔ مناسب نداری، از انبار بکش تا مهرهٔ قابل‌بازی بیاوری؛ فقط وقتی انبار خالی است رد شو.',
+      ),
+      TutorialStep(
+        emoji: '👑',
+        titleEn: 'Highest double leads',
+        titleFa: 'بزرگ‌ترین جفت شروع می‌کند',
+        bodyEn: 'The holder of the highest double opens the game. Lead any tile you like — set the tone!',
+        bodyFa: 'دارندهٔ بزرگ‌ترین جفت بازی را شروع می‌کند. هر مهره‌ای دلت خواست باز کن تا لحن بازی مشخص شود!',
+      ),
+      TutorialStep(
+        emoji: '🏁',
+        titleEn: 'Empty hand wins',
+        titleFa: 'دست خالی برنده است',
+        bodyEn: 'First to empty their hand wins and scores every pip left in the opponents’ hands. Lightest hand wins a blocked table.',
+        bodyFa: 'هرکه زودتر دستش خالی شود برنده است و همهٔ نقطه‌های دست حریفان را امتیاز می‌گیرد؛ اگر میز قفل شود، سبک‌ترین دست برنده است.',
+      ),
+    ],
+  };
 }

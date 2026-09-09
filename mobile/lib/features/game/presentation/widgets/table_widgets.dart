@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/board_skins.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../data/datasources/game_socket_service.dart';
 import '../../domain/entities/game_entities.dart';
@@ -149,14 +150,19 @@ class _AvatarDot extends StatelessWidget {
 
 /// Glass container for the playing surface with a glossy 3D felt look:
 /// angled perspective, top light sheen and vignette — shared by every board.
+/// Pass a [skin] to tint the felt with the player's selected board skin.
 class TableSurface extends StatelessWidget {
-  const TableSurface({super.key, required this.child, this.padding});
+  const TableSurface({super.key, required this.child, this.padding, this.skin});
 
   final Widget child;
   final EdgeInsets? padding;
 
+  /// Optional felt skin; falls back to the classic midnight felt.
+  final BoardSkin? skin;
+
   @override
   Widget build(BuildContext context) {
+    final felt = skin ?? BoardSkin.midnight;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Transform(
@@ -168,15 +174,19 @@ class TableSurface extends StatelessWidget {
           padding: padding ?? const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(26),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF16294D), Color(0xFF0C1730), Color(0xFF08101F)],
+              colors: [
+                Color.lerp(felt.feltTop, Colors.white, 0.06)!,
+                felt.feltBottom,
+                Color.lerp(felt.feltBottom, Colors.black, 0.35)!,
+              ],
             ),
             border: Border.all(color: AppColors.glassStroke),
             boxShadow: [
               BoxShadow(color: Colors.black.withOpacity(0.55), blurRadius: 30, offset: const Offset(0, 16)),
-              BoxShadow(color: AppColors.electricPurple.withOpacity(0.14), blurRadius: 42, spreadRadius: -10),
+              BoxShadow(color: felt.accent.withOpacity(0.14), blurRadius: 42, spreadRadius: -10),
             ],
           ),
           child: Stack(

@@ -1,17 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { BaseGameEngine } from './base-game.engine';
+import { DominoesEngine } from './dominoes.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
  * the system (matchmaking, rooms, gateway) stays generic.
  *
  * The catalogue is being rebuilt wave by wave (logic + 3D board + shop items
- * per game), so the registry starts empty and fills up as each wave lands:
- * engines are injected here and registered in the constructor.
+ * per game); every wave injects its engines here.
  */
 @Injectable()
 export class EngineRegistry {
   private readonly engines = new Map<string, BaseGameEngine>();
+
+  constructor(dominoes: DominoesEngine) {
+    this.register(dominoes);
+  }
 
   register(engine: BaseGameEngine): void {
     this.engines.set(engine.slug, engine);

@@ -22,7 +22,19 @@ interface GameSeed {
  * bilingual tutorial + 3D logo) so the hub never shows a game that cannot be
  * played end to end.
  */
-const CATALOG: GameSeed[] = [];
+const CATALOG: GameSeed[] = [
+  {
+    slug: 'dominoes',
+    name: 'Dominoes',
+    description: 'Classic Draw Dominoes for 2–4 players. Empty your hand or block the table!',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
+  },
+];
 
 /** Ensures the game catalogue matches the registered engines. */
 @Injectable()
