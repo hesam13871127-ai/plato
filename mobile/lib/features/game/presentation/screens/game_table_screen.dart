@@ -38,6 +38,7 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
   'checkers': 'Checkers',
   'chess': 'Chess',
   'pool': 'Pool',
+  'carrom': 'Carrom',
   };
 
   static String _titleFor(String slug) {

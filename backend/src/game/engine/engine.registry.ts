@@ -7,6 +7,7 @@ import { Connect4Engine } from './connect4.engine';
 import { CheckersEngine } from './checkers.engine';
 import { ChessEngine } from './chess.engine';
 import { PoolEngine } from './pool.engine';
+import { CarromEngine } from './carrom.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -27,6 +28,7 @@ export class EngineRegistry {
     checkers: CheckersEngine,
     chess: ChessEngine,
     pool: PoolEngine,
+    carrom: CarromEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -35,6 +37,7 @@ export class EngineRegistry {
     this.register(checkers);
     this.register(chess);
     this.register(pool);
+    this.register(carrom);
   }
 
   register(engine: BaseGameEngine): void {

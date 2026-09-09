@@ -6,6 +6,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { GameSessionService } from '../src/game/game-session.service';
 import { ChessEngine } from '../src/game/engine/chess.engine';
+import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
 
 /**
@@ -350,6 +351,33 @@ function humanActionFor(
       if (grid && grid[grid.length - 1][c] === -1) return { type: 'drop', payload: { col: c } };
     }
     return null;
+  }
+
+  if (slug === 'carrom') {
+    type CarromPiece = { k: number; x: number; y: number; potted: boolean };
+    const pieces = (board.pieces as CarromPiece[]) ?? [];
+    const baseY = seat === 0 ? 81 : 19;
+    if (board.strikerInHand) {
+      const free = (x: number, y: number) =>
+        pieces.every(
+          (p) => p.potted || p.k === 9 || Math.hypot(p.x - x, p.y - y) >= 8.4,
+        ) && [[0, 0], [100, 0], [0, 100], [100, 100]].every(
+          ([px, py]) => Math.hypot(x - px, y - py) >= 10,
+        );
+      for (let x = 25; x <= 75; x += 5) {
+        if (free(x, baseY)) return { type: 'place', payload: { x, y: baseY } };
+      }
+      return null;
+    }
+    const striker = pieces.find((p) => p.k === 9 && !p.potted);
+    if (!striker) return null;
+    const mine = pieces.filter((p) => !p.potted && p.k === seat);
+    const targets = mine.length > 0 ? mine : pieces.filter((p) => !p.potted && p.k !== 9);
+    if (targets.length === 0) return null;
+    const t = targets.reduce((a, b) =>
+      Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
+    );
+    return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
   }
 
   if (slug === 'pool') {

@@ -94,6 +94,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'carrom',
+    name: 'Carrom',
+    description: 'Flick, clack, pocket — classic carrom duels with the red queen.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

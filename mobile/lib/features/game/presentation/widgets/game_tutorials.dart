@@ -250,5 +250,35 @@ class GameTutorials {
         bodyFa: 'همهٔ گروهت را خالی کن، بعد توپ ۸ را جا بزن تا ببری. اگر زودتر بیفتد، بازی مال حریف می‌شود!',
       ),
     ],
+    'carrom': [
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'Baseline & flick',
+        titleFa: 'خط پایه و شلیک',
+        bodyEn: 'Each turn, place your striker anywhere on your baseline band, aim by dragging and flick with power.',
+        bodyFa: 'هر نوبت، استرایکر را روی نوار خط پایهٔ خودت بگذار، با کشیدن نشانه بگیر و با قدرت بزن.',
+      ),
+      TutorialStep(
+        emoji: '⚪',
+        titleEn: 'Pot your nine',
+        titleFa: 'نه‌تای خودت را بینداز',
+        bodyEn: 'White versus black — every one of your men you pocket keeps you at the board for another flick.',
+        bodyFa: 'سفید در برابر مشکی — تا مهرهٔ خودت را جا می‌زنی، سر میز می‌مانی و دوباره می‌زنی.',
+      ),
+      TutorialStep(
+        emoji: '❤️',
+        titleEn: 'Cover the queen',
+        titleFa: 'ملکه را پوشش بده',
+        bodyEn: 'The red queen is a bonus — pot her, then pot one of your men on the same or next stroke to keep her.',
+        bodyFa: 'ملکهٔ قرمز امتیاز ویژه است — او را بینداز و در همان ضربه یا ضربهٔ بعدی یکی از مهره‌هایت را بینداز تا مال تو شود.',
+      ),
+      TutorialStep(
+        emoji: '⚠️',
+        titleEn: 'Striker sins',
+        titleFa: 'خطای استرایکر',
+        bodyEn: 'Pocketing the striker is a foul: one of your sunk men returns to the centre and the turn passes.',
+        bodyFa: 'افتادن استرایکر در جیب خطاست: یکی از مهره‌های انداخته‌شدهٔ تو به مرکز برمی‌گردد و نوبت می‌گذرد.',
+      ),
+    ],
   };
 }

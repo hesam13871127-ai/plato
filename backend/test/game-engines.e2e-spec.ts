@@ -7,6 +7,7 @@ import { Connect4Engine } from '../src/game/engine/connect4.engine';
 import { CheckersEngine } from '../src/game/engine/checkers.engine';
 import { ChessEngine } from '../src/game/engine/chess.engine';
 import { PoolEngine } from '../src/game/engine/pool.engine';
+import { CarromEngine } from '../src/game/engine/carrom.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -27,6 +28,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'checkers', build: () => new CheckersEngine(), players: 2 },
   { name: 'chess', build: () => new ChessEngine(), players: 2 },
   { name: 'pool', build: () => new PoolEngine(), players: 2 },
+  { name: 'carrom', build: () => new CarromEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -1208,6 +1210,212 @@ describe('pool rules', () => {
   });
 });
 
+describe('carrom rules', () => {
+  const engine = new CarromEngine();
+
+  interface PieceShape {
+    k: number; // 0 white · 1 black · 8 queen · 9 striker
+    x: number;
+    y: number;
+    potted: boolean;
+  }
+
+  interface CarromShape {
+    pieces: PieceShape[];
+    strikerInHand: boolean;
+    queenPending: boolean;
+    queenCoveredBy: number | null;
+    shotCount: number;
+    lastShot: {
+      seat: number;
+      angle: number;
+      power: number;
+      potted: number[];
+      strikerPotted: boolean;
+      foul: boolean;
+      reason: string | null;
+      frames: number[][];
+    } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): CarromShape {
+    return state.board as unknown as CarromShape;
+  }
+
+  /** A quiet board with the given pieces; the striker is placed unless in-hand. */
+  function craft(pieces: Array<[number, number, number]>, opts?: { strikerInHand?: boolean; queenPending?: boolean }): GameState {
+    const state = start();
+    const b = board(state);
+    b.pieces = pieces.map(([k, x, y]) => ({ k, x, y, potted: false }));
+    b.strikerInHand = opts?.strikerInHand ?? false;
+    b.queenPending = opts?.queenPending ?? false;
+    b.queenCoveredBy = null;
+    b.shotCount = 5;
+    b.lastShot = null;
+    state.currentSeat = 0;
+    return state;
+  }
+
+  test('sets up 9 white + 9 black men around the queen, striker in hand', () => {
+    const state = start();
+    const b = board(state);
+    expect(b.pieces).toHaveLength(20);
+    expect(b.pieces.filter((p) => p.k === 0)).toHaveLength(9);
+    expect(b.pieces.filter((p) => p.k === 1)).toHaveLength(9);
+    const queen = b.pieces.find((p) => p.k === 8);
+    expect(queen?.x).toBeCloseTo(50);
+    expect(queen?.y).toBeCloseTo(50);
+    expect(b.strikerInHand).toBe(true);
+    expect(b.queenPending).toBe(false);
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('the striker must be placed on your own baseline', () => {
+    const state = craft(
+      [
+        [8, 50, 50],
+        [0, 50, 81],
+        [1, 20, 20],
+        [9, 50, 81],
+      ],
+      { strikerInHand: true },
+    );
+    expect(
+      engine.validate(state, { seat: 0, type: 'place', payload: { x: 50, y: 50 } }).ok,
+    ).toBe(false); // not on the baseline
+    expect(
+      engine.validate(state, { seat: 0, type: 'place', payload: { x: 50, y: 81 } }).ok,
+    ).toBe(false); // blocked by the white man
+    const placed = engine.applyAction(state, {
+      seat: 0,
+      type: 'place',
+      payload: { x: 40, y: 81 },
+    });
+    expect(board(placed).strikerInHand).toBe(false);
+    expect(placed.currentSeat).toBe(0); // placer keeps the turn
+  });
+
+  test('potting your own man keeps you at the board', () => {
+    // Striker (50,81) → white (26.6, 89.9) → pocket (0, 100).
+    const state = craft([
+      [8, 80, 20],
+      [1, 80, 80],
+      [0, 26.6, 89.9],
+      [0, 90, 55],
+      [0, 90, 65],
+      [9, 50, 81],
+    ]);
+    const shot = engine.applyAction(state, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle: Math.atan2(100 - 81, 0 - 50), power: 0.8 },
+    });
+    const sb = board(shot);
+    expect(sb.lastShot?.potted).toContain(0);
+    expect(sb.lastShot?.foul).toBe(false);
+    expect(sb.pieces.find((p) => p.k === 0)?.potted).toBe(true);
+    expect(shot.currentSeat).toBe(0); // own pot keeps the turn
+    expect(sb.strikerInHand).toBe(true); // and the striker is re-placed
+    expect(sb.lastShot!.frames.length).toBeGreaterThan(2);
+  });
+
+  test('a potted striker is a foul: a potted man returns and the turn passes', () => {
+    const state = craft([
+      [8, 50, 50],
+      [1, 80, 20],
+      [9, 50, 81],
+      [0, 60, 60],
+    ]);
+    // One white already down — the foul penalty brings it back.
+    board(state).pieces.find((p) => p.k === 0)!.potted = true;
+    const shot = engine.applyAction(state, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle: Math.atan2(100 - 81, 0 - 50), power: 0.7 }, // striker rolls into the pocket
+    });
+    const sb = board(shot);
+    expect(sb.lastShot?.strikerPotted).toBe(true);
+    expect(sb.lastShot?.foul).toBe(true);
+    expect(shot.currentSeat).toBe(1);
+    const white = sb.pieces.find((p) => p.k === 0)!;
+    expect(white.potted).toBe(false); // returned to the centre
+    expect(Math.hypot(white.x - 50, white.y - 50)).toBeLessThan(15);
+    expect(sb.strikerInHand).toBe(true);
+  });
+
+  test('the queen stays down only until you cover her', () => {
+    const angle = Math.atan2(100 - 81, 0 - 50);
+    // (a) Potting the queen alone leaves her pending and keeps the turn.
+    const potQueen = craft([
+      [0, 80, 60],
+      [1, 20, 20],
+      [8, 26.6, 89.9],
+      [9, 50, 81],
+    ]);
+    const afterQueen = engine.applyAction(potQueen, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle, power: 0.8 },
+    });
+    const qb = board(afterQueen);
+    expect(qb.lastShot?.potted).toContain(8);
+    expect(qb.queenPending).toBe(true);
+    expect(afterQueen.currentSeat).toBe(0); // shoot again to cover
+    expect(qb.pieces.find((p) => p.k === 8)?.potted).toBe(true);
+
+    // (b) Failing to cover sends her back to the centre.
+    const coverFail = craft(
+      [
+        [0, 85, 60],
+        [0, 85, 70],
+        [1, 20, 20],
+        [9, 50, 81],
+      ],
+      { queenPending: true },
+    );
+    const queenDown = coverFail;
+    board(queenDown).pieces.push({ k: 8, x: 0, y: 100, potted: true });
+    const failed = engine.applyAction(queenDown, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle: -Math.PI / 2, power: 0.25 }, // safe tap, nothing potted
+    });
+    const fb = board(failed);
+    expect(fb.queenPending).toBe(false);
+    const queen = fb.pieces.find((p) => p.k === 8)!;
+    expect(queen.potted).toBe(false);
+    expect(Math.hypot(queen.x - 50, queen.y - 50)).toBeLessThan(15);
+    expect(failed.currentSeat).toBe(1);
+  });
+
+  test('sinking the last of your nine men wins the board', () => {
+    const state = craft([
+      [8, 50, 50],
+      [1, 80, 20],
+      [0, 26.6, 89.9],
+      [9, 50, 81],
+    ]);
+    // Eight whites already down.
+    const b = board(state);
+    for (let i = 0; i < 8; i++) {
+      b.pieces.push({ k: 0, x: 90, y: 20 + i, potted: true });
+    }
+    const shot = engine.applyAction(state, {
+      seat: 0,
+      type: 'shoot',
+      payload: { angle: Math.atan2(100 - 81, 0 - 50), power: 0.8 },
+    });
+    expect(shot.phase).toBe('completed');
+    expect(shot.winnerSeat).toBe(0);
+    expect(shot.scores[0]).toBe(10); // nine men + win point
+    expect(shot.scores[1]).toBe(0);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -1218,9 +1426,10 @@ describe('engine registry', () => {
       new CheckersEngine(),
       new ChessEngine(),
       new PoolEngine(),
+      new CarromEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -1229,7 +1438,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });
