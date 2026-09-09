@@ -477,6 +477,10 @@ function humanActionFor(
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
   }
 
+  if (slug === 'trivia') {
+    return { type: 'answer', payload: { choice: Math.floor(Math.random() * 4) } };
+  }
+
   if (slug === 'bowling') {
     // Deterministic lane: aim near the pocket with a sensible power.
     const angle = (session.state.version % 2 === 0 ? -1 : 1) * 0.02;

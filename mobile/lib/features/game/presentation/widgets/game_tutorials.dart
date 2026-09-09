@@ -489,6 +489,36 @@ class GameTutorials {
         bodyEn: 'Strikes earn the next two balls as bonus, spares the next one — twelve strikes make a perfect 300.',
         bodyFa: 'استرایک دو توپ بعدی را بونوس می‌گیرد و اسپیر یکی را — دوازده استرایک یعنی امتیاز کامل ۳۰۰!',
       ),
+    ]
+    'trivia': [
+      TutorialStep(
+        emoji: '🧠',
+        titleEn: 'Seven rounds each',
+        titleFa: 'هفت دور برای هرکس',
+        bodyEn: 'Every turn deals you a fresh question from the house deck — two players get fourteen in total.',
+        bodyFa: 'هر نوبت یک سؤال تازه از دکِ خانه می‌گیری — دو بازیکن در مجموع چهارده سؤال دارند.',
+      ),
+      TutorialStep(
+        emoji: '❓',
+        titleEn: 'Four doors, one key',
+        titleFa: 'چهار گزینه، یک کلید',
+        bodyEn: 'Pick A, B, C or D. The answer key stays sealed server-side until you lock in your choice.',
+        bodyFa: 'یکی از A تا D را انتخاب کن. کلید جواب تا قبل از انتخاب نهایی، سمت سرور مهر و موم می‌ماند.',
+      ),
+      TutorialStep(
+        emoji: '⭐',
+        titleEn: 'Ten a truth',
+        titleFa: 'ده امتیاز هر حقیقت',
+        bodyEn: 'Every correct answer banks ten points — no penalties for wrong guesses, so always take your shot.',
+        bodyFa: 'هر پاسخ درست ده امتیاز دارد — اشتباه جریمه ندارد، پس همیشه شانست را امتحان کن.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Top score takes the crown',
+        titleFa: 'بالاترین امتیاز قهرمان است',
+        bodyEn: 'When the deck runs out the leaderboard decides. Equal points? More correct answers breaks the tie.',
+        bodyFa: 'وقتی دک تمام شود جدول امتیازات تصمیم می‌گیرد. امتیاز برابر؟ تعداد پاسخ درست بیشتر، برنده است.',
+      ),
     ],
   };
 }

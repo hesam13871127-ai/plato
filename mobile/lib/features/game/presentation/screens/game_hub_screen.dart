@@ -288,6 +288,8 @@ String _gameEmoji(String slug) {
       return '🫘';
     case 'bowling':
       return '🎳';
+    case 'trivia':
+      return '🧠';
     default:
       return '🎮';
   }

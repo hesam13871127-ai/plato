@@ -174,6 +174,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'trivia',
+    name: 'Trivia',
+    description: 'Quiz night at the Plato lounge — seven rounds a player, ten points a truth.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

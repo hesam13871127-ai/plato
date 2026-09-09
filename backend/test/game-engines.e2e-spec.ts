@@ -15,6 +15,7 @@ import { DicePartyEngine } from '../src/game/engine/dice-party.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { BowlingEngine, scoreBowling } from '../src/game/engine/bowling.engine';
+import { TriviaEngine, TRIVIA_BANK } from '../src/game/engine/trivia.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -43,6 +44,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'backgammon', build: () => new BackgammonEngine(), players: 2 },
   { name: 'mancala', build: () => new MancalaEngine(), players: 2 },
   { name: 'bowling', build: () => new BowlingEngine(), players: 2 },
+  { name: 'trivia', build: () => new TriviaEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2307,6 +2309,114 @@ describe('bowling rules', () => {
   });
 });
 
+describe('trivia rules', () => {
+  const engine = new TriviaEngine();
+
+  interface TriviaShape {
+    order: number[];
+    asked: number;
+    active: { category: string; q: string; options: string[] } | null;
+    history: Array<{ seat: number; choice: number; correct: boolean }>;
+    lastResult: { seat: number; choice: number; correctChoice: number; correct: boolean } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): TriviaShape {
+    return state.board as unknown as TriviaShape;
+  }
+
+  /** The correct choice for the currently active question. */
+  function key(state: GameState): number {
+    const b = board(state);
+    return TRIVIA_BANK[b.order[b.asked]].correct;
+  }
+
+  test('deals seven questions per player with the first one live', () => {
+    const b = board(start());
+    expect(b.order).toHaveLength(14); // 2 players × 7 rounds
+    expect(new Set(b.order).size).toBe(14); // no repeats
+    expect(b.asked).toBe(0);
+    expect(b.active).not.toBeNull();
+    expect(b.active!.options).toHaveLength(4);
+    expect(b.history).toEqual([]);
+    // The live question matches the top of the deck — without its key.
+    expect(b.active!.q).toBe(TRIVIA_BANK[b.order[0]].q);
+    expect(JSON.stringify(b)).not.toContain('"correct"');
+  });
+
+  test('correct answers bank ten points and pass the quiz on', () => {
+    const state = start();
+    const right = key(state);
+    const next = engine.applyAction(state, { seat: 0, type: 'answer', payload: { choice: right } });
+    const b = board(next);
+    expect(b.history).toEqual([{ seat: 0, choice: right, correct: true }]);
+    expect(b.lastResult).toMatchObject({ seat: 0, choice: right, correct: true });
+    expect(next.scores[0]).toBe(10);
+    expect(next.scores[1]).toBe(0);
+    expect(next.currentSeat).toBe(1);
+    expect(b.asked).toBe(1);
+    expect(b.active!.q).toBe(TRIVIA_BANK[b.order[1]].q);
+
+    // Seat 1 flunks theirs.
+    const wrongChoice = (key(next) + 1) % 4;
+    const after = engine.applyAction(next, { seat: 1, type: 'answer', payload: { choice: wrongChoice } });
+    expect(after.scores[1]).toBe(0);
+    expect(board(after).lastResult).toMatchObject({ seat: 1, correct: false });
+    expect(after.currentSeat).toBe(0);
+  });
+
+  test('running the whole deck finishes the game with the top score winning', () => {
+    let state = start();
+    const total = board(state).order.length;
+    for (let i = 0; i < total; i++) {
+      const seat = i % 2;
+      // Seat 0 answers everything right; seat 1 everything wrong.
+      const choice = seat === 0 ? key(state) : (key(state) + 1) % 4;
+      state = engine.applyAction(state, { seat, type: 'answer', payload: { choice } });
+    }
+    expect(state.phase).toBe('completed');
+    expect(state.winnerSeat).toBe(0);
+    expect(state.scores).toEqual([70, 0]);
+    expect(board(state).asked).toBe(total);
+    expect(board(state).active).toBeNull();
+  });
+
+  test('perfect ties on points break on correct-answer count', () => {
+    let state = start();
+    const total = board(state).order.length;
+    for (let i = 0; i < total; i++) {
+      // Both seats answer right — equal points, equal corrects → a draw.
+      state = engine.applyAction(state, { seat: i % 2, type: 'answer', payload: { choice: key(state) } });
+    }
+    expect(state.scores).toEqual([70, 70]);
+    expect(state.winnerSeat).toBeNull(); // a honourable draw
+  });
+
+  test('only the active seat may answer, and only with a valid choice', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 1, type: 'answer', payload: { choice: 0 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'answer', payload: { choice: 4 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'answer', payload: { choice: 1.5 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'guess', payload: { choice: 0 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'answer', payload: { choice: 2 } }).ok).toBe(true);
+  });
+
+  test('bots answer within the four options', () => {
+    const state = start();
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(move.action.type).toBe('answer');
+      const choice = Number(move.action.payload.choice);
+      expect(choice).toBeGreaterThanOrEqual(0);
+      expect(choice).toBeLessThanOrEqual(3);
+      expect(move.delayMs).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -2325,9 +2435,10 @@ describe('engine registry', () => {
       new BackgammonEngine(),
       new MancalaEngine(),
       new BowlingEngine(),
+      new TriviaEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -2336,7 +2447,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });
