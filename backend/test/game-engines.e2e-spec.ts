@@ -2,6 +2,7 @@ import { EngineRegistry } from '../src/game/engine/engine.registry';
 import { BaseGameEngine } from '../src/game/engine/base-game.engine';
 import { DominoesEngine } from '../src/game/engine/dominoes.engine';
 import { LudoEngine } from '../src/game/engine/ludo.engine';
+import { OchoEngine } from '../src/game/engine/ocho.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -17,6 +18,7 @@ import type { GameState } from '../src/game/engine/types';
 const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: number }> = [
   { name: 'dominoes', build: () => new DominoesEngine() },
   { name: 'ludo', build: () => new LudoEngine() },
+  { name: 'ocho', build: () => new OchoEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -318,11 +320,147 @@ describe('ludo rules', () => {
   });
 });
 
+describe('ocho rules', () => {
+  const engine = new OchoEngine();
+
+  interface OchoCardShape {
+    id: string;
+    color: string;
+    value: string;
+  }
+
+  interface OchoShape {
+    deck: OchoCardShape[];
+    discard: OchoCardShape[];
+    top: OchoCardShape;
+    chosenColor: string | null;
+    hands: OchoCardShape[][];
+    dir: number;
+    turnMode: string;
+    drawnCardId: string | null;
+  }
+
+  function start(players = 2): GameState {
+    return engine.createInitialState(makeConfig(engine, players));
+  }
+
+  test('deals 7 cards per seat from a 108-card deck with a number on top', () => {
+    const state = start(4);
+    const board = state.board as unknown as OchoShape;
+    board.hands.forEach((hand) => expect(hand).toHaveLength(7));
+    expect(board.hands.flat().length + board.deck.length + 1).toBe(108);
+    expect(board.top.color).not.toBe('wild');
+    expect(/^[0-9]$/.test(board.top.value)).toBe(true);
+  });
+
+  test('enforces matching by active colour/value and wild colour choice', () => {
+    const state = start(2);
+    const board = state.board as unknown as OchoShape;
+    const hand = board.hands[0];
+
+    // A card matching neither colour nor value is rejected.
+    const dead = hand.find((c) => c.color !== 'wild' && c.color !== board.top.color && c.value !== board.top.value);
+    if (dead) {
+      expect(engine.validate(state, { seat: 0, type: 'play', payload: { cardId: dead.id } }).ok).toBe(false);
+    }
+    // A wild play without a colour choice is rejected.
+    board.hands[0] = [
+      { id: 'wild-x', color: 'wild', value: 'wild' },
+      ...hand,
+    ];
+    expect(
+      engine.validate(state, { seat: 0, type: 'play', payload: { cardId: 'wild-x' } }).ok,
+    ).toBe(false);
+    // With a declared colour it is legal, and it becomes the active colour.
+    const played = engine.applyAction(state, {
+      seat: 0,
+      type: 'play',
+      payload: { cardId: 'wild-x', color: 'green' },
+    });
+    const pb = played.board as unknown as OchoShape;
+    expect(pb.chosenColor).toBe('green');
+    expect(pb.turnMode).toBe('play');
+  });
+
+  test('skip and reverse steer the turn; draw-two punishes and skips', () => {
+    const state = start(3);
+    const board = state.board as unknown as OchoShape;
+    // A junk card keeps hands non-empty so nobody "wins" mid-test.
+    const junk = (i: number) => ({ id: `junk-${i}`, color: 'junkcolor', value: `j${i}` });
+    // Seat 0 plays a skip on the current top colour.
+    board.hands[0] = [
+      { id: 's1', color: board.top.color, value: 'skip' },
+      junk(0),
+    ];
+    const afterSkip = engine.applyAction(state, { seat: 0, type: 'play', payload: { cardId: 's1' } });
+    expect(afterSkip.currentSeat).toBe(2); // seat 1 skipped in a 3-seat game
+
+    const b2 = afterSkip.board as unknown as OchoShape;
+    b2.hands[2] = [
+      { id: 's2', color: b2.top.color, value: 'rev' },
+      junk(2),
+    ];
+    const afterRev = engine.applyAction(afterSkip, { seat: 2, type: 'play', payload: { cardId: 's2' } });
+    expect((afterRev.board as unknown as OchoShape).dir).toBe(-1);
+    expect(afterRev.currentSeat).toBe(1); // direction flipped: 2 → 1
+
+    const b3 = afterRev.board as unknown as OchoShape;
+    const handSizesBefore = b3.hands.map((h) => h.length);
+    b3.hands[1] = [
+      { id: 'd2', color: b3.top.color, value: 'd2' },
+      junk(1),
+    ];
+    const afterD2 = engine.applyAction(afterRev, { seat: 1, type: 'play', payload: { cardId: 'd2' } });
+    const b4 = afterD2.board as unknown as OchoShape;
+    expect(b4.hands[0]).toHaveLength(handSizesBefore[0] + 2); // seat 0 drew two
+    expect(afterD2.currentSeat).toBe(2); // and lost the turn
+  });
+
+  test('draw-then-play only allows the drawn card; pass ends the turn', () => {
+    const state = start(2);
+    const board = state.board as unknown as OchoShape;
+    const before = board.hands[0].length;
+
+    const drawn = engine.applyAction(state, { seat: 0, type: 'draw', payload: {} });
+    const db = drawn.board as unknown as OchoShape;
+    expect(db.turnMode).toBe('drawn');
+    expect(db.hands[0]).toHaveLength(before + 1);
+    expect(db.drawnCardId).toBeTruthy();
+
+    // Playing a different card after drawing is rejected.
+    const other = db.hands[0].find((c) => c.id !== db.drawnCardId)!;
+    expect(engine.validate(drawn, { seat: 0, type: 'play', payload: { cardId: other.id } }).ok).toBe(
+      false,
+    );
+
+    const passed = engine.applyAction(drawn, { seat: 0, type: 'pass', payload: {} });
+    expect(passed.currentSeat).toBe(1);
+    expect((passed.board as unknown as OchoShape).turnMode).toBe('play');
+  });
+
+  test('never leaks other hands (or the deck) to seats or spectators', () => {
+    const state = start(4);
+    const view = engine.playerView(state, 1);
+    const vb = view.board as unknown as {
+      hand: OchoCardShape[] | null;
+      handSizes: number[];
+      deck: number;
+    };
+    expect(vb.hand).toHaveLength(7);
+    expect(vb.handSizes).toEqual([7, 7, 7, 7]);
+    expect(typeof vb.deck).toBe('number');
+
+    const spectator = engine.spectatorView(state);
+    const sb = spectator.board as unknown as { hand: unknown };
+    expect(sb.hand).toBeNull();
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
-    const registry = new EngineRegistry(new DominoesEngine(), new LudoEngine());
+    const registry = new EngineRegistry(new DominoesEngine(), new LudoEngine(), new OchoEngine());
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -331,7 +469,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

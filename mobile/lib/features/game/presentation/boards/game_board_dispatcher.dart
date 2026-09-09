@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/game_entities.dart';
 import 'dominoes_board.dart';
 import 'ludo_board.dart';
+import 'ocho_board.dart';
 
 typedef BoardAction = Future<void> Function(String type, Map<String, dynamic> payload);
 

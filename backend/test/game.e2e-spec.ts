@@ -317,7 +317,10 @@ function humanActionFor(
   if (slug === 'ocho') {
     type OchoCard = { id: string; color: string; value: string };
     const hands = board.hands as Array<Array<OchoCard>> | undefined;
-    const top = board.top as { color: string; value: string } | undefined;
+    const rawTop = board.top as { color: string; value: string } | undefined;
+    const chosenColor = board.chosenColor as string | null | undefined;
+    // The active colour is the wild's declared colour when a wild is on top.
+    const top = rawTop ? { color: chosenColor ?? rawTop.color, value: rawTop.value } : undefined;
     const turnMode = board.turnMode as string | undefined;
     const hand: OchoCard[] = hands?.[seat] ?? [];
     const matches = (c: OchoCard) =>

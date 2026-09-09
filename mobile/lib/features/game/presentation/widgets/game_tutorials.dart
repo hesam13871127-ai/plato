@@ -107,5 +107,35 @@ class GameTutorials {
         bodyFa: 'اولین بازیکنی که هر چهار مهره‌اش را به خانه برساند برنده است. دنبال شش‌ها بگرد!',
       ),
     ],
+    'ocho': [
+      TutorialStep(
+        emoji: '🃏',
+        titleEn: 'Match the top',
+        titleFa: 'مچ‌کردن کارت بالایی',
+        bodyEn: 'Play a card that shares the top card’s colour or value. Wilds fit anywhere and let you call the next colour.',
+        bodyFa: 'کارتی بگذار که رنگ یا عددش با کارت روی میز یکی باشد؛ کارت‌های وایلد همه‌جا می‌نشینند و رنگ بعدی را هم تو انتخاب می‌کنی.',
+      ),
+      TutorialStep(
+        emoji: '⚡',
+        titleEn: 'Action cards',
+        titleFa: 'کارت‌های اکشن',
+        bodyEn: 'Skip passes a rival by, Reverse flips the flow, +2 and +4 force draws — stack them for chaos!',
+        bodyFa: 'اسکیپ حریف را رد می‌کند، ریورس جهت بازی را برمی‌گرداند، +۲ و +۴ مجبور به کشیدن کارت می‌کنند — برای آشوب ازشون استفاده کن!',
+      ),
+      TutorialStep(
+        emoji: '✋',
+        titleEn: 'Draw, then decide',
+        titleFa: 'بکش، بعد تصمیم بگیر',
+        bodyEn: 'No match? Draw one card — you may play exactly that card, or keep it and pass.',
+        bodyFa: 'کارت مناسب نداری؟ یک کارت بکش — می‌توانی همان کارت را بازی کنی یا نگهش داری و پاس بدهی.',
+      ),
+      TutorialStep(
+        emoji: '🏁',
+        titleEn: 'Shout Ocho!',
+        titleFa: 'بگو اُچو!',
+        bodyEn: 'One card left? The table sees your Ocho! Empty your hand to win and score every rival’s leftover points.',
+        bodyFa: 'یک کارت داری؟ همه اُچوی تو را می‌بینند! دستت را خالی کن تا برنده شوی و امتیاز کارت‌های باقی‌ماندهٔ حریفان را بگیری.',
+      ),
+    ],
   };
 }

@@ -44,6 +44,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'ocho',
+    name: 'Ocho',
+    description: 'Match colours and numbers, slam skips and wilds. The classic crazy-eights party game.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

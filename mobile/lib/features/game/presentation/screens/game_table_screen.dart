@@ -33,6 +33,7 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
   static const _titles = <String, String>{
     'dominoes': 'Dominoes',
     'ludo': 'Ludo',
+    'ocho': 'Ocho',
   };
 
   static String _titleFor(String slug) {

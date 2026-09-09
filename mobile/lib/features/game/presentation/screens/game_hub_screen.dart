@@ -262,6 +262,8 @@ String _gameEmoji(String slug) {
       return '🁢';
     case 'ludo':
       return '🔴';
+    case 'ocho':
+      return '🃏';
     default:
       return '🎮';
   }
