@@ -519,6 +519,36 @@ class GameTutorials {
         bodyEn: 'When the deck runs out the leaderboard decides. Equal points? More correct answers breaks the tie.',
         bodyFa: 'وقتی دک تمام شود جدول امتیازات تصمیم می‌گیرد. امتیاز برابر؟ تعداد پاسخ درست بیشتر، برنده است.',
       ),
+    ]
+    'word_chain': [
+      TutorialStep(
+        emoji: '🔗',
+        titleEn: 'Link the letters',
+        titleFa: 'حرف‌ها را به هم بزن',
+        bodyEn: 'Each word must begin with the last letter of the previous one — apple ends in e, so echo works.',
+        bodyFa: 'هر کلمه باید با آخرین حرف کلمهٔ قبلی شروع شود — سیب به e تمام می‌شود، پس echo قبول است.',
+      ),
+      TutorialStep(
+        emoji: '📚',
+        titleEn: 'The house dictionary',
+        titleFa: 'فرهنگ لغات خانه',
+        bodyEn: 'Words must be real entries in the house dictionary — three to ten letters, plain alphabet.',
+        bodyFa: 'کلمه‌ها باید در فرهنگ لغات خانه واقعی باشند — سه تا ده حرف، فقط حروف الفبا.',
+      ),
+      TutorialStep(
+        emoji: '🚫',
+        titleEn: 'No repeats',
+        titleFa: 'تکرار ممنوع',
+        bodyEn: 'A word already played scores nothing. Misses still burn your turn, so think before you type.',
+        bodyFa: 'کلمهٔ تکراری امتیازی ندارد. خطا هم نوبتت را می‌سوزاند، پس قبل از نوشتن فکر کن.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Ten turns, long words win',
+        titleFa: 'ده نوبت، کلمهٔ بلندتر می‌برد',
+        bodyEn: 'Every player gets ten turns and a word banks one point per letter. Dead-end letters re-roll so the chain never stalls.',
+        bodyFa: 'هر بازیکن ده نوبت دارد و هر کلمه به ازای هر حرف یک امتیاز می‌گیرد. حرف‌های بن‌بست عوض می‌شوند تا زنجیره نایستد.',
+      ),
     ],
   };
 }

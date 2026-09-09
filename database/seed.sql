@@ -27,7 +27,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000016', 'backgammon', 'Backgammon', 'The ancient race — break contact, anchor up and bear off before your rival.', NULL, 2, 2, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000017', 'mancala', 'Mancala', 'Sow, capture and hoard — the classic seed-counting duel of Kalah.', NULL, 2, 2, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000018', 'bowling', 'Bowling', 'Line up the pocket, hurl it down the boards and chase that perfect 300.', NULL, 2, 2, 10, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000019', 'trivia', 'Trivia', 'Quiz night at the Plato lounge — seven rounds a player, ten points a truth.', NULL, 2, 4, 8, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000019', 'trivia', 'Trivia', 'Quiz night at the Plato lounge — seven rounds a player, ten points a truth.', NULL, 2, 4, 8, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000020', 'word_chain', 'Word Chain', 'Each word starts where the last one ended — ten turns to spell your way to the top.', NULL, 2, 4, 8, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -89,6 +90,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9213-000000000025', 'Neon Arcade Lanes', 'Midnight lanes under buzzing neon signage.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 121, JSON_OBJECT('game', 'bowling', 'felt', '#101A3C', 'accent', '#22D3EE')),
   ('44444444-0000-4000-9101-000000000026', 'Golden Envelope Pack', 'Wax-sealed golden envelopes for high-stakes questions.', 'game_piece', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 122, JSON_OBJECT('game', 'trivia', 'piece', 'golden_envelope')),
   ('44444444-0000-4000-9213-000000000026', 'Game Show Stage', 'Spotlights, podiums and that tense quiz-show hum.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 123, JSON_OBJECT('game', 'trivia', 'felt', '#1E1B4B', 'accent', '#FACC15')),
+  ('44444444-0000-4000-9101-000000000027', 'Quill & Ink Set', 'A raven quill that dances over the chain ribbon.', 'game_piece', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 124, JSON_OBJECT('game', 'word_chain', 'piece', 'quill_ink')),
+  ('44444444-0000-4000-9213-000000000027', 'Grand Library Desk', 'A wood-panelled library desk under brass lamps.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 125, JSON_OBJECT('game', 'word_chain', 'felt', '#2B1E10', 'accent', '#B98A3C')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

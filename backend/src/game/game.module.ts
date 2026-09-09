@@ -37,6 +37,7 @@ import { BackgammonEngine } from './engine/backgammon.engine';
 import { MancalaEngine } from './engine/mancala.engine';
 import { BowlingEngine } from './engine/bowling.engine';
 import { TriviaEngine } from './engine/trivia.engine';
+import { WordChainEngine } from './engine/word-chain.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -78,6 +79,7 @@ const ENTITIES = [
     MancalaEngine,
     BowlingEngine,
     TriviaEngine,
+    WordChainEngine,
     EngineRegistry,
     // Services
     BotService,

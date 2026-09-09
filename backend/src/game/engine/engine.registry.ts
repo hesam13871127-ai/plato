@@ -16,6 +16,7 @@ import { BackgammonEngine } from './backgammon.engine';
 import { MancalaEngine } from './mancala.engine';
 import { BowlingEngine } from './bowling.engine';
 import { TriviaEngine } from './trivia.engine';
+import { WordChainEngine } from './word-chain.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -45,6 +46,7 @@ export class EngineRegistry {
     mancala: MancalaEngine,
     bowling: BowlingEngine,
     trivia: TriviaEngine,
+    wordChain: WordChainEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -62,6 +64,7 @@ export class EngineRegistry {
     this.register(mancala);
     this.register(bowling);
     this.register(trivia);
+    this.register(wordChain);
   }
 
   register(engine: BaseGameEngine): void {

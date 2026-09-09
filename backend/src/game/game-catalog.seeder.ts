@@ -184,6 +184,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'word_chain',
+    name: 'Word Chain',
+    description: 'Each word starts where the last one ended — ten turns to spell your way to the top.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

@@ -16,6 +16,7 @@ import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { BowlingEngine, scoreBowling } from '../src/game/engine/bowling.engine';
 import { TriviaEngine, TRIVIA_BANK } from '../src/game/engine/trivia.engine';
+import { WordChainEngine, WORD_CHAIN_DICT } from '../src/game/engine/word-chain.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -45,6 +46,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'mancala', build: () => new MancalaEngine(), players: 2 },
   { name: 'bowling', build: () => new BowlingEngine(), players: 2 },
   { name: 'trivia', build: () => new TriviaEngine() },
+  { name: 'word_chain', build: () => new WordChainEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2417,6 +2419,115 @@ describe('trivia rules', () => {
   });
 });
 
+describe('word_chain rules', () => {
+  const engine = new WordChainEngine();
+
+  interface WordShape {
+    letter: string | null;
+    used: string[];
+    taken: number;
+    totalTurns: number;
+    history: Array<{ seat: number; word: string; valid: boolean; points: number }>;
+    lastWord: { seat: number; word: string; valid: boolean; points: number } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): WordShape {
+    return state.board as unknown as WordShape;
+  }
+
+  test('starts free-form with ten turns per player', () => {
+    const b = board(start());
+    expect(b.letter).toBeNull(); // first word may start with anything
+    expect(b.used).toEqual([]);
+    expect(b.taken).toBe(0);
+    expect(b.totalTurns).toBe(20);
+    expect(b.history).toEqual([]);
+  });
+
+  test('valid words score their length and hand on their last letter', () => {
+    const first = engine.applyAction(start(), { seat: 0, type: 'word', payload: { word: 'dragon' } });
+    let b = board(first);
+    expect(b.lastWord).toEqual({ seat: 0, word: 'dragon', valid: true, points: 6 });
+    expect(first.scores[0]).toBe(6);
+    expect(b.letter).toBe('n');
+    expect(first.currentSeat).toBe(1);
+
+    // Seat 1 must chain from n.
+    const second = engine.applyAction(first, { seat: 1, type: 'word', payload: { word: 'nectar' } });
+    b = board(second);
+    expect(second.scores[1]).toBe(6);
+    expect(b.letter).toBe('r');
+    expect(b.used).toEqual(['dragon', 'nectar']);
+  });
+
+  test('wrong letters, repeats and non-words score nothing but still burn the turn', () => {
+    let state = engine.applyAction(start(), { seat: 0, type: 'word', payload: { word: 'dragon' } }); // letter n
+    state = engine.applyAction(state, { seat: 1, type: 'word', payload: { word: 'apple' } }); // wrong letter
+    let b = board(state);
+    expect(b.lastWord).toMatchObject({ seat: 1, word: 'apple', valid: false, points: 0 });
+    expect(state.scores[1]).toBe(0);
+    expect(b.letter).toBe('n'); // unchanged
+
+    state = engine.applyAction(state, { seat: 0, type: 'word', payload: { word: 'night' } }); // letter t
+    state = engine.applyAction(state, { seat: 1, type: 'word', payload: { word: 'night' } }); // repeat
+    b = board(state);
+    expect(b.lastWord).toMatchObject({ valid: false, points: 0 });
+    expect(b.used.filter((w) => w === 'night')).toHaveLength(1);
+
+    state = engine.applyAction(state, { seat: 0, type: 'word', payload: { word: 'tiger' } });
+    state = engine.applyAction(state, { seat: 1, type: 'word', payload: { word: 'zzz' } }); // not a word
+    b = board(state);
+    expect(b.lastWord).toMatchObject({ word: 'zzz', valid: false, points: 0 });
+    expect(b.letter).toBe('r');
+  });
+
+  test('the chain re-rolls dead-end letters so the game always flows', () => {
+    const state = start();
+    const b = board(state);
+    b.used = WORD_CHAIN_DICT.filter((w) => w[0] !== 'x');
+    b.letter = null;
+    // Play fox → next must start with x, but every x word is already used.
+    const after = engine.applyAction(state, { seat: 0, type: 'word', payload: { word: 'fox' } });
+    expect(board(after).letter).not.toBe('x'); // re-rolled to a live letter
+    expect(engine.chainMoves(after).length).toBeGreaterThan(0);
+  });
+
+  test('twenty turns finish the game and the top score wins', () => {
+    let state = start();
+    for (let i = 0; i < 20; i++) {
+      const seat = i % 2;
+      const legal = engine.chainMoves(state, 20);
+      // Seat 0 plays the longest word; seat 1 throws a doomed zzz.
+      const word = seat === 0 ? legal[0] : 'zzz';
+      state = engine.applyAction(state, { seat, type: 'word', payload: { word } });
+    }
+    expect(state.phase).toBe('completed');
+    expect(state.scores[1]).toBe(0);
+    expect(state.scores[0]).toBeGreaterThan(0);
+    expect(state.winnerSeat).toBe(0);
+  });
+
+  test('shape validation and bots', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 0, type: 'word', payload: { word: 'hi' } }).ok).toBe(false); // too short
+    expect(engine.validate(state, { seat: 0, type: 'word', payload: { word: 'elevenletters' } }).ok).toBe(false); // too long
+    expect(engine.validate(state, { seat: 0, type: 'word', payload: { word: 'ab3c' } }).ok).toBe(false); // not letters
+    expect(engine.validate(state, { seat: 1, type: 'word', payload: { word: 'apple' } }).ok).toBe(false); // not your turn
+    expect(engine.validate(state, { seat: 0, type: 'word', payload: { word: 'Apple' } }).ok).toBe(true); // case-insensitive
+
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(move.action.type).toBe('word');
+      expect(String(move.action.payload.word)).toMatch(/^[a-z]{3,10}$/);
+    }
+  });
+
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -2436,9 +2547,10 @@ describe('engine registry', () => {
       new MancalaEngine(),
       new BowlingEngine(),
       new TriviaEngine(),
+      new WordChainEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -2447,7 +2559,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

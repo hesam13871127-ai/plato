@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module';
 import { GameSessionService } from '../src/game/game-session.service';
 import { ChessEngine } from '../src/game/engine/chess.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
+import { WordChainEngine } from '../src/game/engine/word-chain.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -475,6 +476,12 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'word_chain') {
+    const legal = new WordChainEngine().chainMoves(session.state, 20);
+    if (legal.length === 0) return null;
+    return { type: 'word', payload: { word: legal[0] } };
   }
 
   if (slug === 'trivia') {

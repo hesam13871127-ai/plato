@@ -290,6 +290,8 @@ String _gameEmoji(String slug) {
       return '🎳';
     case 'trivia':
       return '🧠';
+    case 'word_chain':
+      return '🔗';
     default:
       return '🎮';
   }
