@@ -74,6 +74,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'chess',
+    name: 'Chess',
+    description: 'The immortal duel — castle, fork and checkmate your rival on the 64 squares.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 12,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

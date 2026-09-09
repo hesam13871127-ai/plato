@@ -190,5 +190,35 @@ class GameTutorials {
         bodyFa: 'همهٔ مهره‌های حریف را بگیر یا طوری محاصره‌اش کن که حرکتی برایش نماند.',
       ),
     ],
+    'chess': [
+      TutorialStep(
+        emoji: '♞',
+        titleEn: 'Move with purpose',
+        titleFa: 'با هدف حرکت کن',
+        bodyEn: 'Every piece moves its own way — pawns forward, knights in L-shapes, bishops on diagonals, rooks on lines, the queen everywhere.',
+        bodyFa: 'هر مهره راه خودش را دارد — سرباز به جلو، اسب به شکل L، فیل مورب، رخ در خطوط مستقیم و وزیر در همهٔ جهت‌ها.',
+      ),
+      TutorialStep(
+        emoji: '👑',
+        titleEn: 'Special moves',
+        titleFa: 'حرکت‌های ویژه',
+        bodyEn: 'Pawns double-step on their first move, capture en passant, and crown on the last rank. Castle early to tuck your king safe.',
+        bodyFa: 'سرباز در اولین حرکت دو خانه می‌رود، آن‌پاسان می‌گیرد و در ردیف آخر تاج می‌گیرد. زود قلعه بزن تا شاه‌ات امن شود.',
+      ),
+      TutorialStep(
+        emoji: '⚔️',
+        titleEn: 'Check & checkmate',
+        titleFa: 'کیش و مات',
+        bodyEn: "Attack the enemy king to give check. When it can't escape, block or capture — that's checkmate and the game is yours.",
+        bodyFa: 'به شاه حریف حمله کن تا کیش بزنی. اگر نتواند فرار کند، جلوی حمله را بگیرد یا مهاجم را بزند — کیش‌ومات است و بازی مال توست.',
+      ),
+      TutorialStep(
+        emoji: '🤝',
+        titleEn: 'Draws happen',
+        titleFa: 'مساوی هم هست',
+        bodyEn: 'Stalemate, three repetitions, fifty quiet moves or bare kings all end in a draw — sometimes a handshake is the win.',
+        bodyFa: 'پات، تکرار سه‌بارهٔ موقعیت، پنجاه حرکت بی‌صدا یا شاه‌های تنها همه مساوی تمام می‌شوند — گاهی دست‌دادن بهترین برد است.',
+      ),
+    ],
   };
 }

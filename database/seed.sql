@@ -16,7 +16,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000005', 'ludo', 'Ludo', 'Roll the dice and race all four tokens home. Capture rivals and chase that six!', NULL, 2, 4, 20, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000006', 'ocho', 'Ocho', 'Match colours and numbers, slam skips and wilds. The classic crazy-eights party game.', NULL, 2, 4, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000007', 'connect4', '4 in a Row', 'Drop discs and connect four before your rival. Fast, sharp and tactical.', NULL, 2, 2, 5, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000008', 'checkers', 'Checkers', 'Classic draughts — jump, king and capture! Tactical, fast and perfect for duels.', NULL, 2, 2, 10, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000008', 'checkers', 'Checkers', 'Classic draughts — jump, king and capture! Tactical, fast and perfect for duels.', NULL, 2, 2, 10, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000009', 'chess', 'Chess', 'The immortal duel — castle, fork and checkmate your rival on the 64 squares.', NULL, 2, 2, 12, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -56,6 +57,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9205-000000000014', 'Arcade Neon Frame', 'Retro arcade frame with glowing columns.', 'game_skin', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 100, JSON_OBJECT('game', 'connect4', 'felt', '#14103C')),
   ('44444444-0000-4000-9101-000000000015', 'Onyx Crown Checkers', 'Obsidian checkers with molten-gold crown rings.', 'game_piece', 'epic', NULL, 2100, 'coins', 0, 1, 1, 1, 0, 85, JSON_OBJECT('game', 'checkers', 'piece', 'onyx')),
   ('44444444-0000-4000-9206-000000000015', 'Marble Royal Board', 'Polished marble draughts board with brass inlay.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 86, JSON_OBJECT('game', 'checkers', 'felt', '#3B2F2F', 'accent', '#F59E0B')),
+  ('44444444-0000-4000-9101-000000000016', 'Regal Gold Chessmen', 'Gilded ivory-and-obsidian chess set with a brass king.', 'game_piece', 'epic', NULL, 2200, 'coins', 0, 1, 1, 1, 0, 87, JSON_OBJECT('game', 'chess', 'piece', 'gilded')),
+  ('44444444-0000-4000-9207-000000000016', 'Grandmaster Marble', 'Cararra-marble battlefield with walnut inlay for grandmasters.', 'game_skin', 'rare', NULL, 1600, 'coins', 0, 1, 1, 1, 0, 88, JSON_OBJECT('game', 'chess', 'felt', '#2E2A25', 'accent', '#F5C542')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

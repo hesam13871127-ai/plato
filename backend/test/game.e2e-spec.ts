@@ -5,6 +5,7 @@ import type { Server } from 'http';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { GameSessionService } from '../src/game/game-session.service';
+import { ChessEngine } from '../src/game/engine/chess.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
 
 /**
@@ -349,6 +350,18 @@ function humanActionFor(
       if (grid && grid[grid.length - 1][c] === -1) return { type: 'drop', payload: { col: c } };
     }
     return null;
+  }
+
+  if (slug === 'chess') {
+    // Chess legality is non-trivial to mirror here, so the driver asks the
+    // engine itself for the legal move list (the same rules clients use).
+    const legal = new ChessEngine().legalMoves(session.state);
+    if (legal.length === 0) return null;
+    const m = legal[0];
+    return {
+      type: 'move',
+      payload: { from: m.from, to: m.to, ...(m.promotion ? { promotion: 'q' } : {}) },
+    };
   }
 
   if (slug === 'checkers') {

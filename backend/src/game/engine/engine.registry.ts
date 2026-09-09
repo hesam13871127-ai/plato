@@ -5,6 +5,7 @@ import { LudoEngine } from './ludo.engine';
 import { OchoEngine } from './ocho.engine';
 import { Connect4Engine } from './connect4.engine';
 import { CheckersEngine } from './checkers.engine';
+import { ChessEngine } from './chess.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -23,12 +24,14 @@ export class EngineRegistry {
     ocho: OchoEngine,
     connect4: Connect4Engine,
     checkers: CheckersEngine,
+    chess: ChessEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
     this.register(ocho);
     this.register(connect4);
     this.register(checkers);
+    this.register(chess);
   }
 
   register(engine: BaseGameEngine): void {

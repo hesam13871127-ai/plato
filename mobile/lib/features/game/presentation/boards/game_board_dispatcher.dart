@@ -6,6 +6,7 @@ import 'ludo_board.dart';
 import 'ocho_board.dart';
 import 'connect4_board.dart';
 import 'checkers_board.dart';
+import 'chess_board.dart';
 
 typedef BoardAction = Future<void> Function(String type, Map<String, dynamic> payload);
 
@@ -34,6 +35,8 @@ class GameBoardDispatcher extends StatelessWidget {
         return DominoesBoard(session: session, mySeat: mySeat, onAction: onAction);
       case 'checkers':
         return CheckersBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'chess':
+        return ChessBoard(session: session, mySeat: mySeat, onAction: onAction);
       default:
         return _UnknownBoard(slug: session.gameSlug);
     }

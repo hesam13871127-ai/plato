@@ -268,6 +268,8 @@ String _gameEmoji(String slug) {
       return '🔴';
     case 'checkers':
       return '⚪';
+    case 'chess':
+      return '♞';
     default:
       return '🎮';
   }

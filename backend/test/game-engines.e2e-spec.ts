@@ -5,6 +5,7 @@ import { LudoEngine } from '../src/game/engine/ludo.engine';
 import { OchoEngine } from '../src/game/engine/ocho.engine';
 import { Connect4Engine } from '../src/game/engine/connect4.engine';
 import { CheckersEngine } from '../src/game/engine/checkers.engine';
+import { ChessEngine } from '../src/game/engine/chess.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -23,6 +24,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'ocho', build: () => new OchoEngine() },
   { name: 'connect4', build: () => new Connect4Engine(), players: 2 },
   { name: 'checkers', build: () => new CheckersEngine(), players: 2 },
+  { name: 'chess', build: () => new ChessEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -290,8 +292,13 @@ describe('ludo rules', () => {
     const rollState = { ...stuck, currentSeat: 0 } as GameState;
     (rollState.board as unknown as LudoShape).subPhase = 'roll';
     (rollState.board as unknown as LudoShape).dice = null;
+    // Force a 4 (deterministic roll): 57+4 > 58 and no yard tokens, so the
+    // seat has no legal move and the engine must auto-pass. (A natural 1
+    // would reach 58 and be playable — hence the mock.)
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
     const after = engine.applyAction(rollState, { seat: 0, type: 'roll', payload: {} });
-    // Whatever the dice, nothing can move: 57+anything>58 and no yard tokens.
+    randomSpy.mockRestore();
+    // Nothing can move with a 4: 57+4 > 58 and no yard tokens.
     expect(after.currentSeat).toBe(1);
     expect((after.board as unknown as LudoShape).subPhase).toBe('roll');
   });
@@ -681,6 +688,303 @@ describe('checkers rules', () => {
   });
 });
 
+describe('chess rules', () => {
+  const engine = new ChessEngine();
+
+  interface PieceShape {
+    t: string;
+    s: number;
+  }
+
+  interface ChessShape {
+    grid: Array<Array<PieceShape | null>>;
+    castling: { k: boolean[]; q: boolean[] };
+    ep: [number, number] | null;
+    halfmove: number;
+    positions: Record<string, number>;
+    lastMove: {
+      seat: number;
+      from: [number, number];
+      to: [number, number];
+      piece: string;
+      captured: string | null;
+      promotion: boolean;
+      castle: string | null;
+      check: boolean;
+      mate: boolean;
+    } | null;
+    status: string;
+    moveCount: number;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): ChessShape {
+    return state.board as unknown as ChessShape;
+  }
+
+  /** A near-empty board with the given pieces and clean bookkeeping. */
+  function craft(
+    pieces: Array<[number, number, string, number]>,
+    currentSeat: number,
+    halfmove = 0,
+  ): GameState {
+    const state = start();
+    const b = board(state);
+    b.grid = Array.from({ length: 8 }, () => Array<PieceShape | null>(8).fill(null));
+    for (const [r, c, t, s] of pieces) b.grid[r][c] = { t, s };
+    b.castling = { k: [false, false], q: [false, false] };
+    b.ep = null;
+    b.halfmove = halfmove;
+    b.positions = {};
+    state.currentSeat = currentSeat;
+    return state;
+  }
+
+  test('sets up the orthodox opening position with twenty legal moves', () => {
+    const state = start();
+    const b = board(state);
+    const order = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
+    expect(b.grid[0].map((p) => p?.t)).toEqual(order);
+    expect(b.grid[7].map((p) => p?.t)).toEqual(order);
+    expect(b.grid[1].every((p) => p?.t === 'p' && p.s === 1)).toBe(true);
+    expect(b.grid[6].every((p) => p?.t === 'p' && p.s === 0)).toBe(true);
+    expect(b.grid[0][4]).toEqual({ t: 'k', s: 1 });
+    expect(b.grid[7][4]).toEqual({ t: 'k', s: 0 });
+    expect(Object.values(b.positions)).toEqual([1]);
+    expect(engine.legalMoves(state)).toHaveLength(20); // 16 pawn pushes + 4 knights
+  });
+
+  test('double push sets the en-passant square and en passant captures the passer', () => {
+    const state = craft(
+      [
+        [7, 4, 'k', 0],
+        [6, 4, 'p', 0],
+        [4, 3, 'p', 1],
+        [0, 7, 'k', 1],
+      ],
+      0,
+    );
+    const pushed = engine.applyAction(state, {
+      seat: 0,
+      type: 'move',
+      payload: { from: [6, 4], to: [4, 4] },
+    });
+    expect(board(pushed).ep).toEqual([5, 4]);
+    expect(pushed.currentSeat).toBe(1);
+
+    const struck = engine.applyAction(pushed, {
+      seat: 1,
+      type: 'move',
+      payload: { from: [4, 3], to: [5, 4] },
+    });
+    const b = board(struck);
+    expect(b.grid[4][4]).toBeNull(); // the passed pawn is gone
+    expect(b.grid[5][4]).toEqual({ t: 'p', s: 1 });
+    expect(b.ep).toBeNull();
+    expect(struck.currentSeat).toBe(0);
+  });
+
+  test('pawns promote on the last rank (explicit, under- and default crowning)', () => {
+    const explicit = craft(
+      [
+        [7, 3, 'k', 0],
+        [1, 0, 'p', 0],
+        [3, 7, 'k', 1],
+      ],
+      0,
+    );
+    const crowned = engine.applyAction(explicit, {
+      seat: 0,
+      type: 'move',
+      payload: { from: [1, 0], to: [0, 0], promotion: 'q' },
+    });
+    expect(board(crowned).grid[0][0]).toEqual({ t: 'q', s: 0 });
+    expect(board(crowned).lastMove?.promotion).toBe(true);
+
+    const knighted = craft(
+      [
+        [7, 3, 'k', 0],
+        [1, 2, 'p', 0],
+        [3, 7, 'k', 1],
+      ],
+      0,
+    );
+    const ninja = engine.applyAction(knighted, {
+      seat: 1 - 1,
+      type: 'move',
+      payload: { from: [1, 2], to: [0, 2], promotion: 'n' },
+    });
+    expect(board(ninja).grid[0][2]).toEqual({ t: 'n', s: 0 });
+
+    const defaulted = craft(
+      [
+        [7, 3, 'k', 0],
+        [1, 4, 'p', 0],
+        [3, 7, 'k', 1],
+      ],
+      0,
+    );
+    const queen = engine.applyAction(defaulted, {
+      seat: 0,
+      type: 'move',
+      payload: { from: [1, 4], to: [0, 4] },
+    });
+    expect(board(queen).grid[0][4]).toEqual({ t: 'q', s: 0 }); // promotion defaults to queen
+  });
+
+  test('castling moves king and rook together and is refused through check', () => {
+    const state = craft(
+      [
+        [7, 4, 'k', 0],
+        [7, 0, 'r', 0],
+        [7, 7, 'r', 0],
+        [0, 4, 'k', 1],
+        [0, 0, 'r', 1],
+      ],
+      0,
+    );
+    const b = board(state);
+    b.castling = { k: [true, false], q: [true, false] };
+
+    const castled = engine.applyAction(state, {
+      seat: 0,
+      type: 'move',
+      payload: { from: [7, 4], to: [7, 6] },
+    });
+    const cb = board(castled);
+    expect(cb.grid[7][6]).toEqual({ t: 'k', s: 0 });
+    expect(cb.grid[7][5]).toEqual({ t: 'r', s: 0 });
+    expect(cb.grid[7][4]).toBeNull();
+    expect(cb.grid[7][7]).toBeNull();
+    expect(cb.lastMove?.castle).toBe('k');
+    expect(cb.castling.k[0]).toBe(false);
+
+    // A rook covering the transit square forbids kingside castling — but the
+    // unattacked queenside path stays open.
+    const blocked = craft(
+      [
+        [7, 4, 'k', 0],
+        [7, 0, 'r', 0],
+        [7, 7, 'r', 0],
+        [0, 4, 'k', 1],
+        [0, 5, 'r', 1],
+      ],
+      0,
+    );
+    board(blocked).castling = { k: [true, false], q: [true, false] };
+    expect(
+      engine.validate(blocked, { seat: 0, type: 'move', payload: { from: [7, 4], to: [7, 6] } }).ok,
+    ).toBe(false);
+    expect(
+      engine.validate(blocked, { seat: 0, type: 'move', payload: { from: [7, 4], to: [7, 2] } }).ok,
+    ).toBe(true);
+  });
+
+  test('fool’s mate checkmates white in four plies', () => {
+    let state = start();
+    const play = (seat: number, from: [number, number], to: [number, number]) => {
+      state = engine.applyAction(state, { seat, type: 'move', payload: { from, to } });
+    };
+    play(0, [6, 5], [5, 5]); // f3
+    play(1, [1, 4], [3, 4]); // e5
+    play(0, [6, 6], [4, 6]); // g4
+    play(1, [0, 3], [4, 7]); // Qh4#
+    expect(state.phase).toBe('completed');
+    expect(state.winnerSeat).toBe(1);
+    expect(board(state).status).toBe('checkmate');
+    expect(board(state).lastMove?.mate).toBe(true);
+  });
+
+  test('a lone king with no safe square is stalemate, not mate', () => {
+    const state = craft(
+      [
+        [4, 4, 'k', 0],
+        [5, 1, 'q', 0],
+        [0, 0, 'k', 1],
+      ],
+      0,
+    );
+    const moved = engine.applyAction(state, {
+      seat: 0,
+      type: 'move',
+      payload: { from: [5, 1], to: [2, 1] }, // Qb6
+    });
+    expect(moved.phase).toBe('completed');
+    expect(moved.winnerSeat).toBeNull();
+    expect(board(moved).status).toBe('stalemate');
+    expect(moved.scores).toEqual([0, 0]);
+  });
+
+  test('one hundred quiet plies draw by the fifty-move rule', () => {
+    const state = craft(
+      [
+        [7, 4, 'k', 0],
+        [7, 0, 'r', 0],
+        [0, 4, 'k', 1],
+      ],
+      0,
+      99,
+    );
+    const moved = engine.applyAction(state, {
+      seat: 0,
+      type: 'move',
+      payload: { from: [7, 0], to: [7, 1] },
+    });
+    expect(moved.phase).toBe('completed');
+    expect(moved.winnerSeat).toBeNull();
+    expect(board(moved).status).toBe('fifty');
+  });
+
+  test('repeating a position three times draws', () => {
+    let state = start();
+    const cycle: Array<[number, [number, number], [number, number]]> = [
+      [0, [7, 6], [5, 5]], // Nf3
+      [1, [0, 6], [2, 5]], // Nf6
+      [0, [5, 5], [7, 6]], // Ng1
+      [1, [2, 5], [0, 6]], // Ng8
+    ];
+    for (let i = 0; i < 2; i++) {
+      for (const [seat, from, to] of cycle) {
+        state = engine.applyAction(state, { seat, type: 'move', payload: { from, to } });
+      }
+    }
+    expect(state.phase).toBe('completed');
+    expect(state.winnerSeat).toBeNull();
+    expect(board(state).status).toBe('repetition');
+  });
+
+  test('a lone minor piece against a king draws on insufficient material', () => {
+    const state = craft(
+      [
+        [7, 4, 'k', 0],
+        [7, 5, 'n', 0],
+        [0, 4, 'k', 1],
+      ],
+      0,
+    );
+    const moved = engine.applyAction(state, {
+      seat: 0,
+      type: 'move',
+      payload: { from: [7, 5], to: [5, 4] },
+    });
+    expect(moved.phase).toBe('completed');
+    expect(moved.winnerSeat).toBeNull();
+    expect(board(moved).status).toBe('material');
+  });
+
+  test('validation never mutates the state it inspects', () => {
+    const state = start();
+    const snapshot = JSON.stringify(state);
+    engine.validate(state, { seat: 0, type: 'move', payload: { from: [7, 6], to: [5, 5] } });
+    engine.validate(state, { seat: 0, type: 'move', payload: { from: [7, 0], to: [0, 0] } });
+    engine.validate(state, { seat: 1, type: 'move', payload: { from: [0, 6], to: [2, 5] } });
+    expect(JSON.stringify(state)).toBe(snapshot);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -689,9 +993,10 @@ describe('engine registry', () => {
       new OchoEngine(),
       new Connect4Engine(),
       new CheckersEngine(),
+      new ChessEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -700,7 +1005,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });
