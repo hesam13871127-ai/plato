@@ -548,3 +548,48 @@ class _GameChatPanelState extends ConsumerState<GameChatPanel> {
     );
   }
 }
+
+/// Horizontal quick-switcher for the felt skin, shared by every board that
+/// sits on a tintable [TableSurface].
+class BoardSkinRow extends StatelessWidget {
+  const BoardSkinRow({super.key, required this.selected, required this.onPick});
+
+  final String selected;
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 26,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: BoardSkin.all.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 6),
+        itemBuilder: (context, i) {
+          final skin = BoardSkin.all[i];
+          final isSel = skin.id == selected;
+          return GestureDetector(
+            onTap: () => onPick(skin.id),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: isSel ? skin.accent.withValues(alpha: 0.9) : AppColors.glassFill,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: isSel ? Colors.white70 : AppColors.glassStroke),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                skin.name,
+                style: TextStyle(
+                  color: isSel ? Colors.white : AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

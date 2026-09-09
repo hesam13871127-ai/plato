@@ -32,6 +32,7 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
   /// wave by wave; unknown slugs get a prettified name as fallback.
   static const _titles = <String, String>{
     'dominoes': 'Dominoes',
+    'ludo': 'Ludo',
   };
 
   static String _titleFor(String slug) {

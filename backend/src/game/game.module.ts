@@ -22,6 +22,7 @@ import { MatchmakingService } from './matchmaking.service';
 import { ResultsService } from './results.service';
 import { RoomService } from './room.service';
 import { DominoesEngine } from './engine/dominoes.engine';
+import { LudoEngine } from './engine/ludo.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -48,6 +49,7 @@ const ENTITIES = [
   providers: [
     // Engines — registered per wave as games are rebuilt (see EngineRegistry).
     DominoesEngine,
+    LudoEngine,
     EngineRegistry,
     // Services
     BotService,

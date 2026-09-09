@@ -260,6 +260,8 @@ String _gameEmoji(String slug) {
   switch (slug) {
     case 'dominoes':
       return '🁢';
+    case 'ludo':
+      return '🔴';
     default:
       return '🎮';
   }

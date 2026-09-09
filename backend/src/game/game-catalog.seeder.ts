@@ -34,6 +34,17 @@ const CATALOG: GameSeed[] = [
     rankedEnabled: true,
     status: 'active',
   },
+  {
+    slug: 'ludo',
+    name: 'Ludo',
+    description: 'Roll the dice and race all four tokens home. Capture rivals and chase that six!',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 20,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
+  },
 ];
 
 /** Ensures the game catalogue matches the registered engines. */

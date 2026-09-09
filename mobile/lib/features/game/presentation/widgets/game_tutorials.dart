@@ -77,5 +77,35 @@ class GameTutorials {
         bodyFa: 'هرکه زودتر دستش خالی شود برنده است و همهٔ نقطه‌های دست حریفان را امتیاز می‌گیرد؛ اگر میز قفل شود، سبک‌ترین دست برنده است.',
       ),
     ],
+    'ludo': [
+      TutorialStep(
+        emoji: '🎲',
+        titleEn: 'Roll a six',
+        titleFa: 'شش بیار',
+        bodyEn: 'A 6 frees a token from your yard — and grants another roll. Beware: a third six in a row burns the turn!',
+        bodyFa: 'با آوردن ۶ یک مهره از خانه بیرون می‌آید و یک پرتاب دیگر هم می‌گیری؛ اما سه شش پشت‌سرهم نوبتت را می‌سوزاند!',
+      ),
+      TutorialStep(
+        emoji: '🗺️',
+        titleEn: 'Race home',
+        titleFa: 'مسابقه تا خانه',
+        bodyEn: 'Travel 51 cells around the ring, then climb your 6-cell column. The exact roll lands a token home.',
+        bodyFa: '۵۱ خانه دور مسیر برو و بعد ستون ۶ خانه‌ای خودت را بالا برو؛ فقط پرتاب دقیق مهره را به خانه می‌رساند.',
+      ),
+      TutorialStep(
+        emoji: '💥',
+        titleEn: 'Capture rivals',
+        titleFa: 'زدن مهره حریف',
+        bodyEn: 'Land on an opponent to send them back to their yard — start cells and star cells are safe for everyone.',
+        bodyFa: 'روی مهرهٔ حریف فرود بیا تا به حیاطش برگردد؛ خانه‌های شروع و ستاره‌دار امن هستند و کسی آنجا زده نمی‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'All four home wins',
+        titleFa: 'هر چهار مهره به خانه',
+        bodyEn: 'The first seat with all four tokens home takes the crown. Chase those sixes!',
+        bodyFa: 'اولین بازیکنی که هر چهار مهره‌اش را به خانه برساند برنده است. دنبال شش‌ها بگرد!',
+      ),
+    ],
   };
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BaseGameEngine } from './base-game.engine';
 import { DominoesEngine } from './dominoes.engine';
+import { LudoEngine } from './ludo.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -13,8 +14,9 @@ import { DominoesEngine } from './dominoes.engine';
 export class EngineRegistry {
   private readonly engines = new Map<string, BaseGameEngine>();
 
-  constructor(dominoes: DominoesEngine) {
+  constructor(dominoes: DominoesEngine, ludo: LudoEngine) {
     this.register(dominoes);
+    this.register(ludo);
   }
 
   register(engine: BaseGameEngine): void {

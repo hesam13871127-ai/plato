@@ -161,7 +161,7 @@ class _DominoesBoardState extends State<DominoesBoard> {
           icon: Icons.view_module_rounded,
         ),
         const SizedBox(height: 8),
-        _SkinRow(
+        BoardSkinRow(
           selected: _skin,
           onPick: (id) {
             GameFeedback.tap();
@@ -477,52 +477,6 @@ class _Pips extends StatelessWidget {
 }
 
 // ── Chrome ──────────────────────────────────────────────────────────────────
-
-/// Felt skin quick-switcher above the table.
-class _SkinRow extends StatelessWidget {
-  const _SkinRow({required this.selected, required this.onPick});
-
-  final String selected;
-  final ValueChanged<String> onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 26,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: BoardSkin.all.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
-        itemBuilder: (context, i) {
-          final skin = BoardSkin.all[i];
-          final isSel = skin.id == selected;
-          return GestureDetector(
-            onTap: () => onPick(skin.id),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: isSel ? skin.accent.withValues(alpha: 0.9) : AppColors.glassFill,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isSel ? Colors.white70 : AppColors.glassStroke,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                skin.name,
-                style: TextStyle(
-                  color: isSel ? Colors.white : AppColors.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
 
 /// Boneyard count + one chip per seat showing their remaining tiles.
 class _StatusRow extends StatelessWidget {
