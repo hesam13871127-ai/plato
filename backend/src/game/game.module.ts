@@ -30,6 +30,7 @@ import { ChessEngine } from './engine/chess.engine';
 import { PoolEngine } from './engine/pool.engine';
 import { CarromEngine } from './engine/carrom.engine';
 import { DotsAndBoxesEngine } from './engine/dots-and-boxes.engine';
+import { SnakesLaddersEngine } from './engine/snakes-ladders.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -64,6 +65,7 @@ const ENTITIES = [
     PoolEngine,
     CarromEngine,
     DotsAndBoxesEngine,
+    SnakesLaddersEngine,
     EngineRegistry,
     // Services
     BotService,

@@ -9,6 +9,7 @@ import { ChessEngine } from '../src/game/engine/chess.engine';
 import { PoolEngine } from '../src/game/engine/pool.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { DotsAndBoxesEngine } from '../src/game/engine/dots-and-boxes.engine';
+import { SnakesLaddersEngine } from '../src/game/engine/snakes-ladders.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -31,6 +32,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'pool', build: () => new PoolEngine(), players: 2 },
   { name: 'carrom', build: () => new CarromEngine(), players: 2 },
   { name: 'dots_and_boxes', build: () => new DotsAndBoxesEngine(), players: 2 },
+  { name: 'snakes_ladders', build: () => new SnakesLaddersEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -1538,6 +1540,96 @@ describe('dots & boxes rules', () => {
   });
 });
 
+describe('snakes & ladders rules', () => {
+  const engine = new SnakesLaddersEngine();
+
+  interface SlShape {
+    positions: number[];
+    dice: number | null;
+    sixStreak: number;
+    lastMove: {
+      seat: number;
+      roll: number;
+      from: number;
+      to: number;
+      bounced: boolean;
+      snake: [number, number] | null;
+      ladder: [number, number] | null;
+      won: boolean;
+    } | null;
+  }
+
+  function start(players = 2): GameState {
+    return engine.createInitialState(makeConfig(engine, players));
+  }
+
+  function board(state: GameState): SlShape {
+    return state.board as unknown as SlShape;
+  }
+
+  /** Deterministic roll helper — Math.random is mocked to force `dice`. */
+  function roll(state: GameState, seat: number, dice: number): GameState {
+    const spy = jest.spyOn(Math, 'random').mockReturnValue((dice - 0.5) / 6);
+    const next = engine.applyAction(state, { seat, type: 'roll', payload: {} });
+    spy.mockRestore();
+    return next;
+  }
+
+  test('starts everyone off-board with an empty die', () => {
+    const state = start(4);
+    expect(board(state).positions).toEqual([0, 0, 0, 0]);
+    expect(board(state).dice).toBeNull();
+    expect(state.currentSeat).toBe(0);
+    expect(engine.maxPlayers).toBe(4);
+  });
+
+  test('overshooting 100 bounces back instead of finishing', () => {
+    const state = start();
+    board(state).positions[0] = 98;
+    const moved = roll(state, 0, 5); // 98 + 5 = 103 → 200 - 103 = 97
+    expect(board(moved).positions[0]).toBe(97);
+    expect(board(moved).lastMove?.bounced).toBe(true);
+    expect(moved.currentSeat).toBe(1); // not a 6 — turn passes
+  });
+
+  test('ladders lift and snakes bite', () => {
+    const ladder = start();
+    board(ladder).positions[0] = 1;
+    const lifted = roll(ladder, 0, 3); // 1 + 3 = 4 → ladder to 14
+    expect(board(lifted).positions[0]).toBe(14);
+    expect(board(lifted).lastMove?.ladder).toEqual([4, 14]);
+
+    const snake = start();
+    board(snake).positions[0] = 46;
+    const bitten = roll(snake, 0, 1); // 46 + 1 = 47 → snake to 26
+    expect(board(bitten).positions[0]).toBe(26);
+    expect(board(bitten).lastMove?.snake).toEqual([47, 26]);
+  });
+
+  test('landing exactly on 100 wins the race', () => {
+    const state = start();
+    board(state).positions[0] = 97;
+    const moved = roll(state, 0, 3); // 97 + 3 = 100
+    expect(moved.phase).toBe('completed');
+    expect(moved.winnerSeat).toBe(0);
+    expect(board(moved).lastMove?.won).toBe(true);
+    expect(moved.scores[0]).toBe(100);
+  });
+
+  test('a 6 rolls again — but three in a row pass the turn', () => {
+    let state = start();
+    state = roll(state, 0, 6);
+    expect(state.currentSeat).toBe(0); // extra roll
+    expect(board(state).sixStreak).toBe(1);
+    state = roll(state, 0, 6);
+    expect(state.currentSeat).toBe(0); // second extra roll
+    expect(board(state).sixStreak).toBe(2);
+    state = roll(state, 0, 6);
+    expect(state.currentSeat).toBe(1); // third 6 in a row — turn passes
+    expect(board(state).sixStreak).toBe(0);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -1550,9 +1642,10 @@ describe('engine registry', () => {
       new PoolEngine(),
       new CarromEngine(),
       new DotsAndBoxesEngine(),
+      new SnakesLaddersEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -1561,7 +1654,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

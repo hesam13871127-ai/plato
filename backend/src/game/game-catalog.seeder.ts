@@ -114,6 +114,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'snakes_ladders',
+    name: 'Snakes & Ladders',
+    description: 'Climb the ladders, dodge the fangs — pure dice drama for the whole table.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 7,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

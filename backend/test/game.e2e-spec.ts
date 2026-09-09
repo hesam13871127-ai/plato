@@ -353,6 +353,10 @@ function humanActionFor(
     return null;
   }
 
+  if (slug === 'snakes_ladders') {
+    return { type: 'roll', payload: {} };
+  }
+
   if (slug === 'dots_and_boxes') {
     const size = (board.size as number) ?? 5;
     const h = (board.h as number[][]) ?? [];

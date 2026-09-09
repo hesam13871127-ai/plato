@@ -310,5 +310,35 @@ class GameTutorials {
         bodyFa: 'وقتی جدول پر شد، هرکس مربع‌های بیشتری از ۲۵ مربع دارد برنده است.',
       ),
     ],
+    'snakes_ladders': [
+      TutorialStep(
+        emoji: '🎲',
+        titleEn: 'Roll the die',
+        titleFa: 'تاس بریز',
+        bodyEn: 'Tap roll and race your token along the winding 1–100 track. A 6 earns you another roll!',
+        bodyFa: 'بزن و مهره‌ات را در مسیر پیچ‌درپیچ ۱ تا ۱۰۰ بدوان. اگر ۶ بیاوری دوباره می‌ریزی!',
+      ),
+      TutorialStep(
+        emoji: '🪜',
+        titleEn: 'Climb the ladders',
+        titleFa: 'از پله‌ها بالا برو',
+        bodyEn: 'Land at a ladder base and shoot straight up — some ladders rocket you halfway home.',
+        bodyFa: 'روی پایهٔ پله فرود بیا و مستقیم بالا شوت شو — بعضی پله‌ها نصف مسیر را جلو می‌اندازند.',
+      ),
+      TutorialStep(
+        emoji: '🐍',
+        titleEn: 'Dodge the snakes',
+        titleFa: 'از مارها فرار کن',
+        bodyEn: 'Land on a head and its fangs drag you all the way back down. Watch cell 98!',
+        bodyFa: 'روی سر مار فرود بیایی نیشش تا پایین عقب می‌اندازدت. مواظب خانهٔ ۹۸ باش!',
+      ),
+      TutorialStep(
+        emoji: '🏁',
+        titleEn: 'Land exactly on 100',
+        titleFa: 'دقیقاً روی ۱۰۰ فرود بیا',
+        bodyEn: 'You must hit 100 exactly — overshoot and you bounce back off the finish line.',
+        bodyFa: 'باید دقیقاً به ۱۰۰ برسی — اگر بیشتر بیایی از خط پایان به عقب برمی‌گردی.',
+      ),
+    ],
   };
 }
