@@ -134,6 +134,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'dice_party',
+    name: 'Dice Party',
+    description: 'Roll, hold and bank the perfect Yatzy — fifteen ways to score big.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

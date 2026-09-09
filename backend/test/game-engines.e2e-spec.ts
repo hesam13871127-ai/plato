@@ -11,6 +11,7 @@ import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { DotsAndBoxesEngine } from '../src/game/engine/dots-and-boxes.engine';
 import { SnakesLaddersEngine } from '../src/game/engine/snakes-ladders.engine';
 import { BingoEngine } from '../src/game/engine/bingo.engine';
+import { DicePartyEngine } from '../src/game/engine/dice-party.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -35,6 +36,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'dots_and_boxes', build: () => new DotsAndBoxesEngine(), players: 2 },
   { name: 'snakes_ladders', build: () => new SnakesLaddersEngine() },
   { name: 'bingo', build: () => new BingoEngine() },
+  { name: 'dice_party', build: () => new DicePartyEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -1754,6 +1756,124 @@ describe('bingo rules', () => {
   });
 });
 
+describe('dice party rules', () => {
+  const engine = new DicePartyEngine();
+
+  interface DiceShape {
+    dice: number[];
+    held: boolean[];
+    rollsUsed: number;
+    scores: number[][];
+    lastRoll: { seat: number; dice: number[] } | null;
+    lastScore: { seat: number; category: string; points: number } | null;
+  }
+
+  function start(players = 2): GameState {
+    return engine.createInitialState(makeConfig(engine, players));
+  }
+
+  function board(state: GameState): DiceShape {
+    return state.board as unknown as DiceShape;
+  }
+
+  /** Rolls with Math.random mocked to (v-0.5)/6 → every rolled die shows v. */
+  function roll(state: GameState, seat: number, v: number): GameState {
+    const spy = jest.spyOn(Math, 'random').mockReturnValue((v - 0.5) / 6);
+    const next = engine.applyAction(state, { seat, type: 'roll', payload: {} });
+    spy.mockRestore();
+    return next;
+  }
+
+  function setDice(state: GameState, dice: number[]): void {
+    board(state).dice = [...dice];
+  }
+
+  test('starts with five dice, no rolls used and an empty scorecard', () => {
+    const state = start(4);
+    const b = board(state);
+    expect(b.dice).toHaveLength(5);
+    expect(b.held).toEqual([false, false, false, false, false]);
+    expect(b.rollsUsed).toBe(0);
+    expect(b.scores).toHaveLength(4);
+    expect(b.scores[0]).toHaveLength(15);
+    expect(b.scores.every((row) => row.every((v) => v === -1))).toBe(true);
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('held dice survive re-rolls and the turn allows three rolls max', () => {
+    let state = start();
+    state = roll(state, 0, 4); // all dice 4
+    expect(board(state).dice).toEqual([4, 4, 4, 4, 4]);
+    expect(board(state).rollsUsed).toBe(1);
+
+    state = engine.applyAction(state, { seat: 0, type: 'hold', payload: { dice: [0] } });
+    expect(board(state).held).toEqual([true, false, false, false, false]);
+
+    state = roll(state, 0, 2); // dice 1..4 stay held → [4,2,2,2,2]
+    expect(board(state).dice).toEqual([4, 2, 2, 2, 2]);
+
+    state = roll(state, 0, 6);
+    expect(board(state).rollsUsed).toBe(3);
+    expect(
+      engine.validate(state, { seat: 0, type: 'roll', payload: {} }).ok,
+    ).toBe(false); // three rolls used
+    expect(state.currentSeat).toBe(0); // still my turn — must bank a category
+  });
+
+  test('categories score by Yatzy rules and each is used once', () => {
+    const state = start();
+    setDice(state, [6, 6, 6, 2, 2]);
+    state.currentSeat = 0;
+    expect(engine.scoreCategory([6, 6, 6, 2, 2], 'sixes')).toBe(18);
+    expect(engine.scoreCategory([6, 6, 6, 2, 2], 'pair')).toBe(12);
+    expect(engine.scoreCategory([6, 6, 6, 2, 2], 'two_pairs')).toBe(16);
+    expect(engine.scoreCategory([6, 6, 6, 2, 2], 'three_kind')).toBe(18);
+    expect(engine.scoreCategory([6, 6, 6, 2, 2], 'full_house')).toBe(22);
+    expect(engine.scoreCategory([6, 6, 6, 2, 2], 'chance')).toBe(22);
+    expect(engine.scoreCategory([1, 2, 3, 4, 5], 'small_straight')).toBe(15);
+    expect(engine.scoreCategory([2, 3, 4, 5, 6], 'large_straight')).toBe(20);
+    expect(engine.scoreCategory([2, 3, 4, 5, 6], 'small_straight')).toBe(0);
+    expect(engine.scoreCategory([5, 5, 5, 5, 5], 'yatzy')).toBe(50);
+    expect(engine.scoreCategory([5, 5, 5, 5, 2], 'yatzy')).toBe(0);
+
+    const scored = engine.applyAction(state, { seat: 0, type: 'score', payload: { category: 'full_house' } });
+    expect(board(scored).scores[0][CATS_INDEX('full_house')]).toBe(22);
+    expect(board(scored).lastScore?.points).toBe(22);
+    expect(scored.currentSeat).toBe(1); // turn passes after banking
+    expect(
+      engine.validate(
+        { ...scored, currentSeat: 0 } as GameState,
+        { seat: 0, type: 'score', payload: { category: 'full_house' } },
+      ).ok,
+    ).toBe(false); // category already used
+  });
+
+  function CATS_INDEX(cat: string): number {
+    return [
+      'ones', 'twos', 'threes', 'fours', 'fives', 'sixes',
+      'pair', 'two_pairs', 'three_kind', 'four_kind',
+      'small_straight', 'large_straight', 'full_house', 'chance', 'yatzy',
+    ].indexOf(cat);
+  }
+
+  test('the upper-section bonus pays +50 at 63+ and settles the winner', () => {
+    const state = start(2);
+    const b = board(state);
+    // Seat 1 already banked everything; seat 0 has only 'yatzy' left.
+    b.scores[0] = [4, 8, 12, 16, 20, 24, 8, 12, 15, 20, 15, 20, 22, 21, -1]; // upper = 84
+    b.scores[1] = [3, 6, 9, 12, 15, 18, 6, 8, 12, 16, 0, 0, 0, 20, 21]; // upper = 63
+    setDice(state, [1, 1, 1, 1, 1]);
+    state.currentSeat = 0;
+
+    const done = engine.applyAction(state, { seat: 0, type: 'score', payload: { category: 'yatzy' } });
+    expect(done.phase).toBe('completed');
+    expect(done.winnerSeat).toBe(0);
+    // seat 0: 84 + 133 + 50 (yatzy) + 50 (bonus) = 317; seat 1: 63 + 83 + 50 = 196.
+    expect(done.scores[0]).toBe(317);
+    expect(done.scores[1]).toBe(196);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -1768,9 +1888,10 @@ describe('engine registry', () => {
       new DotsAndBoxesEngine(),
       new SnakesLaddersEngine(),
       new BingoEngine(),
+      new DicePartyEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -1779,7 +1900,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

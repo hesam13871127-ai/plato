@@ -370,5 +370,35 @@ class GameTutorials {
         bodyFa: 'هر خط پنج‌خانه‌ای را کامل کن تا میز برایت بینگو می‌گوید — اولین خط کل بازی را می‌برد.',
       ),
     ],
+    'dice_party': [
+      TutorialStep(
+        emoji: '🎲',
+        titleEn: 'Three rolls a turn',
+        titleFa: 'سه پرتاب در هر نوبت',
+        bodyEn: 'Roll all five dice, then re-roll up to twice more. Tap dice between rolls to hold them.',
+        bodyFa: 'هر پنج تاس را بریز، بعد تا دو بار دیگر دوباره بینداز. بین پرتاب‌ها روی تاس‌ها بزن تا نگهشان داری.',
+      ),
+      TutorialStep(
+        emoji: '🔒',
+        titleEn: 'Hold your luck',
+        titleFa: 'شانست را قفل کن',
+        bodyEn: 'Held dice glow and stay put. Chase triples, straights or that legendary five-of-a-kind.',
+        bodyFa: 'تاس‌های نگه‌داشته‌شده می‌درخشند و سر جایشان می‌مانند. دنبال سه‌تایی، رام یا همان افسانه‌ای پنج‌تایی برو.',
+      ),
+      TutorialStep(
+        emoji: '📊',
+        titleEn: 'Bank a category',
+        titleFa: 'دسته‌ای را بانک کن',
+        bodyEn: 'Every turn ends by banking your roll into one of fifteen categories — each can be used exactly once.',
+        bodyFa: 'هر نوبت با بانک‌کردن پرتابت در یکی از پانزده دسته تمام می‌شود — هر دسته فقط یک بار قابل استفاده است.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Bonus & Yatzy',
+        titleFa: 'بونوس و یاتزی',
+        bodyEn: 'Score 63+ across ones to sixes for a +50 bonus, and five matching dice bank a mighty Yatzy: 50 points!',
+        bodyFa: 'در جمع ۱ها تا ۶ها به ۶۳+ برسی ۵۰ امتیاز بونوس می‌گیری و پنج تاس یکسان یعنی یاتزی: ۵۰ امتیاز!',
+      ),
+    ],
   };
 }

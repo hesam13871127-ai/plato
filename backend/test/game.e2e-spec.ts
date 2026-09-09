@@ -357,6 +357,80 @@ function humanActionFor(
     return { type: slug === 'bingo' ? 'draw' : 'roll', payload: {} };
   }
 
+  if (slug === 'dice_party') {
+    const dice = (board.dice as number[]) ?? [];
+    const held = (board.held as boolean[]) ?? [];
+    const rollsUsed = (board.rollsUsed as number) ?? 0;
+    const scores = (board.scores as number[][]) ?? [];
+    if (rollsUsed < 3) return { type: 'roll', payload: {} };
+    if (rollsUsed === 3 && held.some((h) => h)) {
+      // Release holds (not strictly needed, but exercises the hold action).
+      return { type: 'hold', payload: { dice: [] } };
+    }
+    const cats = [
+      'ones', 'twos', 'threes', 'fours', 'fives', 'sixes',
+      'pair', 'two_pairs', 'three_kind', 'four_kind',
+      'small_straight', 'large_straight', 'full_house', 'chance', 'yatzy',
+    ];
+    const counts = Array(7).fill(0);
+    let sum = 0;
+    for (const d of dice) {
+      counts[d] += 1;
+      sum += d;
+    }
+    const value = (cat: string): number => {
+      const upper = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].indexOf(cat);
+      if (upper !== -1) return counts[upper + 1] * (upper + 1);
+      switch (cat) {
+        case 'pair':
+          for (let v = 6; v >= 1; v--) if (counts[v] >= 2) return v * 2;
+          return 0;
+        case 'two_pairs': {
+          const pairs: number[] = [];
+          for (let v = 6; v >= 1 && pairs.length < 2; v--) if (counts[v] >= 2) pairs.push(v);
+          return pairs.length === 2 ? pairs[0] * 2 + pairs[1] * 2 : 0;
+        }
+        case 'three_kind':
+          for (let v = 6; v >= 1; v--) if (counts[v] >= 3) return v * 3;
+          return 0;
+        case 'four_kind':
+          for (let v = 6; v >= 1; v--) if (counts[v] >= 4) return v * 4;
+          return 0;
+        case 'small_straight':
+          return [1, 2, 3, 4, 5].every((v) => counts[v] > 0) ? 15 : 0;
+        case 'large_straight':
+          return [2, 3, 4, 5, 6].every((v) => counts[v] > 0) ? 20 : 0;
+        case 'full_house': {
+          let tri = 0;
+          let pair = 0;
+          for (let v = 1; v <= 6; v++) {
+            if (counts[v] === 3) tri = v;
+            if (counts[v] === 2) pair = v;
+          }
+          return tri > 0 && pair > 0 ? tri * 3 + pair * 2 : 0;
+        }
+        case 'chance':
+          return sum;
+        case 'yatzy':
+          return counts.some((c, v) => v > 0 && c === 5) ? 50 : 0;
+        default:
+          return 0;
+      }
+    };
+    let bestCat: string | null = null;
+    let bestVal = -1;
+    cats.forEach((cat, i) => {
+      if (scores[seat]?.[i] !== -1) return;
+      const v = value(cat);
+      if (v > bestVal) {
+        bestVal = v;
+        bestCat = cat;
+      }
+    });
+    if (bestCat) return { type: 'score', payload: { category: bestCat } };
+    return null;
+  }
+
   if (slug === 'dots_and_boxes') {
     const size = (board.size as number) ?? 5;
     const h = (board.h as number[][]) ?? [];
