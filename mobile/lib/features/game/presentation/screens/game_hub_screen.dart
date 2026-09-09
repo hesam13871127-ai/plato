@@ -292,6 +292,8 @@ String _gameEmoji(String slug) {
       return '🧠';
     case 'word_chain':
       return '🔗';
+    case 'emoji_charades':
+      return '🎭';
     default:
       return '🎮';
   }

@@ -18,6 +18,7 @@ import 'mancala_board.dart';
 import 'bowling_board.dart';
 import 'trivia_board.dart';
 import 'word_chain_board.dart';
+import 'emoji_charades_board.dart';
 
 typedef BoardAction = Future<void> Function(String type, Map<String, dynamic> payload);
 
@@ -70,6 +71,8 @@ class GameBoardDispatcher extends StatelessWidget {
         return TriviaBoard(session: session, mySeat: mySeat, onAction: onAction);
       case 'word_chain':
         return WordChainBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'emoji_charades':
+        return EmojiCharadesBoard(session: session, mySeat: mySeat, onAction: onAction);
       default:
         return _UnknownBoard(slug: session.gameSlug);
     }

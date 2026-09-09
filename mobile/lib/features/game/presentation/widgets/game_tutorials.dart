@@ -549,6 +549,36 @@ class GameTutorials {
         bodyEn: 'Every player gets ten turns and a word banks one point per letter. Dead-end letters re-roll so the chain never stalls.',
         bodyFa: 'هر بازیکن ده نوبت دارد و هر کلمه به ازای هر حرف یک امتیاز می‌گیرد. حرف‌های بن‌بست عوض می‌شوند تا زنجیره نایستد.',
       ),
+    ]
+    'emoji_charades': [
+      TutorialStep(
+        emoji: '🎭',
+        titleEn: 'Read the emoji',
+        titleFa: 'ایموجی را بخوان',
+        bodyEn: 'Each round deals an emoji riddle — a movie, a saying, a dish or a place painted in little pictures.',
+        bodyFa: 'هر دور یک ریدل ایموجی می‌گیرد — فیلم، ضرب‌المثل، غذا یا مکانی که با ایموجی‌ها نقاشی شده.',
+      ),
+      TutorialStep(
+        emoji: '💬',
+        titleEn: 'Guess in turns',
+        titleFa: 'نوبتی حدس بزن',
+        bodyEn: 'Players guess one at a time from four options. Nail it for ten points and the round ends on the spot.',
+        bodyFa: 'بازیکن‌ها یکی‌یکی از میان چهار گزینه حدس می‌زنند. درست بزنی ده امتیاز و راند همان‌جا تمام می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '❌',
+        titleEn: 'Misses vanish',
+        titleFa: 'خطاها محو می‌شوند',
+        bodyEn: 'A wrong pick gets knocked out for the whole table — you narrow it down for whoever guesses next.',
+        bodyFa: 'حدس اشتباه برای کل میز حذف می‌شود — دامنه را برای حدس‌زنندهٔ بعدی تنگ‌تر می‌کنی.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Eight riddles decide it',
+        titleFa: 'هشت ریدل تعیین‌کننده است',
+        bodyEn: 'Three misses kill a round and reveal the answer. After eight riddles the sharpest reader takes the crown.',
+        bodyFa: 'سه خطا راند را می‌کشد و جواب را لو می‌دهد. بعد از هشت ریدل، تیزبین‌ترین خواننده برنده است.',
+      ),
     ],
   };
 }

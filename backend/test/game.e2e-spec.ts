@@ -8,6 +8,7 @@ import { GameSessionService } from '../src/game/game-session.service';
 import { ChessEngine } from '../src/game/engine/chess.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import { WordChainEngine } from '../src/game/engine/word-chain.engine';
+import { EmojiCharadesEngine } from '../src/game/engine/emoji-charades.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -476,6 +477,13 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'emoji_charades') {
+    const eliminated = ((board.eliminated as number[] | undefined) ?? []);
+    const live = [0, 1, 2, 3].filter((c) => !eliminated.includes(c));
+    if (live.length === 0) return null;
+    return { type: 'guess', payload: { choice: live[Math.floor(Math.random() * live.length)] } };
   }
 
   if (slug === 'word_chain') {

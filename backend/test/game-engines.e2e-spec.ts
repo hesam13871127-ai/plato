@@ -17,6 +17,7 @@ import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { BowlingEngine, scoreBowling } from '../src/game/engine/bowling.engine';
 import { TriviaEngine, TRIVIA_BANK } from '../src/game/engine/trivia.engine';
 import { WordChainEngine, WORD_CHAIN_DICT } from '../src/game/engine/word-chain.engine';
+import { EmojiCharadesEngine, EMOJI_RIDDLES } from '../src/game/engine/emoji-charades.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -47,6 +48,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'bowling', build: () => new BowlingEngine(), players: 2 },
   { name: 'trivia', build: () => new TriviaEngine() },
   { name: 'word_chain', build: () => new WordChainEngine() },
+  { name: 'emoji_charades', build: () => new EmojiCharadesEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2528,6 +2530,128 @@ describe('word_chain rules', () => {
 
 });
 
+describe('emoji_charades rules', () => {
+  const engine = new EmojiCharadesEngine();
+
+  interface CharadesShape {
+    order: number[];
+    round: number;
+    eliminated: number[];
+    active: { category: string; emojis: string; options: string[] } | null;
+    history: Array<{ seat: number; round: number; choice: number; correct: boolean }>;
+    lastResult: { seat: number; choice: number; correctChoice: number; correct: boolean; roundEnded: boolean } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): CharadesShape {
+    return state.board as unknown as CharadesShape;
+  }
+
+  function key(state: GameState): number {
+    const b = board(state);
+    return EMOJI_RIDDLES[b.order[b.round]].correct;
+  }
+
+  function wrongChoice(state: GameState): number {
+    const k = key(state);
+    const dead = board(state).eliminated;
+    const wrong = [0, 1, 2, 3].filter((c) => c !== k && !dead.includes(c));
+    return wrong[0];
+  }
+
+  test('deals eight riddles with the first one live', () => {
+    const b = board(start());
+    expect(b.order).toHaveLength(8);
+    expect(new Set(b.order).size).toBe(8);
+    expect(b.round).toBe(0);
+    expect(b.eliminated).toEqual([]);
+    expect(b.active).not.toBeNull();
+    expect(b.active!.options).toHaveLength(4);
+    expect(b.active!.emojis.length).toBeGreaterThan(1);
+    expect(JSON.stringify(b)).not.toContain('"correct"');
+  });
+
+  test('a wrong guess knocks the option out for the whole table', () => {
+    const state = start();
+    const wrong = wrongChoice(state);
+    const next = engine.applyAction(state, { seat: 0, type: 'guess', payload: { choice: wrong } });
+    const b = board(next);
+    expect(b.eliminated).toEqual([wrong]);
+    expect(next.currentSeat).toBe(1); // same riddle, next guesser
+    expect(b.round).toBe(0);
+    expect(b.active).not.toBeNull();
+    // The dead option may not be picked again.
+    expect(
+      engine.validate(next, { seat: 1, type: 'guess', payload: { choice: wrong } }).ok,
+    ).toBe(false);
+  });
+
+  test('the right guess banks ten and deals the next riddle', () => {
+    const state = start();
+    const right = key(state);
+    const next = engine.applyAction(state, { seat: 0, type: 'guess', payload: { choice: right } });
+    const b = board(next);
+    expect(next.scores[0]).toBe(10);
+    expect(b.round).toBe(1);
+    expect(b.eliminated).toEqual([]);
+    expect(b.active!.emojis).toBe(EMOJI_RIDDLES[b.order[1]].emojis);
+    expect(b.lastResult).toMatchObject({ seat: 0, correct: true, roundEnded: true });
+    expect(next.currentSeat).toBe(1); // guessing order rotates past the winner
+  });
+
+  test('three wrong guesses gift the answer to whoever is next', () => {
+    const state = start();
+    // Seat 0 misses, seat 1 misses, seat 0 misses again → only the key is left.
+    let s = engine.applyAction(state, { seat: 0, type: 'guess', payload: { choice: wrongChoice(state) } });
+    s = engine.applyAction(s, { seat: 1, type: 'guess', payload: { choice: wrongChoice(s) } });
+    s = engine.applyAction(s, { seat: 0, type: 'guess', payload: { choice: wrongChoice(s) } });
+    const b = board(s);
+    expect(b.history).toHaveLength(3); // three misses recorded
+    expect(b.round).toBe(1); // round died — answer revealed, next riddle
+    expect(b.eliminated).toEqual([]); // reset for the fresh riddle
+    expect(s.scores[0]).toBe(0);
+    expect(s.scores[1]).toBe(0);
+    expect(b.lastResult).toMatchObject({ correct: false, roundEnded: true });
+  });
+
+  test('eight rounds finish the game and the sharpest mind wins', () => {
+    let state = start();
+    let guard = 0;
+    while (state.phase === 'in_progress' && guard++ < 64) {
+      const seat = state.currentSeat;
+      const k = key(state);
+      const dead = board(state).eliminated;
+      const live = [0, 1, 2, 3].filter((c) => !dead.includes(c));
+      // Seat 0 always guesses right when it can see the key; seat 1 always wrong.
+      const choice = seat === 0 ? (dead.includes(k) ? live[0] : k) : wrongChoice(state);
+      state = engine.applyAction(state, { seat, type: 'guess', payload: { choice } });
+    }
+    expect(state.phase).toBe('completed');
+    expect(board(state).round).toBe(7);
+    expect(state.scores[0]).toBeGreaterThanOrEqual(10);
+    expect(state.winnerSeat).toBe(0);
+  });
+
+  test('shape validation and bots', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 1, type: 'guess', payload: { choice: 0 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'guess', payload: { choice: 7 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'answer', payload: { choice: 0 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'guess', payload: { choice: 2 } }).ok).toBe(true);
+
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(move.action.type).toBe('guess');
+      const choice = Number(move.action.payload.choice);
+      expect(choice).toBeGreaterThanOrEqual(0);
+      expect(choice).toBeLessThanOrEqual(3);
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -2548,9 +2672,10 @@ describe('engine registry', () => {
       new BowlingEngine(),
       new TriviaEngine(),
       new WordChainEngine(),
+      new EmojiCharadesEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -2559,7 +2684,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

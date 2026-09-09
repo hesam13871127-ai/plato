@@ -17,6 +17,7 @@ import { MancalaEngine } from './mancala.engine';
 import { BowlingEngine } from './bowling.engine';
 import { TriviaEngine } from './trivia.engine';
 import { WordChainEngine } from './word-chain.engine';
+import { EmojiCharadesEngine } from './emoji-charades.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -47,6 +48,7 @@ export class EngineRegistry {
     bowling: BowlingEngine,
     trivia: TriviaEngine,
     wordChain: WordChainEngine,
+    charades: EmojiCharadesEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -65,6 +67,7 @@ export class EngineRegistry {
     this.register(bowling);
     this.register(trivia);
     this.register(wordChain);
+    this.register(charades);
   }
 
   register(engine: BaseGameEngine): void {

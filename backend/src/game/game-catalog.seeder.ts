@@ -194,6 +194,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'emoji_charades',
+    name: 'Emoji Charades',
+    description: 'Read the emoji riddle, out-guess the table — wrong picks vanish for everyone.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 
