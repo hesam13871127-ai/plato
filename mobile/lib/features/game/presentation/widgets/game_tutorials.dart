@@ -399,6 +399,36 @@ class GameTutorials {
         bodyEn: 'Score 63+ across ones to sixes for a +50 bonus, and five matching dice bank a mighty Yatzy: 50 points!',
         bodyFa: 'در جمع ۱ها تا ۶ها به ۶۳+ برسی ۵۰ امتیاز بونوس می‌گیری و پنج تاس یکسان یعنی یاتزی: ۵۰ امتیاز!',
       ),
+    ]
+    'backgammon': [
+      TutorialStep(
+        emoji: '🎲',
+        titleEn: 'Race the dice',
+        titleFa: 'مسابقه با تاس',
+        bodyEn: 'White runs clockwise, black runs back. Roll two dice and move checkers exactly by those pips.',
+        bodyFa: 'سفید در جهت عقربه‌ها می‌رود و سیاه برعکس. دو تاس بریز و مهره‌ها را دقیقاً به اندازهٔ آن خانه‌ها جابه‌جا کن.',
+      ),
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'Block and hit',
+        titleFa: 'مسدود کن و بزن',
+        bodyEn: 'Land on a lone enemy to send it to the bar. Two or more checkers on a point make it a wall.',
+        bodyFa: 'روی مهرهٔ تنهأ حریف فرود بیا تا به بار پرتاب شود. دو مهره یا بیشتر روی یک خانه، دیوار می‌سازند.',
+      ),
+      TutorialStep(
+        emoji: '🚪',
+        titleEn: 'Enter from the bar',
+        titleFa: 'ورود از بار',
+        bodyEn: 'Checkers on the bar must re-enter in the enemy home board before anything else may move.',
+        bodyFa: 'مهره‌های روی بار باید اول در خانهٔ حریف وارد زمین شوند، بعد بقیهٔ مهره‌ها حق حرکت دارند.',
+      ),
+      TutorialStep(
+        emoji: '🏁',
+        titleEn: 'Bear off to win',
+        titleFa: 'تخلیه کن و ببر',
+        bodyEn: 'Gather all fifteen checkers in your home board, then bear them off. First to clear everything wins — gammons score double!',
+        bodyFa: 'هر پانزده مهره را در خانهٔ خودت جمع کن و بعد تخلیه‌شان کن. اولین تخلیه‌کننده برنده است — گامون دو برابر امتیاز دارد!',
+      ),
     ],
   };
 }

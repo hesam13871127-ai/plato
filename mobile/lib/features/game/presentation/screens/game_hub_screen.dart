@@ -282,6 +282,8 @@ String _gameEmoji(String slug) {
       return '🎱';
     case 'dice_party':
       return '🎲';
+    case 'backgammon':
+      return '♟️';
     default:
       return '🎮';
   }

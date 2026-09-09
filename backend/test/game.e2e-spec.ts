@@ -6,6 +6,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { GameSessionService } from '../src/game/game-session.service';
 import { ChessEngine } from '../src/game/engine/chess.engine';
+import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
 
@@ -473,6 +474,17 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'backgammon') {
+    // Backgammon legality (bar, blocking, bear-off, max-dice) is mirrored by
+    // the engine's public legal-move list — the same one clients use.
+    const subPhase = board.subPhase as string | undefined;
+    if (subPhase === 'roll') return { type: 'roll', payload: {} };
+    const legal = new BackgammonEngine().legalMoves(session.state);
+    if (legal.length === 0) return null;
+    const m = legal[0];
+    return { type: 'move', payload: { from: m.from, die: m.die } };
   }
 
   if (slug === 'pool') {

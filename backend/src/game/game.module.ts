@@ -33,6 +33,7 @@ import { DotsAndBoxesEngine } from './engine/dots-and-boxes.engine';
 import { SnakesLaddersEngine } from './engine/snakes-ladders.engine';
 import { BingoEngine } from './engine/bingo.engine';
 import { DicePartyEngine } from './engine/dice-party.engine';
+import { BackgammonEngine } from './engine/backgammon.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -70,6 +71,7 @@ const ENTITIES = [
     SnakesLaddersEngine,
     BingoEngine,
     DicePartyEngine,
+    BackgammonEngine,
     EngineRegistry,
     // Services
     BotService,

@@ -12,6 +12,7 @@ import { DotsAndBoxesEngine } from '../src/game/engine/dots-and-boxes.engine';
 import { SnakesLaddersEngine } from '../src/game/engine/snakes-ladders.engine';
 import { BingoEngine } from '../src/game/engine/bingo.engine';
 import { DicePartyEngine } from '../src/game/engine/dice-party.engine';
+import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -37,6 +38,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'snakes_ladders', build: () => new SnakesLaddersEngine() },
   { name: 'bingo', build: () => new BingoEngine() },
   { name: 'dice_party', build: () => new DicePartyEngine() },
+  { name: 'backgammon', build: () => new BackgammonEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -1874,6 +1876,207 @@ describe('dice party rules', () => {
   });
 });
 
+describe('backgammon rules', () => {
+  const engine = new BackgammonEngine();
+
+  interface BgShape {
+    points: number[]; // index 0 = point 1; + seat0, - seat1
+    bar: [number, number];
+    off: [number, number];
+    dice: number[];
+    rolled: number[];
+    subPhase: 'roll' | 'move';
+    lastMove: { seat: number; from: number; to: number; die: number; hit: boolean } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): BgShape {
+    return state.board as unknown as BgShape;
+  }
+
+  /** Rolls with mocked dice: doubles of v, or the pair [a, b]. */
+  function roll(state: GameState, seat: number, a: number, b?: number): GameState {
+    const seq = b === undefined ? [a] : [a, b];
+    let i = 0;
+    const spy = jest
+      .spyOn(Math, 'random')
+      .mockImplementation(() => (seq[Math.min(i++, seq.length - 1)] - 0.5) / 6);
+    const next = engine.applyAction(state, { seat, type: 'roll', payload: {} });
+    spy.mockRestore();
+    return next;
+  }
+
+  function craft(points: number[], opts?: Partial<BgShape> & { currentSeat?: number }): GameState {
+    const state = start();
+    const b = board(state);
+    b.points = [...points];
+    b.bar = opts?.bar ?? [0, 0];
+    b.off = opts?.off ?? [0, 0];
+    b.dice = opts?.dice ?? [];
+    b.rolled = opts?.rolled ?? [];
+    b.subPhase = opts?.subPhase ?? 'move';
+    state.currentSeat = opts?.currentSeat ?? 0;
+    return state;
+  }
+
+  test('lays out the standard opening position', () => {
+    const b = board(start());
+    expect(b.points.filter((v) => v > 0).reduce((a, v) => a + v, 0)).toBe(15);
+    expect(b.points.filter((v) => v < 0).reduce((a, v) => a - v, 0)).toBe(15);
+    expect(b.points[23]).toBe(2); // seat 0 on 24
+    expect(b.points[5]).toBe(5); // seat 0 on 6
+    expect(b.points[0]).toBe(-2); // seat 1 on 1
+    expect(b.points[18]).toBe(-5); // seat 1 on 19
+    expect(b.bar).toEqual([0, 0]);
+    expect(b.off).toEqual([0, 0]);
+    expect(b.subPhase).toBe('roll');
+  });
+
+  test('checkers move by the die, blocked points refuse and blots are hit to the bar', () => {
+    // Seat 0: checkers on 24 and 6. Seat 1: two on 19 (blocked), one on 16 (blot).
+    const state = craft([
+      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -2, 0, 0, 0, 0, 1,
+    ], { dice: [5, 3], rolled: [5, 3] });
+
+    // 24 → 19 is blocked (two enemies).
+    expect(
+      engine.validate(state, { seat: 0, type: 'move', payload: { from: 24, die: 5 } }).ok,
+    ).toBe(false);
+    // 24 → 21 fine.
+    const moved = engine.applyAction(state, { seat: 0, type: 'move', payload: { from: 24, die: 3 } });
+    const mb = board(moved);
+    expect(mb.points[20]).toBe(1); // landed on 21
+    expect(mb.points[23]).toBe(0);
+    // Now 21 → 16 with the 5 hits the blot.
+    const hit = engine.applyAction(moved, { seat: 0, type: 'move', payload: { from: 21, die: 5 } });
+    const hb = board(hit);
+    expect(hb.points[15]).toBe(1); // seat 0 now on 16
+    expect(hb.bar[1]).toBe(1);
+    expect(hb.lastMove?.hit).toBe(true);
+    expect(hit.currentSeat).toBe(1); // dice used up — turn passes
+    expect(board(hit).subPhase).toBe('roll');
+  });
+
+  test('bar checkers must re-enter before anything else moves', () => {
+    const state = craft(
+      [
+        0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -2, -2, -2, -2,
+      ],
+      { dice: [3, 6], rolled: [3, 6], bar: [1, 0] },
+    );
+    // Moving the back checkers on 6 while a checker waits on the bar is illegal.
+    expect(
+      engine.validate(state, { seat: 0, type: 'move', payload: { from: 6, die: 3 } }).ok,
+    ).toBe(false);
+    // Seat 0 enters on 25 - die; with a 3 that is point 22 — blocked (-2). With a 6 → 19 — blocked.
+    // Rolling [3, 6] therefore forfeits the whole turn.
+    const beforeRoll = craft(
+      [
+        0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -2, -2, -2, -2,
+      ],
+      { subPhase: 'roll', bar: [1, 0] },
+    );
+    const entered = roll(beforeRoll, 0, 3, 6);
+    // Blocked everywhere → the roll is forfeited and the turn passes.
+    expect(entered.currentSeat).toBe(1);
+    expect(board(entered).subPhase).toBe('roll');
+    expect(board(entered).dice).toEqual([]);
+  });
+
+  test('entering from the bar lands on 25-die for seat 0', () => {
+    const state = craft(
+      [
+        0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2,
+      ],
+      { dice: [4, 4, 4, 4], rolled: [4, 4, 4, 4], bar: [1, 0] },
+    );
+    const entered = engine.applyAction(state, { seat: 0, type: 'move', payload: { from: 'bar', die: 4 } });
+    const eb = board(entered);
+    expect(eb.points[20]).toBe(1); // entered on 25 - 4 = 21
+    expect(eb.bar[0]).toBe(0);
+    expect(entered.currentSeat).toBe(0); // doubles — three dice left
+    expect(eb.dice).toEqual([4, 4, 4]);
+  });
+
+  test('bearing off requires the full home board; exact then overshoot', () => {
+    // All 15 home for seat 0: five on 6, six on 5, four on 1.
+    const state = craft(
+      [
+        4, 0, 0, 0, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1,
+      ],
+      { dice: [6, 5], rolled: [6, 5] },
+    );
+    // A checker still outside (seat 1 blot at 19 doesn't matter; put one of mine at 7).
+    const notHome = craft(
+      [
+        4, 0, 0, 0, 6, 4, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1,
+      ],
+      { dice: [6, 5], rolled: [6, 5] },
+    );
+    expect(
+      engine.validate(notHome, { seat: 0, type: 'move', payload: { from: 6, die: 6 } }).ok,
+    ).toBe(false); // cannot bear off with a checker on 7
+
+    // Exact bear-off from 6 with a 6.
+    const exact = engine.applyAction(state, { seat: 0, type: 'move', payload: { from: 6, die: 6 } });
+    expect(board(exact).off[0]).toBe(1);
+    expect(board(exact).points[5]).toBe(4);
+
+    // Overshoot: bearing off 5 with a 6 is legal only from the rearmost point.
+    expect(
+      engine.validate(exact, { seat: 0, type: 'move', payload: { from: 5, die: 6 } }).ok,
+    ).toBe(false); // checkers remain on 6 → 5 is not rearmost
+    const rear = craft([4, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1], { dice: [6], rolled: [6] });
+    const overshot = engine.applyAction(rear, { seat: 0, type: 'move', payload: { from: 5, die: 6 } });
+    expect(board(overshot).off[0]).toBe(1);
+  });
+
+  test('bearing off all fifteen wins; gammon doubles and backgammon triples', () => {
+    const almost = craft(
+      [
+        0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2,
+      ],
+      { dice: [6], rolled: [6], off: [14, 0] },
+    );
+    const won = engine.applyAction(almost, { seat: 0, type: 'move', payload: { from: 6, die: 6 } });
+    expect(won.phase).toBe('completed');
+    expect(won.winnerSeat).toBe(0);
+    expect(won.scores[0]).toBe(2); // seat 1 bore off none → gammon
+
+    // Backgammon: seat 1 also stuck on the bar.
+    const deep = craft(
+      [
+        0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2,
+      ],
+      { dice: [6], rolled: [6], off: [14, 0], bar: [0, 1] },
+    );
+    const bg = engine.applyAction(deep, { seat: 0, type: 'move', payload: { from: 6, die: 6 } });
+    expect(bg.scores[0]).toBe(3); // bar → backgammon
+  });
+
+  test('doubles play four times and dice must be used to the maximum', () => {
+    const state = craft(
+      [
+        0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, -2, 0, 0, 0, 0, 2,
+      ],
+      { dice: [2, 2, 2, 2], rolled: [2, 2, 2, 2] },
+    );
+    let moved = state;
+    // Two checkers march 24 → 22, then both continue 22 → 20.
+    const froms = [24, 24, 22, 22];
+    for (let i = 0; i < 4; i++) {
+      expect(board(moved).dice).toHaveLength(4 - i);
+      moved = engine.applyAction(moved, { seat: 0, type: 'move', payload: { from: froms[i], die: 2 } });
+    }
+    expect(board(moved).dice).toHaveLength(0);
+    expect(moved.currentSeat).toBe(1);
+    expect(board(moved).points[19]).toBe(2); // the pair settled on 20
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -1889,9 +2092,10 @@ describe('engine registry', () => {
       new SnakesLaddersEngine(),
       new BingoEngine(),
       new DicePartyEngine(),
+      new BackgammonEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -1900,7 +2104,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

@@ -144,6 +144,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'backgammon',
+    name: 'Backgammon',
+    description: 'The ancient race — break contact, anchor up and bear off before your rival.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 
