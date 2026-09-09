@@ -579,6 +579,36 @@ class GameTutorials {
         bodyEn: 'Three misses kill a round and reveal the answer. After eight riddles the sharpest reader takes the crown.',
         bodyFa: 'سه خطا راند را می‌کشد و جواب را لو می‌دهد. بعد از هشت ریدل، تیزبین‌ترین خواننده برنده است.',
       ),
+    ]
+    'memory': [
+      TutorialStep(
+        emoji: '🃏',
+        titleEn: 'Flip two',
+        titleFa: 'دو تا برگردان',
+        bodyEn: 'Sixteen face-down cards hide eight emoji pairs. Tap two to flip them over.',
+        bodyFa: 'شانزده کارت رو به پایین، هشت جفت ایموجی را پنهان کرده‌اند. دو تا را بزن تا برگردند.',
+      ),
+      TutorialStep(
+        emoji: '✅',
+        titleEn: 'Match and keep going',
+        titleFa: 'جفت کن و ادامه بده',
+        bodyEn: 'A matching pair is yours and you immediately flip again — chain them for a sweep.',
+        bodyFa: 'جفتِ درست مال توست و بلافاصله دوباره برمی‌گردانی — پشت‌سرهم بگیر و جارو کن.',
+      ),
+      TutorialStep(
+        emoji: '👁️',
+        titleEn: 'Misses are memory fuel',
+        titleFa: 'خطا سوخت حافظه است',
+        bodyEn: 'A mismatch flips back and passes the turn, but the table has seen both faces — use that.',
+        bodyFa: 'ناهمسان برمی‌گردد و نوبت می‌گذرد، ولی میز هر دو روی کارت را دیده — از آن استفاده کن.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Biggest haul wins',
+        titleFa: 'بیشترین غنیمت برنده است',
+        bodyEn: 'When the last pair is claimed, the player holding the most pairs takes the game.',
+        bodyFa: 'وقتی آخرین جفت برداشته شود، کسی که بیشترین جفت را دارد بازی را می‌برد.',
+      ),
     ],
   };
 }

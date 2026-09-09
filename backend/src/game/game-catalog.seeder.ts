@@ -204,6 +204,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'memory',
+    name: 'Memory',
+    description: 'Sixteen cards, eight pairs — flip two, remember everything, sweep the deck.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

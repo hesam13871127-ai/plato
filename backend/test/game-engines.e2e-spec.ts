@@ -18,6 +18,7 @@ import { BowlingEngine, scoreBowling } from '../src/game/engine/bowling.engine';
 import { TriviaEngine, TRIVIA_BANK } from '../src/game/engine/trivia.engine';
 import { WordChainEngine, WORD_CHAIN_DICT } from '../src/game/engine/word-chain.engine';
 import { EmojiCharadesEngine, EMOJI_RIDDLES } from '../src/game/engine/emoji-charades.engine';
+import { MemoryEngine, MEMORY_SYMBOLS } from '../src/game/engine/memory.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -49,6 +50,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'trivia', build: () => new TriviaEngine() },
   { name: 'word_chain', build: () => new WordChainEngine() },
   { name: 'emoji_charades', build: () => new EmojiCharadesEngine() },
+  { name: 'memory', build: () => new MemoryEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2652,6 +2654,136 @@ describe('emoji_charades rules', () => {
   });
 });
 
+describe('memory rules', () => {
+  const engine = new MemoryEngine();
+
+  interface MemoryShape {
+    cards: Array<{ symbol: string; matched: boolean }>;
+    revealed: number[];
+    matchCount: number;
+    lastFlip: { seat: number; a: number; b: number; matched: boolean } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): MemoryShape {
+    return state.board as unknown as MemoryShape;
+  }
+
+  /** Finds two unmatched positions sharing a symbol. */
+  function matchingPair(state: GameState): [number, number] {
+    const cards = board(state).cards;
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].matched) continue;
+      for (let j = i + 1; j < cards.length; j++) {
+        if (!cards[j].matched && cards[j].symbol === cards[i].symbol) return [i, j];
+      }
+    }
+    throw new Error('no pair left');
+  }
+
+  function mismatchPair(state: GameState): [number, number] {
+    const cards = board(state).cards;
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].matched) continue;
+      for (let j = i + 1; j < cards.length; j++) {
+        if (!cards[j].matched && cards[j].symbol !== cards[i].symbol) return [i, j];
+      }
+    }
+    throw new Error('no mismatch left');
+  }
+
+  test('deals sixteen cards as eight shuffled pairs', () => {
+    const b = board(start());
+    expect(b.cards).toHaveLength(16);
+    expect(b.cards.every((c) => !c.matched)).toBe(true);
+    expect(b.revealed).toEqual([]);
+    expect(b.matchCount).toBe(0);
+    const counts = new Map<string, number>();
+    for (const c of b.cards) counts.set(c.symbol, (counts.get(c.symbol) ?? 0) + 1);
+    expect(counts.size).toBe(8);
+    for (const n of counts.values()) expect(n).toBe(2);
+    for (const s of MEMORY_SYMBOLS) expect(counts.has(s)).toBe(true);
+  });
+
+  test('a matching pair is claimed and keeps you at the table', () => {
+    const state = start();
+    const [a, b] = matchingPair(state);
+    const next = engine.applyAction(state, { seat: 0, type: 'flip', payload: { a, b } });
+    const nb = board(next);
+    expect(nb.cards[a].matched).toBe(true);
+    expect(nb.cards[b].matched).toBe(true);
+    expect(nb.matchCount).toBe(1);
+    expect(next.scores[0]).toBe(1);
+    expect(next.currentSeat).toBe(0); // flip again
+    expect(nb.lastFlip).toMatchObject({ seat: 0, a, b, matched: true });
+  });
+
+  test('a mismatch flips back and passes the turn — but the table remembers', () => {
+    const state = start();
+    const [a, b] = mismatchPair(state);
+    const next = engine.applyAction(state, { seat: 0, type: 'flip', payload: { a, b } });
+    const nb = board(next);
+    expect(nb.cards[a].matched).toBe(false);
+    expect(nb.cards[b].matched).toBe(false);
+    expect(next.scores[0]).toBe(0);
+    expect(next.currentSeat).toBe(1);
+    expect(nb.lastFlip).toMatchObject({ matched: false });
+    expect(nb.revealed).toContain(a);
+    expect(nb.revealed).toContain(b);
+  });
+
+  test('flips must be two different, unclaimed cards', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 0, type: 'flip', payload: { a: 3, b: 3 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'flip', payload: { a: 1, b: 99 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 1, type: 'flip', payload: { a: 1, b: 2 } }).ok).toBe(false);
+    const [a, b] = matchingPair(state);
+    const matched = engine.applyAction(state, { seat: 0, type: 'flip', payload: { a, b } });
+    expect(engine.validate(matched, { seat: 0, type: 'flip', payload: { a, b } }).ok).toBe(false); // claimed
+    expect(engine.validate(state, { seat: 0, type: 'flip', payload: { a: 1, b: 2 } }).ok).toBe(true);
+  });
+
+  test('sweeping all eight pairs finishes the deck with the haul as the score', () => {
+    let state = start();
+    while (state.phase === 'in_progress') {
+      const [a, b] = matchingPair(state);
+      state = engine.applyAction(state, { seat: state.currentSeat, type: 'flip', payload: { a, b } });
+    }
+    expect(state.phase).toBe('completed');
+    expect(board(state).matchCount).toBe(8);
+    expect(state.scores).toEqual([8, 0]); // seat 0 swept without missing
+    expect(state.winnerSeat).toBe(0);
+  });
+
+  test('unrevealed card faces never leak to clients, and bots flip legally', () => {
+    const state = start();
+    const [a, b] = mismatchPair(state);
+    const after = engine.applyAction(state, { seat: 0, type: 'flip', payload: { a, b } });
+
+    // Player view hides every card the table has not seen.
+    const view = engine.playerView(after, 1);
+    const vb = (view.board as unknown as MemoryShape).cards;
+    expect(vb[a].symbol).toBe(board(after).cards[a].symbol); // seen — public
+    expect(vb[b].symbol).toBe(board(after).cards[b].symbol);
+    const hidden = vb.filter((c, i) => !board(after).revealed.includes(i) && !c.matched);
+    expect(hidden.length).toBe(14);
+    for (const c of hidden) expect(c.symbol).toBe('?');
+
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(after, 1, difficulty);
+      expect(move.action.type).toBe('flip');
+      const fa = Number(move.action.payload.a);
+      const fb = Number(move.action.payload.b);
+      expect(fa).not.toBe(fb);
+      expect(board(after).cards[fa].matched).toBe(false);
+      expect(board(after).cards[fb].matched).toBe(false);
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -2673,9 +2805,10 @@ describe('engine registry', () => {
       new TriviaEngine(),
       new WordChainEngine(),
       new EmojiCharadesEngine(),
+      new MemoryEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -2684,7 +2817,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

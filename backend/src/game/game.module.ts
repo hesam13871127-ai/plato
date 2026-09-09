@@ -39,6 +39,7 @@ import { BowlingEngine } from './engine/bowling.engine';
 import { TriviaEngine } from './engine/trivia.engine';
 import { WordChainEngine } from './engine/word-chain.engine';
 import { EmojiCharadesEngine } from './engine/emoji-charades.engine';
+import { MemoryEngine } from './engine/memory.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -82,6 +83,7 @@ const ENTITIES = [
     TriviaEngine,
     WordChainEngine,
     EmojiCharadesEngine,
+    MemoryEngine,
     EngineRegistry,
     // Services
     BotService,

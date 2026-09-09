@@ -9,6 +9,7 @@ import { ChessEngine } from '../src/game/engine/chess.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import { WordChainEngine } from '../src/game/engine/word-chain.engine';
 import { EmojiCharadesEngine } from '../src/game/engine/emoji-charades.engine';
+import { MemoryEngine } from '../src/game/engine/memory.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -477,6 +478,20 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'memory') {
+    // The driver acts with full server sight: snap up a matching pair.
+    const cards = (board.cards as Array<{ symbol: string; matched: boolean }>) ?? [];
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].matched) continue;
+      for (let j = i + 1; j < cards.length; j++) {
+        if (!cards[j].matched && cards[j].symbol === cards[i].symbol) {
+          return { type: 'flip', payload: { a: i, b: j } };
+        }
+      }
+    }
+    return null;
   }
 
   if (slug === 'emoji_charades') {
