@@ -137,5 +137,28 @@ class GameTutorials {
         bodyFa: 'یک کارت داری؟ همه اُچوی تو را می‌بینند! دستت را خالی کن تا برنده شوی و امتیاز کارت‌های باقی‌ماندهٔ حریفان را بگیری.',
       ),
     ],
+    'connect4': [
+      TutorialStep(
+        emoji: '🔴',
+        titleEn: 'Drop discs',
+        titleFa: 'انداختن مهره',
+        bodyEn: 'Take turns dropping a disc into one of the 7 columns — it falls to the lowest open slot.',
+        bodyFa: 'نوبتی یک مهره در یکی از ۷ ستون بینداز؛ مهره تا پایین‌ترین خانهٔ خالی سقوط می‌کند.',
+      ),
+      TutorialStep(
+        emoji: '🔗',
+        titleEn: 'Connect four',
+        titleFa: 'چهار در خط',
+        bodyEn: 'Line up four of your discs horizontally, vertically or diagonally to win instantly.',
+        bodyFa: 'چهار مهرهٔ همرنگت را افقی، عمودی یا مورب پشت سر هم بچین تا همان لحظه برنده شوی.',
+      ),
+      TutorialStep(
+        emoji: '🛡️',
+        titleEn: 'Block & build',
+        titleFa: 'دفاع و حمله',
+        bodyEn: 'The centre columns are power squares — block your rival’s runs while quietly building yours.',
+        bodyFa: 'ستون‌های وسط طلایی‌ترین خانه‌ها هستند؛ هم ردیف حریف را ببند، هم بی‌سروصدا ردیف خودت را بساز.',
+      ),
+    ],
   };
 }

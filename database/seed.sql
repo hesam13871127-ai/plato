@@ -14,7 +14,8 @@ INSERT INTO games (id, slug, name, description, icon_url, min_players, max_playe
 VALUES
   ('11111111-0000-4000-8000-000000000002', 'dominoes', 'Dominoes', 'Classic Draw Dominoes for 2-4 players. Empty your hand or block the table!', NULL, 2, 4, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000005', 'ludo', 'Ludo', 'Roll the dice and race all four tokens home. Capture rivals and chase that six!', NULL, 2, 4, 20, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000006', 'ocho', 'Ocho', 'Match colours and numbers, slam skips and wilds. The classic crazy-eights party game.', NULL, 2, 4, 10, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000006', 'ocho', 'Ocho', 'Match colours and numbers, slam skips and wilds. The classic crazy-eights party game.', NULL, 2, 4, 10, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000007', 'connect4', '4 in a Row', 'Drop discs and connect four before your rival. Fast, sharp and tactical.', NULL, 2, 2, 5, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -50,6 +51,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9203-000000000012', 'Neon Circuit Track', 'Glowing cyber-circuit ludo ring.', 'game_skin', 'epic', NULL, 1900, 'coins', 0, 1, 1, 1, 0, 98, JSON_OBJECT('game', 'ludo', 'felt', '#0E21A8')),
   ('44444444-0000-4000-9101-000000000013', 'Gilded Ocho Deck', 'Black-and-gold ocho cards with foil edges.', 'game_piece', 'legendary', NULL, 2900, 'coins', 0, 1, 1, 1, 0, 83, JSON_OBJECT('game', 'ocho', 'piece', 'gilded')),
   ('44444444-0000-4000-9204-000000000013', 'Velvet Card Lounge', 'Deep velvet lounge felt for card nights.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 99, JSON_OBJECT('game', 'ocho', 'felt', '#4A1D5C')),
+  ('44444444-0000-4000-9101-000000000014', 'Hologram Discs', 'Translucent neon-rimmed connect-4 discs.', 'game_piece', 'rare', NULL, 1200, 'coins', 10, 1, 1, 1, 0, 84, JSON_OBJECT('game', 'connect4', 'piece', 'hologram')),
+  ('44444444-0000-4000-9205-000000000014', 'Arcade Neon Frame', 'Retro arcade frame with glowing columns.', 'game_skin', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 100, JSON_OBJECT('game', 'connect4', 'felt', '#14103C')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

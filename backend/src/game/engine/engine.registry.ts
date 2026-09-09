@@ -3,6 +3,7 @@ import { BaseGameEngine } from './base-game.engine';
 import { DominoesEngine } from './dominoes.engine';
 import { LudoEngine } from './ludo.engine';
 import { OchoEngine } from './ocho.engine';
+import { Connect4Engine } from './connect4.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -15,10 +16,16 @@ import { OchoEngine } from './ocho.engine';
 export class EngineRegistry {
   private readonly engines = new Map<string, BaseGameEngine>();
 
-  constructor(dominoes: DominoesEngine, ludo: LudoEngine, ocho: OchoEngine) {
+  constructor(
+    dominoes: DominoesEngine,
+    ludo: LudoEngine,
+    ocho: OchoEngine,
+    connect4: Connect4Engine,
+  ) {
     this.register(dominoes);
     this.register(ludo);
     this.register(ocho);
+    this.register(connect4);
   }
 
   register(engine: BaseGameEngine): void {

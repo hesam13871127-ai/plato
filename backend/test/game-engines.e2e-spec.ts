@@ -3,6 +3,7 @@ import { BaseGameEngine } from '../src/game/engine/base-game.engine';
 import { DominoesEngine } from '../src/game/engine/dominoes.engine';
 import { LudoEngine } from '../src/game/engine/ludo.engine';
 import { OchoEngine } from '../src/game/engine/ocho.engine';
+import { Connect4Engine } from '../src/game/engine/connect4.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -19,6 +20,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'dominoes', build: () => new DominoesEngine() },
   { name: 'ludo', build: () => new LudoEngine() },
   { name: 'ocho', build: () => new OchoEngine() },
+  { name: 'connect4', build: () => new Connect4Engine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -456,11 +458,113 @@ describe('ocho rules', () => {
   });
 });
 
+describe('connect4 rules', () => {
+  const engine = new Connect4Engine();
+
+  interface C4Shape {
+    grid: number[][];
+    rows: number;
+    cols: number;
+    winLine: Array<[number, number]> | null;
+    lastMove: { seat: number; col: number; row: number } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  test('drops fall to the lowest open slot and turns alternate', () => {
+    const state = start();
+    const a = engine.applyAction(state, { seat: 0, type: 'drop', payload: { col: 3 } });
+    const b = engine.applyAction(a, { seat: 1, type: 'drop', payload: { col: 3 } });
+    const board = b.board as unknown as C4Shape;
+    expect(board.grid[0][3]).toBe(0);
+    expect(board.grid[1][3]).toBe(1);
+    expect(b.currentSeat).toBe(0);
+    expect(engine.validate(b, { seat: 0, type: 'drop', payload: { col: 9 } }).ok).toBe(false);
+  });
+
+  test('detects horizontal, vertical and diagonal wins with the exact line', () => {
+    // Horizontal: seat 0 owns row 0, cols 0..3.
+    let state = start();
+    const board = state.board as unknown as C4Shape;
+    board.grid[0] = [0, 0, 0, -1, -1, -1, -1];
+    const won = engine.applyAction(state, { seat: 0, type: 'drop', payload: { col: 3 } });
+    const wb = won.board as unknown as C4Shape;
+    expect(won.phase).toBe('completed');
+    expect(won.winnerSeat).toBe(0);
+    expect(wb.winLine).toEqual([
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+    ]);
+
+    // Vertical: seat 1 owns column 6, rows 0..2.
+    state = start();
+    const board2 = state.board as unknown as C4Shape;
+    board2.grid[0][6] = 1;
+    board2.grid[1][6] = 1;
+    board2.grid[2][6] = 1;
+    state.currentSeat = 1;
+    const wonV = engine.applyAction(state, { seat: 1, type: 'drop', payload: { col: 6 } });
+    expect((wonV.board as unknown as C4Shape).winLine).toEqual([
+      [0, 6],
+      [1, 6],
+      [2, 6],
+      [3, 6],
+    ]);
+
+    // Diagonal: seat 0 builds the rising main diagonal (0,0)…(3,3).
+    state = start();
+    const board3 = state.board as unknown as C4Shape;
+    board3.grid[0][0] = 0;
+    board3.grid[1][1] = 0;
+    board3.grid[2][2] = 0;
+    // column 3 must have 3 discs so the drop lands on row 3.
+    board3.grid[0][3] = 1;
+    board3.grid[1][3] = 1;
+    board3.grid[2][3] = 1;
+    const wonD = engine.applyAction(state, { seat: 0, type: 'drop', payload: { col: 3 } });
+    const dLine = (wonD.board as unknown as C4Shape).winLine;
+    expect(dLine).not.toBeNull();
+    expect(wonD.winnerSeat).toBe(0);
+  });
+
+  test('rejects drops into full columns and ends a full board as a draw', () => {
+    const state = start();
+    const board = state.board as unknown as C4Shape;
+    // A guaranteed line-free fill: value(r,c) = (floor(r/2) + c) % 2 has runs
+    // of at most two in every direction (rows alternate, columns pair up,
+    // both diagonals go v,v,¬v,¬v). One slot is left open for the last drop.
+    for (let r = 0; r < board.rows; r++) {
+      for (let c = 0; c < board.cols; c++) {
+        board.grid[r][c] = (Math.floor(r / 2) + c) % 2;
+      }
+    }
+    board.grid[0][3] = -1; // the final open slot
+    expect(engine.validate(state, { seat: 0, type: 'drop', payload: { col: 3 } }).ok).toBe(true);
+
+    const full = engine.applyAction(state, { seat: 0, type: 'drop', payload: { col: 3 } });
+    expect(full.phase).toBe('completed');
+    expect(full.winnerSeat).toBe(null); // draw
+    expect(full.scores).toEqual([0, 0]);
+
+    // And now every column is full — drops are rejected.
+    expect(engine.validate(full, { seat: 0, type: 'drop', payload: { col: 3 } }).ok).toBe(false);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
-    const registry = new EngineRegistry(new DominoesEngine(), new LudoEngine(), new OchoEngine());
+    const registry = new EngineRegistry(
+      new DominoesEngine(),
+      new LudoEngine(),
+      new OchoEngine(),
+      new Connect4Engine(),
+    );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -469,7 +573,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

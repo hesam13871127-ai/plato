@@ -54,6 +54,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'connect4',
+    name: '4 in a Row',
+    description: 'Drop discs and connect four before your rival. Fast, sharp and tactical.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 5,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

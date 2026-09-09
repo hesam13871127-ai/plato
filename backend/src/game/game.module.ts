@@ -24,6 +24,7 @@ import { RoomService } from './room.service';
 import { DominoesEngine } from './engine/dominoes.engine';
 import { LudoEngine } from './engine/ludo.engine';
 import { OchoEngine } from './engine/ocho.engine';
+import { Connect4Engine } from './engine/connect4.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -52,6 +53,7 @@ const ENTITIES = [
     DominoesEngine,
     LudoEngine,
     OchoEngine,
+    Connect4Engine,
     EngineRegistry,
     // Services
     BotService,
