@@ -35,6 +35,7 @@ import { BingoEngine } from './engine/bingo.engine';
 import { DicePartyEngine } from './engine/dice-party.engine';
 import { BackgammonEngine } from './engine/backgammon.engine';
 import { MancalaEngine } from './engine/mancala.engine';
+import { BowlingEngine } from './engine/bowling.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -74,6 +75,7 @@ const ENTITIES = [
     DicePartyEngine,
     BackgammonEngine,
     MancalaEngine,
+    BowlingEngine,
     EngineRegistry,
     // Services
     BotService,

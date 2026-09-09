@@ -164,6 +164,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'bowling',
+    name: 'Bowling',
+    description: 'Line up the pocket, hurl it down the boards and chase that perfect 300.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

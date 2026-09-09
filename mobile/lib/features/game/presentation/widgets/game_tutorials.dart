@@ -459,6 +459,36 @@ class GameTutorials {
         bodyEn: 'When either side runs empty, both sweep their leftovers. The bigger store takes the game!',
         bodyFa: 'وقتی یک سمت خالی شود، هر دو باقی‌ماندهٔ خود را جمع می‌کنند. انبار بزرگ‌تر برنده است!',
       ),
+    ]
+    'bowling': [
+      TutorialStep(
+        emoji: '🎳',
+        titleEn: 'Line it up',
+        titleFa: 'کج را بگیر',
+        bodyEn: 'Drag across the lane to aim your approach, then set the power slider and roll.',
+        bodyFa: 'روی لِین بکش تا نشانه‌گیری کنی، بعد قدرت را تنظیم کن و توپ را رها کن.',
+      ),
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'Find the pocket',
+        titleFa: 'جا را پیدا کن',
+        bodyEn: 'The pocket just beside the head pin scatters the rack — dead centre often leaves corners.',
+        bodyFa: 'جای کنارِ پین اول رَک را پراکنده می‌کند — مرکزِ دقیق معمولاً گوشه‌ها را جا می‌گذارد.',
+      ),
+      TutorialStep(
+        emoji: '♻️',
+        titleEn: 'Two balls a frame',
+        titleFa: 'دو توپ در هر فریم',
+        bodyEn: 'Knocked pins stay down for your second ball. Clear all ten on the first for a strike!',
+        bodyFa: 'پین‌های افتاده برای توپ دوم هم افتاده می‌مانند. اگر با توپ اول هر ده را بیندازی، استرایک است!',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Score like the pros',
+        titleFa: 'حرفه‌ای امتیاز بگیر',
+        bodyEn: 'Strikes earn the next two balls as bonus, spares the next one — twelve strikes make a perfect 300.',
+        bodyFa: 'استرایک دو توپ بعدی را بونوس می‌گیرد و اسپیر یکی را — دوازده استرایک یعنی امتیاز کامل ۳۰۰!',
+      ),
     ],
   };
 }

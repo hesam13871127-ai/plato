@@ -286,6 +286,8 @@ String _gameEmoji(String slug) {
       return '♟️';
     case 'mancala':
       return '🫘';
+    case 'bowling':
+      return '🎳';
     default:
       return '🎮';
   }

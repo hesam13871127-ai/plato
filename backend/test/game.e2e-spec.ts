@@ -477,6 +477,12 @@ function humanActionFor(
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
   }
 
+  if (slug === 'bowling') {
+    // Deterministic lane: aim near the pocket with a sensible power.
+    const angle = (session.state.version % 2 === 0 ? -1 : 1) * 0.02;
+    return { type: 'throw', payload: { angle, power: 0.75 } };
+  }
+
   if (slug === 'mancala') {
     const legal = new MancalaEngine().legalMoves(session.state);
     if (legal.length === 0) return null;

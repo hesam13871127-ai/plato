@@ -25,7 +25,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000014', 'bingo', 'Bingo', 'Balls roll, cards dab, five in a row shouts BINGO! Luck at its loudest.', NULL, 2, 4, 5, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000015', 'dice_party', 'Dice Party', 'Roll, hold and bank the perfect Yatzy — fifteen ways to score big.', NULL, 2, 4, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000016', 'backgammon', 'Backgammon', 'The ancient race — break contact, anchor up and bear off before your rival.', NULL, 2, 2, 10, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000017', 'mancala', 'Mancala', 'Sow, capture and hoard — the classic seed-counting duel of Kalah.', NULL, 2, 2, 10, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000017', 'mancala', 'Mancala', 'Sow, capture and hoard — the classic seed-counting duel of Kalah.', NULL, 2, 2, 10, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000018', 'bowling', 'Bowling', 'Line up the pocket, hurl it down the boards and chase that perfect 300.', NULL, 2, 2, 10, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -83,6 +84,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9213-000000000023', 'Sultan Palace Felt', 'Ottoman palace felt with gilded triangles.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 117, JSON_OBJECT('game', 'backgammon', 'felt', '#2A1A4A', 'accent', '#D4AF37')),
   ('44444444-0000-4000-9101-000000000024', 'Golden Bean Set', 'Polished golden beans that clink like coins.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 118, JSON_OBJECT('game', 'mancala', 'piece', 'golden_beans')),
   ('44444444-0000-4000-9213-000000000024', 'Baobab Wood Board', 'Carved baobab board with deep dark hollows.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 119, JSON_OBJECT('game', 'mancala', 'felt', '#3A2413', 'accent', '#D9A94A')),
+  ('44444444-0000-4000-9101-000000000025', 'Comet Strike Ball', 'A deep-space resin ball with a comet-ice core.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 120, JSON_OBJECT('game', 'bowling', 'piece', 'comet_ball')),
+  ('44444444-0000-4000-9213-000000000025', 'Neon Arcade Lanes', 'Midnight lanes under buzzing neon signage.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 121, JSON_OBJECT('game', 'bowling', 'felt', '#101A3C', 'accent', '#22D3EE')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

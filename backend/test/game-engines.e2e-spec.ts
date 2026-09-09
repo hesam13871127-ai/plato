@@ -14,6 +14,7 @@ import { BingoEngine } from '../src/game/engine/bingo.engine';
 import { DicePartyEngine } from '../src/game/engine/dice-party.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
+import { BowlingEngine, scoreBowling } from '../src/game/engine/bowling.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -41,6 +42,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'dice_party', build: () => new DicePartyEngine() },
   { name: 'backgammon', build: () => new BackgammonEngine(), players: 2 },
   { name: 'mancala', build: () => new MancalaEngine(), players: 2 },
+  { name: 'bowling', build: () => new BowlingEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2183,6 +2185,128 @@ describe('mancala rules', () => {
   });
 });
 
+describe('bowling rules', () => {
+  const engine = new BowlingEngine();
+
+  interface BowlShape {
+    pins: { x: number; y: number; down: boolean }[];
+    frameNumber: number;
+    rollsThisFrame: number;
+    frames: number[][];
+    tenthStart: [number, number];
+    lastShot: { seat: number; angle: number; power: number; knocked: number; gutter: boolean; frames: number[][] } | null;
+    throwCount: number;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): BowlShape {
+    return state.board as unknown as BowlShape;
+  }
+
+  function throwBall(state: GameState, seat: number, angle: number, power = 0.9): GameState {
+    return engine.applyAction(state, { seat, type: 'throw', payload: { angle, power } });
+  }
+
+  test('racks ten pins in a triangle with empty score sheets', () => {
+    const b = board(start());
+    expect(b.pins).toHaveLength(10);
+    expect(b.pins.every((p) => !p.down)).toBe(true);
+    expect(b.frameNumber).toBe(1);
+    expect(b.rollsThisFrame).toBe(0);
+    expect(b.frames).toEqual([[], []]);
+    expect(b.lastShot).toBeNull();
+  });
+
+  test('a pocket throw knocks pins and earns a second ball', () => {
+    const next = throwBall(start(), 0, 0.05); // deterministic sim: 7 down
+    const b = board(next);
+    expect(b.lastShot).not.toBeNull();
+    expect(b.lastShot!.gutter).toBe(false);
+    expect(b.lastShot!.knocked).toBeGreaterThan(3); // a solid pocket hit
+    expect(b.frames[0]).toEqual([b.lastShot!.knocked]);
+    expect(b.rollsThisFrame).toBe(1);
+    expect(next.currentSeat).toBe(0); // same bowler, second ball
+    expect(b.pins.filter((p) => !p.down).length).toBe(10 - b.lastShot!.knocked);
+  });
+
+  test('a full strike hands the frame straight over', () => {
+    const next = throwBall(start(), 0, 0, 0.6); // sweet spot: all ten
+    const b = board(next);
+    expect(b.lastShot!.knocked).toBe(10);
+    expect(b.frames[0]).toEqual([10]);
+    expect(next.currentSeat).toBe(1); // no second ball after a strike
+    expect(b.rollsThisFrame).toBe(0);
+    expect(b.pins.every((p) => !p.down)).toBe(true); // fresh rack for seat 1
+  });
+
+  test('a wide angle finds the gutter and knocks nothing', () => {
+    const next = throwBall(start(), 0, 0.45, 0.5);
+    const b = board(next);
+    expect(b.lastShot!.gutter).toBe(true);
+    expect(b.lastShot!.knocked).toBe(0);
+    expect(b.frames[0]).toEqual([0]);
+    expect(b.pins.every((p) => !p.down)).toBe(true);
+  });
+
+  test('after two balls the frame passes to the other bowler with a fresh rack', () => {
+    const first = throwBall(start(), 0, 0.05); // 7 down
+    const second = throwBall(first, 0, 0.15); // gutter ball — frame over
+    const b = board(second);
+    expect(b.rollsThisFrame).toBe(0);
+    expect(second.currentSeat).toBe(1);
+    expect(b.frameNumber).toBe(1);
+    expect(b.pins.every((p) => !p.down)).toBe(true); // fresh rack
+    expect(b.frames[0]).toHaveLength(2);
+  });
+
+  test('the second bowler finishing advances the frame number', () => {
+    let state = throwBall(start(), 0, 0.05);
+    state = throwBall(state, 0, 0.15);
+    state = throwBall(state, 1, 0.05);
+    state = throwBall(state, 1, 0.15);
+    const b = board(state);
+    expect(b.frameNumber).toBe(2);
+    expect(state.currentSeat).toBe(0);
+    expect(b.frames[0]).toHaveLength(2);
+    expect(b.frames[1]).toHaveLength(2);
+  });
+
+  test('aim and power are validated', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 0, type: 'throw', payload: { angle: 0.5, power: 0.9 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'throw', payload: { angle: 0.1, power: 1.4 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'throw', payload: { angle: 0.1, power: 0.05 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 1, type: 'throw', payload: { angle: 0.1, power: 0.9 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'throw', payload: { angle: 0.1, power: 0.9 } }).ok).toBe(true);
+  });
+
+  test('classic score sheet arithmetic', () => {
+    // Perfect game: twelve strikes.
+    expect(scoreBowling([10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10])).toEqual({
+      perFrame: [30, 60, 90, 120, 150, 180, 210, 240, 270, 300],
+      total: 300,
+    });
+    // All spares with nines: 19 per frame.
+    const spares: number[] = [];
+    for (let i = 0; i < 10; i++) spares.push(9, 1);
+    spares.push(9);
+    expect(scoreBowling(spares).total).toBe(190);
+    // Gutter game.
+    const gutters: number[] = [];
+    for (let i = 0; i < 10; i++) gutters.push(0, 0);
+    expect(scoreBowling(gutters).total).toBe(0);
+    // Strike then spare then open: 20 + 14 + 7 = 41.
+    expect(scoreBowling([10, 9, 1, 4, 3]).total).toBe(41);
+    // Pending frames report -1.
+    const pending = scoreBowling([10, 4]);
+    expect(pending.perFrame[0]).toBe(-1);
+    expect(pending.total).toBe(0);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -2200,9 +2324,10 @@ describe('engine registry', () => {
       new DicePartyEngine(),
       new BackgammonEngine(),
       new MancalaEngine(),
+      new BowlingEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -2211,7 +2336,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });
