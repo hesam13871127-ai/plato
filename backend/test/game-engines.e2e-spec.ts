@@ -21,6 +21,7 @@ import { EmojiCharadesEngine, EMOJI_RIDDLES } from '../src/game/engine/emoji-cha
 import { MemoryEngine, MEMORY_SYMBOLS } from '../src/game/engine/memory.engine';
 import { SketchEngine } from '../src/game/engine/sketch.engine';
 import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
+import { ImpostorEngine, IMPOSTOR_LOCATIONS } from '../src/game/engine/impostor.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -55,6 +56,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'memory', build: () => new MemoryEngine() },
   { name: 'sketch', build: () => new SketchEngine() },
   { name: 'werewolf', build: () => new WerewolfEngine(), players: 5 },
+  { name: 'impostor', build: () => new ImpostorEngine(), players: 4 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -2978,23 +2980,26 @@ describe('werewolf rules', () => {
     const state = start(5);
     const wolf = wolfSeat(state);
     const b = board(state);
+    // Banish a villager so the game continues into night 2.
+    const patsy = [0, 1, 2, 3, 4].find((i) => i !== wolf && i !== seerSeat(state))!;
     b.players.forEach((p) => (p.alive = true));
     b.phase = 'day_vote';
     b.votes = {};
-    b.pendingVoters = [0, 1, 2, 3, 4];
-    state.currentSeat = 0;
 
-    // Everyone piles on seat 3.
+    // Three voters pile on the patsy, then the patsy votes the wolf.
+    const others = [0, 1, 2, 3, 4].filter((i) => i !== patsy);
+    const voters = [others[0], others[1], others[2], patsy];
+    b.pendingVoters = voters;
+    state.currentSeat = voters[0];
+
     let s = state;
-    for (const voter of [0, 1, 2]) {
-      s = engine.applyAction(s, { seat: voter, type: 'vote', payload: { target: 3 } });
-    }
-    s = engine.applyAction(s, { seat: 3, type: 'vote', payload: { target: 2 } });
-    s = engine.applyAction(s, { seat: 4, type: 'vote', payload: { target: 3 } });
-    expect(board(s).players[3].alive).toBe(false); // 3 votes banish
+    s = engine.applyAction(s, { seat: voters[0], type: 'vote', payload: { target: patsy } });
+    s = engine.applyAction(s, { seat: voters[1], type: 'vote', payload: { target: patsy } });
+    s = engine.applyAction(s, { seat: voters[2], type: 'vote', payload: { target: patsy } });
+    s = engine.applyAction(s, { seat: patsy, type: 'vote', payload: { target: wolf } });
+    expect(board(s).players[patsy].alive).toBe(false); // 3 votes banish
     expect(board(s).phase).toBe('night_kill');
     expect(board(s).day).toBe(2);
-    void wolf;
   });
 
   test('roles, kills and seer notes stay sealed until the story ends', () => {
@@ -3072,6 +3077,158 @@ describe('werewolf rules', () => {
   });
 });
 
+
+describe('impostor rules', () => {
+  const engine = new ImpostorEngine();
+
+  interface ImpShape {
+    phase: 'clue' | 'vote' | 'guess';
+    category: string;
+    location: string;
+    impostorSeat: number;
+    round: number;
+    clues: Array<{ seat: number; word: string }>;
+    votes: Record<number, number>;
+    pending: number[];
+    log: string[];
+  }
+
+  function start(players = 4): GameState {
+    return engine.createInitialState(makeConfig(engine, players));
+  }
+
+  function board(state: GameState): ImpShape {
+    return state.board as unknown as ImpShape;
+  }
+
+  test('deals one impostor, a secret place and a clue order', () => {
+    const b = board(start(4));
+    expect(b.phase).toBe('clue');
+    expect(b.round).toBe(1);
+    expect(b.pending).toEqual([0, 1, 2, 3]);
+    expect(state0current(b)).toBe(0);
+    expect(IMPOSTOR_LOCATIONS.some((l) => l.location === b.location && l.category === b.category)).toBe(true);
+    expect(b.impostorSeat).toBeGreaterThanOrEqual(0);
+    expect(b.impostorSeat).toBeLessThan(4);
+    expect(b.clues).toEqual([]);
+  });
+
+  test('everyone clues in order, then the vote opens', () => {
+    let state = start(4);
+    for (let i = 0; i < 4; i++) {
+      expect(state.currentSeat).toBe(i);
+      state = engine.applyAction(state, { seat: i, type: 'clue', payload: { word: 'noisy' } });
+    }
+    const b = board(state);
+    expect(b.phase).toBe('vote');
+    expect(b.clues.map((c) => c.seat)).toEqual([0, 1, 2, 3]);
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('ejecting the impostor offers the location steal', () => {
+    const state = start(4);
+    const imp = board(state).impostorSeat;
+    const b = board(state);
+    // All three crew vote the impostor; the impostor votes back.
+    const crew = [0, 1, 2, 3].filter((i) => i !== imp);
+    b.phase = 'vote';
+    b.votes = {};
+    b.pending = [...crew, imp];
+    state.currentSeat = crew[0];
+    let s = state;
+    for (const voter of crew) {
+      s = engine.applyAction(s, { seat: voter, type: 'vote', payload: { target: imp } });
+    }
+    s = engine.applyAction(s, { seat: imp, type: 'vote', payload: { target: crew[0] } });
+    const nb = board(s);
+    expect(nb.phase).toBe('guess'); // caught — one steal attempt
+    expect(s.currentSeat).toBe(imp);
+  });
+
+  test('a correct steal wins the impostor the game; a wrong guess loses it', () => {
+    const state = start(4);
+    const imp = board(state).impostorSeat;
+    const b = board(state);
+    const crew = [0, 1, 2, 3].filter((i) => i !== imp);
+    b.phase = 'vote';
+    b.votes = {};
+    b.pending = [...crew, imp];
+    state.currentSeat = crew[0];
+    let s = state;
+    for (const voter of crew) {
+      s = engine.applyAction(s, { seat: voter, type: 'vote', payload: { target: imp } });
+    }
+    s = engine.applyAction(s, { seat: imp, type: 'vote', payload: { target: crew[0] } });
+    expect(board(s).phase).toBe('guess');
+
+    // Wrong guess → crew wins.
+    const wrong = IMPOSTOR_LOCATIONS.find((l) => l.location !== board(s).location)!.location;
+    const lost = engine.applyAction(s, { seat: imp, type: 'guess', payload: { location: wrong } });
+    expect(lost.phase).toBe('completed');
+    expect(lost.winnerSeats).toEqual(crew);
+    expect(lost.scores[imp]).toBe(0);
+
+    // Right guess → impostor steals it.
+    const b2 = board(s);
+    const stolen = engine.applyAction(s, { seat: imp, type: 'guess', payload: { location: b2.location } });
+    expect(stolen.phase).toBe('completed');
+    expect(stolen.winnerSeats).toEqual([imp]);
+    void b2;
+  });
+
+  test('ejecting a crewmate hands the impostor the win', () => {
+    const state = start(4);
+    const imp = board(state).impostorSeat;
+    const b = board(state);
+    const crew = [0, 1, 2, 3].filter((i) => i !== imp);
+    b.phase = 'vote';
+    b.votes = {};
+    b.pending = [...crew, imp];
+    state.currentSeat = crew[0];
+    let s = state;
+    s = engine.applyAction(s, { seat: crew[0], type: 'vote', payload: { target: crew[1] } });
+    s = engine.applyAction(s, { seat: crew[1], type: 'vote', payload: { target: crew[0] } });
+    s = engine.applyAction(s, { seat: crew[2], type: 'vote', payload: { target: crew[1] } });
+    s = engine.applyAction(s, { seat: imp, type: 'vote', payload: { target: crew[1] } });
+    expect(s.phase).toBe('completed');
+    expect(s.winnerSeats).toEqual([imp]);
+  });
+
+  test('the location stays sealed from the impostor, the identity from everyone', () => {
+    const state = start(4);
+    const imp = board(state).impostorSeat;
+    const crewSeat = (imp + 1) % 4;
+
+    const crewView = engine.playerView(state, crewSeat) as GameState;
+    const cb = crewView.board as unknown as ImpShape;
+    expect(cb.location).toBe(board(state).location); // crew knows the place
+    expect(cb.impostorSeat).toBe(-1); // ...but not the traitor
+
+    const impView = engine.playerView(state, imp) as GameState;
+    const ib = impView.board as unknown as ImpShape;
+    expect(ib.location).toBe('?'); // the impostor blends blind
+    expect(ib.category).toBe(board(state).category); // ...but gets the category hint
+    expect(ib.impostorSeat).toBe(-1);
+  });
+
+  test('clues and votes are shape-validated; bots speak the protocol', () => {
+    const state = start(4);
+    expect(engine.validate(state, { seat: 0, type: 'clue', payload: { word: 'two words' } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 1, type: 'clue', payload: { word: 'noisy' } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'vote', payload: { target: 0 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'clue', payload: { word: 'shiny' } }).ok).toBe(true);
+
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(['clue', 'vote', 'guess']).toContain(move.action.type);
+    }
+  });
+
+  function state0current(b: ImpShape): number {
+    return b.pending[0];
+  }
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -3096,9 +3253,10 @@ describe('engine registry', () => {
       new MemoryEngine(),
       new SketchEngine(),
       new WerewolfEngine(),
+      new ImpostorEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -3107,7 +3265,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

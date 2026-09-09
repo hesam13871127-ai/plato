@@ -234,6 +234,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'impostor',
+    name: 'Impostor',
+    description: 'One player does not know the place — blend in, sniff them out, eject them.',
+    minPlayers: 4,
+    maxPlayers: 8,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

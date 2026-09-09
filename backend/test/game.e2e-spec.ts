@@ -12,6 +12,7 @@ import { EmojiCharadesEngine } from '../src/game/engine/emoji-charades.engine';
 import { MemoryEngine } from '../src/game/engine/memory.engine';
 import { SketchEngine } from '../src/game/engine/sketch.engine';
 import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
+import { ImpostorEngine } from '../src/game/engine/impostor.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -281,6 +282,7 @@ async function playToCompletion(
  * (play/draw/pass), connect4 (drop) and checkers (move).
  */
 void (0 as unknown as WerewolfEngine); // driver type anchor
+void (0 as unknown as ImpostorEngine); // driver type anchor
 
 function humanActionFor(
   session: NonNullable<ReturnType<GameSessionService['get']>>,
@@ -482,6 +484,24 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'impostor') {
+    // Acting with full server sight: speak, vote, or steal.
+    const phase = board.phase as string | undefined;
+    const pending = (board.pending as number[]) ?? [];
+    if (!pending.includes(seat)) return null;
+    if (phase === 'clue') {
+      return { type: 'clue', payload: { word: 'noisy' } };
+    }
+    if (phase === 'vote') {
+      const players = session.state.seats.map((_, i) => i).filter((i) => i !== seat);
+      return { type: 'vote', payload: { target: players[0] } };
+    }
+    if (phase === 'guess') {
+      return { type: 'guess', payload: { location: (board.location as string) ?? 'airport' } };
+    }
+    return null;
   }
 
   if (slug === 'werewolf') {

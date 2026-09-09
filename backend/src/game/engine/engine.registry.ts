@@ -21,6 +21,7 @@ import { EmojiCharadesEngine } from './emoji-charades.engine';
 import { MemoryEngine } from './memory.engine';
 import { SketchEngine } from './sketch.engine';
 import { WerewolfEngine } from './werewolf.engine';
+import { ImpostorEngine } from './impostor.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -55,6 +56,7 @@ export class EngineRegistry {
     memory: MemoryEngine,
     sketch: SketchEngine,
     werewolf: WerewolfEngine,
+    impostor: ImpostorEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -77,6 +79,7 @@ export class EngineRegistry {
     this.register(memory);
     this.register(sketch);
     this.register(werewolf);
+    this.register(impostor);
   }
 
   register(engine: BaseGameEngine): void {

@@ -32,7 +32,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000021', 'emoji_charades', 'Emoji Charades', 'Read the emoji riddle, out-guess the table — wrong picks vanish for everyone.', NULL, 2, 4, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000022', 'memory', 'Memory', 'Sixteen cards, eight pairs — flip two, remember everything, sweep the deck.', NULL, 2, 4, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000023', 'sketch', 'Sketch', 'Grab the brush, paint the secret word and let the table race to read your mind.', NULL, 2, 4, 10, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000024', 'werewolf', 'Werewolf', 'Night falls, the village sleeps — find the wolves before the wolves find you.', NULL, 5, 8, 10, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000024', 'werewolf', 'Werewolf', 'Night falls, the village sleeps — find the wolves before the wolves find you.', NULL, 5, 8, 10, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000025', 'impostor', 'Impostor', 'One player does not know the place — blend in, sniff them out, eject them.', NULL, 4, 8, 8, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -104,6 +105,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9213-000000000030', 'Atelier Loft Studio', 'A sunlit artist loft with paint-splattered easels.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 131, JSON_OBJECT('game', 'sketch', 'felt', '#1F2430', 'accent', '#22D3EE')),
   ('44444444-0000-4000-9101-000000000031', 'Silver Fang Charm', 'A silver fang pendant that glints under the full moon.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 132, JSON_OBJECT('game', 'werewolf', 'piece', 'silver_fang')),
   ('44444444-0000-4000-9213-000000000031', 'Blood Moon Village', 'A haunted village square beneath a blood-red moon.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 133, JSON_OBJECT('game', 'werewolf', 'felt', '#2B0A0A', 'accent', '#EF4444')),
+  ('44444444-0000-4000-9101-000000000032', 'Smoke Bomb Charm', 'A pewter smoke bomb that fizzes when caught.', 'game_piece', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 134, JSON_OBJECT('game', 'impostor', 'piece', 'smoke_bomb')),
+  ('44444444-0000-4000-9213-000000000032', 'Noir Rooftop Bar', 'A rainy rooftop bar lit by flickering neon.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 135, JSON_OBJECT('game', 'impostor', 'felt', '#101827', 'accent', '#F59E0B')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

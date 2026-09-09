@@ -42,6 +42,7 @@ import { EmojiCharadesEngine } from './engine/emoji-charades.engine';
 import { MemoryEngine } from './engine/memory.engine';
 import { SketchEngine } from './engine/sketch.engine';
 import { WerewolfEngine } from './engine/werewolf.engine';
+import { ImpostorEngine } from './engine/impostor.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -88,6 +89,7 @@ const ENTITIES = [
     MemoryEngine,
     SketchEngine,
     WerewolfEngine,
+    ImpostorEngine,
     EngineRegistry,
     // Services
     BotService,

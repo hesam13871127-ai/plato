@@ -669,6 +669,36 @@ class GameTutorials {
         bodyEn: 'The village wins by banishing every wolf; the wolves win the moment they match the survivors.',
         bodyFa: 'روستا با اخراج همهٔ گرگ‌ها می‌برد؛ گرگ‌ها به محض رسیدن به تعداد بازماندگان برنده می‌شوند.',
       ),
+    ]
+    'impostor': [
+      TutorialStep(
+        emoji: '🕵️',
+        titleEn: 'One blind spy',
+        titleFa: 'یک جاسوس نابینا',
+        bodyEn: 'Everyone gets the same secret location — except the impostor, who only sees its category.',
+        bodyFa: 'همه یک مکان مخفی مشترک می‌گیرند — به‌جز جاسوس که فقط دستهٔ آن را می‌بیند.',
+      ),
+      TutorialStep(
+        emoji: '💬',
+        titleEn: 'Clues in turn',
+        titleFa: 'نوبتی سرنخ بده',
+        bodyEn: 'Speak one word about the place, in table order. Too obvious and the spy guesses it; too vague and you look guilty.',
+        bodyFa: 'به ترتیب میز، یک کلمه دربارهٔ مکان بگو. زیادی واضح باشد جاسوس حدسش می‌زند؛ زیادی مبهم باشد خودت مشکوک می‌شوی.',
+      ),
+      TutorialStep(
+        emoji: '🗳️',
+        titleEn: 'Eject a suspect',
+        titleFa: 'مظنون را بیرون بریز',
+        bodyEn: 'Everyone votes. Eject the impostor and the crew wins — but eject a crewmate and the spy takes it all.',
+        bodyFa: 'همه رأی می‌دهند. جاسوس را بیرون بریزی خدمه می‌برد — ولی یکی از خودی‌ها را بیرون بریزی جاسوس همه‌چیز را می‌برد.',
+      ),
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'The last gambit',
+        titleFa: 'آخرین ترفند',
+        bodyEn: 'Caught impostors get one guess at the location — name it right and steal the win from the gallows!',
+        bodyFa: 'جاسوسِ لو رفته یک شانس حدس مکان دارد — درست بگو و برد را از چالهٔ داروغه بقاپ!',
+      ),
     ],
   };
 }
