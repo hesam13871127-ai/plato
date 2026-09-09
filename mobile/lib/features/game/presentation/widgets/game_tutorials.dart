@@ -729,6 +729,36 @@ class GameTutorials {
         bodyEn: 'After fifteen darts the highest total wins — hunt the treble twenty and the bullseye.',
         bodyFa: 'بعد از پانزده دارت، بیشترین امتیاز برنده است — تریبلِ بیست و گاوه را شکار کن.',
       ),
+    ]
+    'minigolf': [
+      TutorialStep(
+        emoji: '⛳',
+        titleEn: 'Nine tiny holes',
+        titleFa: 'نه حفرهٔ کوچک',
+        bodyEn: 'Each hole is a compact green with walls, blocks and one flag. Fewest strokes over nine holes wins.',
+        bodyFa: 'هر حفره یک چمن کوچک با دیواره، مانع و یک پرچم است. کمترین ضربه در نه حفره برنده است.',
+      ),
+      TutorialStep(
+        emoji: '👆',
+        titleEn: 'Aim and roll',
+        titleFa: 'نشانه بگیر و بغلتان',
+        bodyEn: 'Tap ahead of the ball to set your line, choose the power, and stroke. Watch the roll replay.',
+        bodyFa: 'جلوی توپ بزن تا خط ضربه را بچینی، قدرت را انتخاب کن و بزن. مسیر غلتیدن را تماشا کن.',
+      ),
+      TutorialStep(
+        emoji: '🧱',
+        titleEn: 'Use the banks',
+        titleFa: 'از دیوارها استفاده کن',
+        bodyEn: 'Walls and blocks bounce the ball — bank around obstacles when the direct line is blocked.',
+        bodyFa: 'دیوارها و مانع‌ها توپ را برمی‌گردانند — وقتی مسیر مستقیم بسته است از کنارشان بگذر.',
+      ),
+      TutorialStep(
+        emoji: '⏳',
+        titleEn: 'Six and out',
+        titleFa: 'شش ضربه و تمام',
+        bodyEn: 'Six strokes cap a hole — the seventh is charged automatically, so play the safe line first.',
+        bodyFa: 'شش ضربه سقف هر حفره است — هفتمی خودکار حساب می‌شود، پس اول خط مطمئن را بازی کن.',
+      ),
     ],
   };
 }

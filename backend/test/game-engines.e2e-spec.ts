@@ -23,6 +23,7 @@ import { SketchEngine } from '../src/game/engine/sketch.engine';
 import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
 import { ImpostorEngine, IMPOSTOR_LOCATIONS } from '../src/game/engine/impostor.engine';
 import { DartsEngine, scoreDart } from '../src/game/engine/darts.engine';
+import { MinigolfEngine, MINIGOLF_HOLES } from '../src/game/engine/minigolf.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -59,6 +60,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'werewolf', build: () => new WerewolfEngine(), players: 5 },
   { name: 'impostor', build: () => new ImpostorEngine(), players: 4 },
   { name: 'darts', build: () => new DartsEngine() },
+  { name: 'minigolf', build: () => new MinigolfEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -3315,6 +3317,160 @@ describe('darts rules', () => {
   });
 });
 
+
+describe('minigolf rules', () => {
+  const engine = new MinigolfEngine();
+
+  interface GolfShape {
+    hole: number;
+    activeSeat: number;
+    ball: { x: number; y: number };
+    strokes: number[][];
+    holeStrokes: number;
+    lastShot: { seat: number; hole: number; angle: number; power: number; holed: boolean; frames: number[][] } | null;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): GolfShape {
+    return state.board as unknown as GolfShape;
+  }
+
+  function stroke(state: GameState, angle: number, power: number): GameState {
+    return engine.applyAction(state, { seat: state.currentSeat, type: 'stroke', payload: { angle, power } });
+  }
+
+  test('a straight opening drive rolls dead-centre into the cup', () => {
+    // Hole 1 is a straight lane: tee (12,30), cup (88,30).
+    const state = stroke(start(), 0, 0.8);
+    const b = board(state);
+    expect(b.lastShot!.frames.length).toBeGreaterThan(4);
+    for (const f of b.lastShot!.frames) {
+      expect(Math.abs(f[1] - 30)).toBeLessThan(0.5); // stays on the centre line
+    }
+    expect(b.lastShot!.holed).toBe(true); // dead-centre line
+    const last = b.lastShot!.frames[b.lastShot!.frames.length - 1];
+    expect(last[0]).toBeGreaterThan(85); // reached the cup
+    expect(b.strokes[0][0]).toBe(1); // one-stroke hole
+    expect(state.currentSeat).toBe(1); // tee passes on
+  });
+
+  test('wall bounces keep the ball inside the course', () => {
+    let state = start();
+    // Wild slashes at the cushions, both seats, until the cap.
+    let guard = 0;
+    while (state.phase === 'in_progress' && guard++ < 200) {
+      const wild = guard % 2 === 0 ? 0.9 : -2.1;
+      state = stroke(state, wild, 1);
+      const b = board(state);
+      expect(b.ball.x).toBeGreaterThanOrEqual(2);
+      expect(b.ball.x).toBeLessThanOrEqual(98);
+      expect(b.ball.y).toBeGreaterThanOrEqual(2);
+      expect(b.ball.y).toBeLessThanOrEqual(58);
+    }
+    expect(state.phase).toBe('completed');
+  });
+
+  test('a soft putt into the cup holes out and passes the putter', () => {
+    // Place near the cup on hole 1 and tap it in.
+    const state = start();
+    const b = state.board as unknown as GolfShape;
+    b.ball = { x: 80, y: 30 };
+    const holed = stroke(state, 0, 0.2);
+    expect(board(holed).lastShot!.holed).toBe(true);
+    expect(holed.currentSeat).toBe(1); // next player takes the tee
+    expect(board(holed).strokes[0][0]).toBe(1);
+    expect(holed.scores[0]).toBe(1);
+  });
+
+  test('six strokes cap the hole at seven for a hopelessly blocked ball', () => {
+    const state = start();
+    // Nail the ball into the top-left corner where the cup is unreachable.
+    const b = state.board as unknown as GolfShape;
+    b.ball = { x: 4, y: 4 };
+    let s = state;
+    for (let i = 0; i < 6; i++) {
+      s = stroke(s, Math.PI, 0.15); // weak putts into the left wall
+    }
+    expect(board(s).strokes[0][0]).toBe(7); // cap penalty
+    expect(s.currentSeat).toBe(1);
+  });
+
+  test('the full round plays hole by hole, seat by seat', () => {
+    const state = start();
+    // Bot-style quick play: run hard bots through the whole course.
+    let s = state;
+    let guard = 0;
+    let lastHole = 0;
+    const seatsSeen = new Set<number>();
+    while (s.phase === 'in_progress' && guard++ < 400) {
+      const move = engine.chooseBotMove(s, s.currentSeat, 'hard');
+      seatsSeen.add(s.currentSeat);
+      lastHole = Math.max(lastHole, board(s).hole);
+      s = engine.applyAction(s, { ...move.action, seat: s.currentSeat });
+    }
+    expect(s.phase).toBe('completed');
+    expect(lastHole).toBe(8); // reached hole 9
+    expect(seatsSeen).toEqual(new Set([0, 1]));
+    expect(board(s).strokes[0]).toHaveLength(9);
+    expect(board(s).strokes[1]).toHaveLength(9);
+    expect(s.scores[0]).toBe(board(s).strokes[0].reduce((a, b) => a + b, 0));
+    // Fewest strokes wins.
+    const min = Math.min(...s.scores);
+    if (s.scores[0] !== s.scores[1]) {
+      expect(s.winnerSeat).toBe(s.scores.indexOf(min));
+    } else {
+      expect(s.winnerSeat).toBeNull();
+    }
+  });
+
+  test('nine holes are laid out inside the course with reachable cups', () => {
+    expect(MINIGOLF_HOLES).toHaveLength(9);
+    for (const hole of MINIGOLF_HOLES) {
+      expect(hole.tee[0]).toBeGreaterThan(4);
+      expect(hole.tee[1]).toBeGreaterThan(4);
+      expect(hole.cup[0]).toBeLessThan(96);
+      expect(hole.cup[1]).toBeLessThan(56);
+      // The cup must not sit inside a block.
+      for (const w of hole.walls) {
+        const inside =
+          hole.cup[0] > w.x - 2 && hole.cup[0] < w.x + w.w + 2 && hole.cup[1] > w.y - 2 && hole.cup[1] < w.y + w.h + 2;
+        expect(inside).toBe(false);
+      }
+    }
+  });
+
+  test('strokes are validated by shape and seat', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 0, type: 'stroke', payload: { angle: 0, power: 0.05 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'stroke', payload: { angle: 0, power: 1.4 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 1, type: 'stroke', payload: { angle: 0, power: 0.5 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'putt', payload: { angle: 0, power: 0.5 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'stroke', payload: { angle: 1.2, power: 0.7 } }).ok).toBe(true);
+  });
+
+  test('bots aim at the cup or a bank around blocks', () => {
+    const state = start();
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(move.action.type).toBe('stroke');
+      expect(Number(move.action.payload.power)).toBeGreaterThanOrEqual(0.15);
+      expect(Number(move.action.payload.power)).toBeLessThanOrEqual(1);
+    }
+    // On the island hole the direct line is blocked — bot must pick a bank.
+    const island = start();
+    const ib = island.board as unknown as GolfShape;
+    ib.hole = 7;
+    ib.ball = { x: MINIGOLF_HOLES[7].tee[0], y: MINIGOLF_HOLES[7].tee[1] };
+    const move = engine.chooseBotMove(island, 0, 'expert');
+    const ang = Number(move.action.payload.angle);
+    const direct = Math.atan2(MINIGOLF_HOLES[7].cup[1] - ib.ball.y, MINIGOLF_HOLES[7].cup[0] - ib.ball.x);
+    expect(Math.abs(ang - direct)).toBeGreaterThan(0.05);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -3341,9 +3497,10 @@ describe('engine registry', () => {
       new WerewolfEngine(),
       new ImpostorEngine(),
       new DartsEngine(),
+      new MinigolfEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -3352,7 +3509,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

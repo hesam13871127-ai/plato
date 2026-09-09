@@ -304,6 +304,8 @@ String _gameEmoji(String slug) {
       return '🕵️';
     case 'darts':
       return '🎯';
+    case 'minigolf':
+      return '⛳';
     default:
       return '🎮';
   }

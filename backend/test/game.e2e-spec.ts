@@ -14,6 +14,7 @@ import { SketchEngine } from '../src/game/engine/sketch.engine';
 import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
 import { ImpostorEngine } from '../src/game/engine/impostor.engine';
 import { DartsEngine } from '../src/game/engine/darts.engine';
+import { MinigolfEngine } from '../src/game/engine/minigolf.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -285,6 +286,7 @@ async function playToCompletion(
 void (0 as unknown as WerewolfEngine); // driver type anchor
 void (0 as unknown as ImpostorEngine); // driver type anchor
 void (0 as unknown as DartsEngine); // driver type anchor
+void (0 as unknown as MinigolfEngine); // driver type anchor
 
 function humanActionFor(
   session: NonNullable<ReturnType<GameSessionService['get']>>,
@@ -486,6 +488,11 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'minigolf') {
+    // Deterministic straight putt down hole 1.
+    return { type: 'stroke', payload: { angle: 0, power: 0.8 } };
   }
 
   if (slug === 'darts') {

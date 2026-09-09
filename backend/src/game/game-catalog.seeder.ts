@@ -254,6 +254,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'minigolf',
+    name: 'Mini Golf',
+    description: 'Nine compact holes — bank the walls, dodge the blocks, hole out in fewer strokes.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 
