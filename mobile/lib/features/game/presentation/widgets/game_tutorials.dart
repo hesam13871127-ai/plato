@@ -160,5 +160,35 @@ class GameTutorials {
         bodyFa: 'ستون‌های وسط طلایی‌ترین خانه‌ها هستند؛ هم ردیف حریف را ببند، هم بی‌سروصدا ردیف خودت را بساز.',
       ),
     ],
+    'checkers': [
+      TutorialStep(
+        emoji: '⚫',
+        titleEn: 'Move your men',
+        titleFa: 'حرکت مهره‌ها',
+        bodyEn: 'Men slide one dark square diagonally forward. Plan ahead — every move counts.',
+        bodyFa: 'سربازها یک خانهٔ تیره به‌صورت مورب و فقط به جلو حرکت می‌کنند. با برنامه جلو برو.',
+      ),
+      TutorialStep(
+        emoji: '🔥',
+        titleEn: 'Jumps are mandatory',
+        titleFa: 'پرش اجباری است',
+        bodyEn: 'If a rival piece is jumpable you must take it — and chain every follow-up jump too!',
+        bodyFa: 'اگر مهرهٔ حریف قابل پریدن باشد باید بپری — و همهٔ پرش‌های بعدی را هم پشت سر هم انجام دهی!',
+      ),
+      TutorialStep(
+        emoji: '👑',
+        titleEn: 'Crown your kings',
+        titleFa: 'تاج پادشاهی',
+        bodyEn: 'Reach the far row to get crowned. Kings command all four diagonal directions.',
+        bodyFa: 'به ردیف آخر برسی پادشاه می‌شوی. پادشاه‌ها در هر چهار جهت مورب فرمان می‌رانند.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Win the duel',
+        titleFa: 'بردن دوئل',
+        bodyEn: 'Capture every rival piece or trap them with no legal move left.',
+        bodyFa: 'همهٔ مهره‌های حریف را بگیر یا طوری محاصره‌اش کن که حرکتی برایش نماند.',
+      ),
+    ],
   };
 }

@@ -64,6 +64,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'checkers',
+    name: 'Checkers',
+    description: 'Classic draughts — jump, king and capture! Tactical, fast and perfect for duels.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 10,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

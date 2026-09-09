@@ -4,6 +4,7 @@ import { DominoesEngine } from '../src/game/engine/dominoes.engine';
 import { LudoEngine } from '../src/game/engine/ludo.engine';
 import { OchoEngine } from '../src/game/engine/ocho.engine';
 import { Connect4Engine } from '../src/game/engine/connect4.engine';
+import { CheckersEngine } from '../src/game/engine/checkers.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -21,6 +22,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'ludo', build: () => new LudoEngine() },
   { name: 'ocho', build: () => new OchoEngine() },
   { name: 'connect4', build: () => new Connect4Engine(), players: 2 },
+  { name: 'checkers', build: () => new CheckersEngine(), players: 2 },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -555,6 +557,130 @@ describe('connect4 rules', () => {
   });
 });
 
+describe('checkers rules', () => {
+  const engine = new CheckersEngine();
+
+  interface CellShape {
+    s: number;
+    k: number;
+  }
+
+  interface CheckersShape {
+    cells: Array<Array<CellShape | null>>;
+    mustJumpFrom: [number, number] | null;
+    lastMove: { seat: number; captured: [number, number] | null; promoted: boolean } | null;
+    noProgress: number;
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): CheckersShape {
+    return state.board as unknown as CheckersShape;
+  }
+
+  test('sets up 12 men per side on dark squares only', () => {
+    const state = start();
+    const b = board(state);
+    let zero = 0;
+    let one = 0;
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const p = b.cells[r][c];
+        if ((r + c) % 2 === 0) expect(p).toBeNull();
+        if (p?.s === 0) zero++;
+        if (p?.s === 1) one++;
+      }
+    }
+    expect(zero).toBe(12);
+    expect(one).toBe(12);
+  });
+
+  test('men move forward diagonally only; backwards is rejected', () => {
+    const state = start();
+    const b = board(state);
+    // Give seat 0 a man at (2, 2) with empty squares around.
+    b.cells = Array.from({ length: 8 }, () => Array<CellShape | null>(8).fill(null));
+    b.cells[2][2] = { s: 0, k: 0 };
+    b.cells[5][3] = { s: 1, k: 0 }; // an enemy man far away
+    state.currentSeat = 0;
+
+    expect(engine.validate(state, { seat: 0, type: 'move', payload: { from: [2, 2], to: [3, 3] } }).ok).toBe(true);
+    expect(engine.validate(state, { seat: 0, type: 'move', payload: { from: [2, 2], to: [1, 3] } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'move', payload: { from: [2, 2], to: [2, 3] } }).ok).toBe(false);
+  });
+
+  test('captures are mandatory and multi-jump chains continue from the landing square', () => {
+    const state = start();
+    const b = board(state);
+    b.cells = Array.from({ length: 8 }, () => Array<CellShape | null>(8).fill(null));
+    // Seat 0 man at (2,2); enemy at (3,3); landing (4,4); a second enemy at
+    // (5,5) with landing (6,6) so the chain continues.
+    b.cells[2][2] = { s: 0, k: 0 };
+    b.cells[3][3] = { s: 1, k: 0 };
+    b.cells[5][5] = { s: 1, k: 0 };
+    b.cells[7][1] = { s: 1, k: 0 }; // spare enemy piece
+    state.currentSeat = 0;
+
+    // A quiet step is illegal while a jump exists.
+    b.cells[4][1] = null;
+    expect(engine.validate(state, { seat: 0, type: 'move', payload: { from: [2, 2], to: [3, 1] } }).ok).toBe(false);
+
+    const jump1 = engine.applyAction(state, { seat: 0, type: 'move', payload: { from: [2, 2], to: [4, 4] } });
+    const b1 = board(jump1);
+    expect(b1.cells[3][3]).toBeNull(); // enemy captured
+    expect(b1.cells[4][4]?.s).toBe(0);
+    expect(b1.mustJumpFrom).toEqual([4, 4]); // chain continues
+    expect(jump1.currentSeat).toBe(0); // same seat keeps jumping
+
+    // Moving a different piece mid-chain is rejected.
+    b1.cells[0][5] = { s: 0, k: 0 };
+    expect(
+      engine.validate(jump1, { seat: 0, type: 'move', payload: { from: [0, 5], to: [1, 4] } }).ok,
+    ).toBe(false);
+
+    const jump2 = engine.applyAction(jump1, { seat: 0, type: 'move', payload: { from: [4, 4], to: [6, 6] } });
+    const b2 = board(jump2);
+    expect(b2.cells[5][5]).toBeNull();
+    expect(b2.mustJumpFrom).toBeNull();
+    expect(jump2.currentSeat).toBe(1); // chain over — turn passes
+  });
+
+  test('reaching the back rank promotes to king and ends the turn', () => {
+    const state = start();
+    const b = board(state);
+    b.cells = Array.from({ length: 8 }, () => Array<CellShape | null>(8).fill(null));
+    b.cells[6][2] = { s: 0, k: 0 };
+    b.cells[7][3] = null; // landing square on the back rank
+    b.cells[5][5] = { s: 1, k: 0 }; // spare enemy with room to move
+    state.currentSeat = 0;
+
+    const moved = engine.applyAction(state, { seat: 0, type: 'move', payload: { from: [6, 2], to: [7, 3] } });
+    const b2 = board(moved);
+    expect(b2.cells[7][3]?.k).toBe(1); // crowned
+    expect(b2.lastMove?.promoted).toBe(true);
+    expect(moved.currentSeat).toBe(1); // promotion ends the turn
+  });
+
+  test('a seat with no legal move loses; kings move in all four diagonals', () => {
+    const state = start();
+    const b = board(state);
+    b.cells = Array.from({ length: 8 }, () => Array<CellShape | null>(8).fill(null));
+    // Seat 0 king at (3,3); seat 1 man at (0,0) with (1,1) blocked → trapped.
+    b.cells[3][3] = { s: 0, k: 1 };
+    b.cells[0][0] = { s: 1, k: 0 };
+    b.cells[1][1] = { s: 0, k: 0 }; // blocks the man's only diagonal
+    state.currentSeat = 0;
+
+    // The king may move in any diagonal direction.
+    expect(engine.validate(state, { seat: 0, type: 'move', payload: { from: [3, 3], to: [2, 2] } }).ok).toBe(true);
+    const moved = engine.applyAction(state, { seat: 0, type: 'move', payload: { from: [3, 3], to: [2, 4] } });
+    expect(moved.phase).toBe('completed'); // seat 1 has no legal move
+    expect(moved.winnerSeat).toBe(0);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -562,9 +688,10 @@ describe('engine registry', () => {
       new LudoEngine(),
       new OchoEngine(),
       new Connect4Engine(),
+      new CheckersEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -573,7 +700,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

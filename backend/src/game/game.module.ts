@@ -25,6 +25,7 @@ import { DominoesEngine } from './engine/dominoes.engine';
 import { LudoEngine } from './engine/ludo.engine';
 import { OchoEngine } from './engine/ocho.engine';
 import { Connect4Engine } from './engine/connect4.engine';
+import { CheckersEngine } from './engine/checkers.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -54,6 +55,7 @@ const ENTITIES = [
     LudoEngine,
     OchoEngine,
     Connect4Engine,
+    CheckersEngine,
     EngineRegistry,
     // Services
     BotService,
