@@ -24,6 +24,7 @@ import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
 import { ImpostorEngine, IMPOSTOR_LOCATIONS } from '../src/game/engine/impostor.engine';
 import { DartsEngine, scoreDart } from '../src/game/engine/darts.engine';
 import { MinigolfEngine, MINIGOLF_HOLES } from '../src/game/engine/minigolf.engine';
+import { BankrollEngine } from '../src/game/engine/bankroll.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -61,6 +62,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'impostor', build: () => new ImpostorEngine(), players: 4 },
   { name: 'darts', build: () => new DartsEngine() },
   { name: 'minigolf', build: () => new MinigolfEngine() },
+  { name: 'bankroll', build: () => new BankrollEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -3471,6 +3473,166 @@ describe('minigolf rules', () => {
   });
 });
 
+
+describe('bankroll rules', () => {
+  const engine = new BankrollEngine();
+
+  interface BankShape {
+    round: number;
+    phase: 'bet' | 'roll';
+    bankrolls: number[];
+    pot: number;
+    roundStake: number;
+    bettors: number[];
+    results: Array<{ seat: number; dice: [number, number]; sum: number; bust: boolean }>;
+    foldedRound: boolean[];
+    log: string[];
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): BankShape {
+    return state.board as unknown as BankShape;
+  }
+
+  function act(state: GameState, type: string, payload: Record<string, unknown> = {}): GameState {
+    return engine.applyAction(state, { seat: state.currentSeat, type, payload });
+  }
+
+  const dieFace = (v: number) => (v - 0.5) / 6;
+
+  function rigDice(spy: jest.SpyInstance, ...faces: number[]) {
+    for (const f of faces) spy.mockReturnValueOnce(dieFace(f));
+  }
+
+  test('bets move chips to the pot and a fold keeps the stack', () => {
+    let state = start();
+    state = act(state, 'bet', { amount: 100 });
+    expect(board(state).pot).toBe(100);
+    expect(board(state).bankrolls[0]).toBe(900);
+    expect(state.currentSeat).toBe(1);
+    state = act(state, 'fold');
+    const b = board(state);
+    expect(b.bankrolls[1]).toBe(1000);
+    expect(b.phase).toBe('roll');
+    expect(b.bettors).toEqual([0]);
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('craps bust and the best safe total rakes the pot', () => {
+    let state = start();
+    state = act(state, 'bet', { amount: 100 });
+    state = act(state, 'bet', { amount: 50 });
+    expect(board(state).phase).toBe('roll');
+    const spy = jest.spyOn(Math, 'random');
+    rigDice(spy, 3, 4, 1, 1); // seat 0 rolls 7 (safe); seat 1 rolls 2 (craps)
+    state = act(state, 'roll');
+    state = act(state, 'roll');
+    spy.mockRestore();
+    const b = board(state);
+    // The roll results are swept between rounds — the ledger remembers.
+    expect(b.log.some((l) => l.includes('rolls 3+4=7 — safe!'))).toBe(true);
+    expect(b.log.some((l) => l.includes('rolls 1+1=2 — craps, busted!'))).toBe(true);
+    expect(b.round).toBe(2); // round resolved, back to betting
+    expect(b.bankrolls[0]).toBe(1000 - 100 + 150);
+    expect(b.bankrolls[1]).toBe(1000 - 50);
+    expect(b.pot).toBe(0);
+  });
+
+  test('a tie splits the pot evenly', () => {
+    let state = start();
+    state = act(state, 'bet', { amount: 60 });
+    state = act(state, 'bet', { amount: 60 });
+    const spy = jest.spyOn(Math, 'random');
+    rigDice(spy, 4, 4, 5, 3); // both roll 8
+    state = act(state, 'roll');
+    state = act(state, 'roll');
+    spy.mockRestore();
+    const b = board(state);
+    expect(b.bankrolls).toEqual([1000, 1000]);
+    expect(b.round).toBe(2);
+  });
+
+  test('an all-craps round carries the pot over', () => {
+    let state = start();
+    state = act(state, 'bet', { amount: 40 });
+    state = act(state, 'bet', { amount: 20 });
+    const spy = jest.spyOn(Math, 'random');
+    rigDice(spy, 1, 1, 6, 6); // 2 and 12 — everybody busts
+    state = act(state, 'roll');
+    state = act(state, 'roll');
+    spy.mockRestore();
+    const b = board(state);
+    expect(b.round).toBe(2);
+    expect(b.pot).toBe(60); // the pot swells the next round
+    expect(b.phase).toBe('bet');
+  });
+
+  test('a round where everyone folds carries nothing forward', () => {
+    let state = start();
+    state = act(state, 'fold');
+    state = act(state, 'fold');
+    const b = board(state);
+    expect(b.round).toBe(2);
+    expect(b.phase).toBe('bet');
+    expect(b.pot).toBe(0);
+    expect(b.bankrolls).toEqual([1000, 1000]);
+  });
+
+  test('five rounds decide the richest stack', () => {
+    let state = start();
+    const spy = jest.spyOn(Math, 'random');
+    for (let i = 0; i < 5; i++) {
+      rigDice(spy, 6, 5, 4, 4); // seat 0 rolls 11, seat 1 rolls 8, every round
+    }
+    let guard = 0;
+    while (state.phase === 'in_progress' && guard++ < 60) {
+      const b = board(state);
+      state = act(state, b.phase === 'bet' ? 'bet' : 'roll', b.phase === 'bet' ? { amount: 10 } : {});
+    }
+    spy.mockRestore();
+    expect(guard).toBe(20); // 5 rounds × (2 bets + 2 rolls)
+    expect(state.phase).toBe('completed');
+    const b = board(state);
+    expect(b.round).toBe(5);
+    expect(b.bankrolls).toEqual([1050, 950]); // +10 net a round for the winner
+    expect(state.winnerSeat).toBe(0);
+    expect(state.scores).toEqual([1050, 950]);
+  });
+
+  test('stakes and rolls are validated', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 0, type: 'bet', payload: { amount: 4 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'bet', payload: { amount: 1001 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 1, type: 'bet', payload: { amount: 10 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'roll', payload: {} }).ok).toBe(false); // bet phase
+    expect(engine.validate(state, { seat: 0, type: 'bet', payload: { amount: 1000 } }).ok).toBe(true);
+    let s = act(state, 'bet', { amount: 1000 });
+    s = act(s, 'fold'); // seat 1 folds → roll phase with only seat 0 in
+    expect(engine.validate(s, { seat: 0, type: 'bet', payload: { amount: 10 } }).ok).toBe(false);
+    expect(engine.validate(s, { seat: 0, type: 'roll', payload: {} }).ok).toBe(true);
+  });
+
+  test('bots bet legal amounts and roll when told', () => {
+    const state = engine.createInitialState(makeConfig(engine, 4));
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(move.action.type).toBe('bet');
+      const amount = Number(move.action.payload.amount);
+      expect(Number.isInteger(amount)).toBe(true);
+      expect(amount).toBeGreaterThanOrEqual(5);
+      expect(amount).toBeLessThanOrEqual(1000);
+    }
+    let s = state;
+    for (let i = 0; i < 4; i++) s = act(s, 'bet', { amount: 5 });
+    expect(board(s).phase).toBe('roll');
+    const move = engine.chooseBotMove(s, board(s).bettors[0], 'hard');
+    expect(move.action.type).toBe('roll');
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -3498,9 +3660,10 @@ describe('engine registry', () => {
       new ImpostorEngine(),
       new DartsEngine(),
       new MinigolfEngine(),
+      new BankrollEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -3509,7 +3672,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

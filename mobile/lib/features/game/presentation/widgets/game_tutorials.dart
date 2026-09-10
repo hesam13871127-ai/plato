@@ -759,6 +759,36 @@ class GameTutorials {
         bodyEn: 'Six strokes cap a hole — the seventh is charged automatically, so play the safe line first.',
         bodyFa: 'شش ضربه سقف هر حفره است — هفتمی خودکار حساب می‌شود، پس اول خط مطمئن را بازی کن.',
       ),
+    ]
+    'bankroll': [
+      TutorialStep(
+        emoji: '💵',
+        titleEn: 'Five betting rounds',
+        titleFa: 'پنج دور شرط‌بندی',
+        bodyEn: 'Everyone starts with a thousand coins. Each round, push a stake into the pot or fold and sit it out.',
+        bodyFa: 'همه با هزار سکه شروع می‌کنند. هر دور، مبلغی به گلدان بفرست یا فولد کن و دور را بیرون بمان.',
+      ),
+      TutorialStep(
+        emoji: '🎲',
+        titleEn: 'Let the dice decide',
+        titleFa: 'تاس‌ها تصمیم می‌گیرند',
+        bodyEn: 'Everyone who bet rolls two dice: seven and eleven are safe, craps — two, three or twelve — bust you out.',
+        bodyFa: 'هرکس شرط بسته دو تاس می‌ریزد: هفت و یازده امن‌اند، کرپس — دو، سه یا دوازده — تو را از دور بیرون می‌اندازند.',
+      ),
+      TutorialStep(
+        emoji: '🪙',
+        titleEn: 'Rake the pot',
+        titleFa: 'گلدان را جمع کن',
+        bodyEn: 'The highest safe total wins the whole pot — ties split it. If everyone craps out, the pot carries over and grows.',
+        bodyFa: 'بیشترین مجموعِ امن کل گلدان را می‌برد — مساوی آن را تقسیم می‌کند. اگر همه کرپس شوند گلدان به دور بعد منتقل و بزرگ‌تر می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🃏',
+        titleEn: 'Know when to fold',
+        titleFa: 'بدان کِی فولد کنی',
+        bodyEn: 'After five rounds the richest stack wins — protect a big lead with a well-timed fold in the last round.',
+        bodyFa: 'بعد از پنج دور، پرپول‌ترین برد می‌کند — پیشتازی بزرگ را با یک فولدِ به‌موقع در دور آخر حفظ کن.',
+      ),
     ],
   };
 }

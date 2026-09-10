@@ -45,6 +45,7 @@ import { WerewolfEngine } from './engine/werewolf.engine';
 import { ImpostorEngine } from './engine/impostor.engine';
 import { DartsEngine } from './engine/darts.engine';
 import { MinigolfEngine } from './engine/minigolf.engine';
+import { BankrollEngine } from './engine/bankroll.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -94,6 +95,7 @@ const ENTITIES = [
     ImpostorEngine,
     DartsEngine,
     MinigolfEngine,
+    BankrollEngine,
     EngineRegistry,
     // Services
     BotService,

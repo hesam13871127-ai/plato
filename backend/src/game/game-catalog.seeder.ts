@@ -264,6 +264,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'bankroll',
+    name: 'Bankroll',
+    description: 'Hot-seat dice poker — stake your stack, dodge the craps, rake the pot.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 7,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

@@ -306,6 +306,8 @@ String _gameEmoji(String slug) {
       return '🎯';
     case 'minigolf':
       return '⛳';
+    case 'bankroll':
+      return '💵';
     default:
       return '🎮';
   }
