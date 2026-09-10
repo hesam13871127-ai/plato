@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import type { AppConfig } from '../config/configuration';
@@ -22,8 +22,10 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
       inject: [ConfigService],
       useFactory: (config: ConfigService<AppConfig, true>) => {
         const db = config.get('database', { infer: true });
+        const logger = new Logger('DatabaseModule');
 
         if (db.type === 'sqlite') {
+          logger.log('driver: sqljs (test) | column naming: snake_case [ok]');
           return {
             type: 'sqljs',
             location: ':memory:',
@@ -35,6 +37,10 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
             // pulls the WASM binary into memory.
           };
         }
+
+        logger.log(
+          `driver: mysql (${db.host}:${db.port}/${db.database}) | column naming: snake_case [ok]`,
+        );
 
         return {
           type: 'mysql',

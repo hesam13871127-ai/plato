@@ -1,31 +1,47 @@
 @echo off
 REM ============================================================
-REM  update.bat - one-click update + database-fix verification
-REM  Run it from the repo root (double-clicking also works).
+REM  update.bat - FORCE-sync this folder to the fixed branch.
+REM  Fixes any stale/old-branch state, then verifies the fix.
+REM  Run from the repo root (double-clicking works too).
 REM ============================================================
 cd /d "%~dp0"
 
-echo === [1/3] Fetching latest code ============================
+echo.
+echo === [1/4] Fetching from GitHub ============================
 git fetch origin
-if errorlevel 1 echo [!] git fetch FAILED - check your internet / GitHub login.
+if errorlevel 1 (
+    echo [!] git fetch FAILED - check internet / GitHub login.
+    echo     Send me a screenshot of this window.
+    pause
+    exit /b 1
+)
 
 echo.
-echo === [2/3] Switching to branch arena/01a08515-plato =======
-git checkout arena/01a08515-plato
-git pull
-if errorlevel 1 echo [!] git pull FAILED - send me the message above.
+echo === [2/4] Force-switching to the fixed branch =============
+git checkout -f arena/01a08515-plato
+git reset --hard origin/arena/01a08515-plato
+git clean -fd backend/src backend/scripts database mobile
 
 echo.
-echo === [3/3] Verification ====================================
+echo === [3/4] Verification =====================================
 git log --oneline -3
 echo.
-if exist "backend\src\database\snake-naming.strategy.ts" (
-    echo [OK] The database fix is present. Now run:
-    echo        cd backend
-    echo        npm run start:dev
+findstr /C:"SnakeNamingStrategy" backend\src\database\database.module.ts >nul 2>&1
+if %errorlevel%==0 (
+    echo [OK] The database fix is in place on this machine.
 ) else (
-    echo [MISSING] The database fix is NOT present - the update did not work.
-    echo Send me the FULL output of this window.
+    echo [MISSING] The fix is NOT in this folder - something is wrong.
+    echo           Send me a screenshot of this whole window.
 )
+
+echo.
+echo === [4/4] Next step ========================================
+echo   1. Close every old terminal that still runs the backend ^(Ctrl+C^).
+echo   2. Then run:
+echo        cd backend
+echo        npm run start:dev
+echo   3. In the first log lines you MUST see:
+echo        [DatabaseModule] driver: mysql ^(...^) ^| column naming: snake_case [ok]
+echo      If you do NOT see that line, an old build is running.
 echo.
 pause
