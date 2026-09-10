@@ -29,6 +29,7 @@ import { BattleshipEngine, BATTLESHIP_FLEET } from '../src/game/engine/battleshi
 import { ReversiEngine, legalMoves, flipsFor } from '../src/game/engine/reversi.engine';
 import { GomokuEngine, winningLineAt } from '../src/game/engine/gomoku.engine';
 import { BlackjackEngine, handValue } from '../src/game/engine/blackjack.engine';
+import { HangmanEngine, HANGMAN_WORDS } from '../src/game/engine/hangman.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -71,6 +72,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'reversi', build: () => new ReversiEngine() },
   { name: 'gomoku', build: () => new GomokuEngine() },
   { name: 'blackjack', build: () => new BlackjackEngine() },
+  { name: 'hangman', build: () => new HangmanEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -4226,6 +4228,183 @@ describe('blackjack rules', () => {
   });
 });
 
+
+describe('hangman rules', () => {
+  const engine = new HangmanEngine();
+
+  interface HmShape {
+    round: number;
+    secret: string;
+    masked: string[];
+    wrong: string[];
+    revealedWord: string | null;
+    log: string[];
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): HmShape {
+    return state.board as unknown as HmShape;
+  }
+
+  function guess(state: GameState, letter: string, seat = state.currentSeat): GameState {
+    return engine.applyAction(state, { seat, type: 'guess', payload: { letter } });
+  }
+
+  /** Re-seals a chosen word into a fresh state. */
+  function withWord(word: string): GameState {
+    const state = start();
+    const b = board(state);
+    b.secret = word;
+    b.masked = word.split('').map(() => '_');
+    b.wrong = [];
+    return state;
+  }
+
+  test('the word list is clean and the state starts masked', () => {
+    expect(HANGMAN_WORDS.length).toBeGreaterThanOrEqual(50);
+    for (const w of HANGMAN_WORDS) {
+      expect(w).toMatch(/^[a-z]{4,9}$/);
+    }
+    const state = start();
+    const b = board(state);
+    expect(b.round).toBe(1);
+    expect(b.secret.length).toBeGreaterThanOrEqual(4);
+    expect(b.masked).toEqual(b.secret.split('').map(() => '_'));
+    expect(b.wrong).toEqual([]);
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('a hit reveals every occurrence and scores ten a letter', () => {
+    const state = withWord('balcony');
+    const next = guess(state, 'n'); // one occurrence, index 5
+    const b = board(next);
+    expect(b.masked.join('')).toBe('_____n_');
+    expect(next.scores[0]).toBe(10);
+    expect(next.currentSeat).toBe(1); // rotation passes on
+    const again = guess(next, 'y', 1);
+    expect(board(again).masked[6]).toBe('y');
+    expect(next.scores[1] + 10).toBe(again.scores[1]);
+  });
+
+  test('a miss costs five, banks the letter and rotates', () => {
+    const state = withWord('rocket');
+    const next = guess(state, 'z');
+    const b = board(next);
+    expect(b.wrong).toEqual(['z']);
+    expect(next.scores[0]).toBe(-5);
+    expect(next.currentSeat).toBe(1);
+    expect(b.masked.every((c) => c === '_')).toBe(true);
+  });
+
+  test('finishing the word pays the bonus and rolls the next word', () => {
+    let state = withWord('forest');
+    state = guess(state, 'f'); // seat 0 hit
+    state = guess(state, 'q'); // seat 1 miss
+    state = guess(state, 'o'); // seat 0 hit
+    state = guess(state, 'z'); // seat 1 miss
+    state = guess(state, 'r'); // seat 0 hit
+    expect(board(state).masked.join('')).toBe('for___');
+    expect(state.scores[0]).toBe(30);
+    expect(state.scores[1]).toBe(-10);
+    state = guess(state, 'x'); // seat 1 miss
+    state = guess(state, 'e'); // seat 0 hit
+    state = guess(state, 'v'); // seat 1 miss
+    state = guess(state, 's'); // seat 0 hit
+    state = guess(state, 'j'); // seat 1 miss
+    state = guess(state, 't'); // seat 0 completes the word
+    const b = board(state);
+    expect(b.revealedWord).toBe('forest'); // banner carries into the new round
+    expect(b.round).toBe(2);
+    expect(b.masked.every((c) => c === '_')).toBe(true); // fresh word
+    expect(b.wrong).toEqual([]);
+    expect(state.currentSeat).toBe(0);
+    expect(state.scores[0]).toBe(30 + 10 + 10 + 10 + 25); // hits + the finisher bonus
+  });
+
+  test('six misses hang the figure and reveal the word unbought', () => {
+    const state = withWord('mirror');
+    let s = state;
+    for (const letter of ['a', 'b', 'c', 'd', 'e', 'f']) {
+      s = guess(s, letter);
+    }
+    const b = board(s);
+    expect(b.wrong).toEqual([]); // swept for the fresh word
+    expect(b.revealedWord).toBe('mirror'); // the reveal banner persists
+    expect(b.round).toBe(2);
+    expect(s.scores[0] + s.scores[1]).toBe(-30); // six misses at five a pop
+    expect(b.log.some((l) => l.includes("the word was 'mirror'"))).toBe(true);
+  });
+
+  test('guesses are validated for shape, repeats and seat', () => {
+    const state = withWord('garden');
+    expect(engine.validate(state, { seat: 0, type: 'guess', payload: { letter: 'ab' } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'guess', payload: { letter: 'A' } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'guess', payload: { letter: '3' } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 1, type: 'guess', payload: { letter: 'g' } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'guess', payload: { letter: 'g' } }).ok).toBe(true);
+    const hit = guess(state, 'g');
+    expect(engine.validate(hit, { seat: 1, type: 'guess', payload: { letter: 'g' } }).ok).toBe(false); // already revealed
+    const miss = guess(hit, 'z', 1);
+    expect(engine.validate(miss, { seat: 0, type: 'guess', payload: { letter: 'z' } }).ok).toBe(false); // already wrong
+  });
+
+  test('the sealed word never leaks through a view', () => {
+    const state = withWord('castle');
+    for (const view of [engine.playerView(state, 0), engine.playerView(state, 1), engine.spectatorView(state)]) {
+      const vb = view.board as unknown as HmShape;
+      expect(vb.secret).toBe('');
+      expect(vb.masked).toHaveLength(6);
+      expect(vb.masked.every((c) => c === '_')).toBe(true);
+      expect(vb.wrong).toEqual([]);
+    }
+    // The log carries hits and misses, never the word.
+    const guessed = guess(state, 'c');
+    const log = board(engine.playerView(guessed, 1)).log.join(' ');
+    expect(log).not.toContain('astle');
+  });
+
+  test('three words decide the high score', () => {
+    let state = start();
+    // Force short words and drive every guess from the secret (server-side).
+    let guard = 0;
+    const words: string[] = [];
+    while (state.phase === 'in_progress' && guard++ < 400) {
+      const b = board(state);
+      if (!words.includes(b.secret)) words.push(b.secret);
+      const secret = b.secret;
+      const taken = new Set([...b.wrong, ...b.masked.filter((c) => c !== '_')]);
+      const letter = secret.split('').find((c) => !taken.has(c)) ?? 'q';
+      state = guess(state, letter);
+    }
+    expect(state.phase).toBe('completed');
+    expect(board(state).round).toBe(3);
+    expect(words.length).toBeGreaterThanOrEqual(2); // distinct words seen
+    // Seat 0 always guessed first each round and the rotation alternates —
+    // verify the winner is exactly the top scorer.
+    const max = Math.max(...state.scores);
+    const leaders = state.scores.map((s, i) => ({ s, i })).filter((x) => x.s === max).map((x) => x.i);
+    if (leaders.length === 1) {
+      expect(state.winnerSeat).toBe(leaders[0]);
+    } else {
+      expect(state.winnerSeat).toBeNull();
+    }
+  });
+
+  test('bots guess legal, unguessed lowercase letters', () => {
+    const state = withWord('palace');
+    const played = guess(state, 'p');
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(played, 1, difficulty);
+      expect(move.action.type).toBe('guess');
+      const action = { ...move.action, seat: 1 };
+      expect(engine.validate(played, action).ok).toBe(true);
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -4258,9 +4437,10 @@ describe('engine registry', () => {
       new ReversiEngine(),
       new GomokuEngine(),
       new BlackjackEngine(),
+      new HangmanEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -4269,7 +4449,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

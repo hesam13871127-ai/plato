@@ -20,6 +20,7 @@ import { BattleshipEngine } from '../src/game/engine/battleship.engine';
 import { ReversiEngine, legalMoves } from '../src/game/engine/reversi.engine';
 import { GomokuEngine } from '../src/game/engine/gomoku.engine';
 import { BlackjackEngine, handValue } from '../src/game/engine/blackjack.engine';
+import { HangmanEngine } from '../src/game/engine/hangman.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -297,6 +298,7 @@ void (0 as unknown as BattleshipEngine); // driver type anchor
 void (0 as unknown as ReversiEngine); // driver type anchor
 void (0 as unknown as GomokuEngine); // driver type anchor
 void (0 as unknown as BlackjackEngine); // driver type anchor
+void (0 as unknown as HangmanEngine); // driver type anchor
 
 function humanActionFor(
   session: NonNullable<ReturnType<GameSessionService['get']>>,
@@ -498,6 +500,20 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'hangman') {
+    // Full server sight: reveal the secret letter by letter.
+    const secret = (board.secret as string) ?? '';
+    const masked = (board.masked as string[]) ?? [];
+    const wrong = (board.wrong as string[]) ?? [];
+    const taken = new Set<string>([...wrong, ...masked.filter((c) => c !== '_')]);
+    const letter = secret.split('').find((c) => !taken.has(c));
+    if (letter) return { type: 'guess', payload: { letter } };
+    for (const c of 'etaoinshrdlcumwfgypbvkjxqz') {
+      if (!taken.has(c)) return { type: 'guess', payload: { letter: c } };
+    }
+    return null;
   }
 
   if (slug === 'blackjack') {

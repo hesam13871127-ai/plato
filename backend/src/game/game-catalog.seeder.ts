@@ -314,6 +314,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'hangman',
+    name: 'Hangman',
+    description: 'Guess the sealed word letter by letter — hits score, misses draw the figure.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 5,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

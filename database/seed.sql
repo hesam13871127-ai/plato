@@ -40,7 +40,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000029', 'battleship', 'Battleship', 'Deploy five ships and trade salvos — first to sink the enemy fleet rules the waves.', NULL, 2, 2, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000030', 'reversi', 'Reversi', 'Sandwich enemy discs to flip whole lines — corners are gold, edges are silver.', NULL, 2, 2, 7, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000031', 'gomoku', 'Gomoku', 'Five in a row on a fifteen-by-fifteen grid — connect your stones before they connect theirs.', NULL, 2, 2, 6, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000032', 'blackjack', 'Blackjack', 'Hot-seat twenty-one — hit or stand, beat the dealer to seventeen, blackjacks pay three to two.', NULL, 2, 4, 6, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000032', 'blackjack', 'Blackjack', 'Hot-seat twenty-one — hit or stand, beat the dealer to seventeen, blackjacks pay three to two.', NULL, 2, 4, 6, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000033', 'hangman', 'Hangman', 'Guess the sealed word letter by letter — hits score, misses draw the figure.', NULL, 2, 4, 5, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -128,6 +129,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9213-000000000038', 'Kaya Wood Goban', 'A kaya-wood board with perfectly cut star points.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 147, JSON_OBJECT('game', 'gomoku', 'felt', '#D9B380', 'accent', '#EAB308')),
   ('44444444-0000-4000-9101-000000000039', 'Vegas Dealer Visor', 'A green dealer visor that sees right through bluffs.', 'game_piece', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 148, JSON_OBJECT('game', 'blackjack', 'piece', 'dealer_visor')),
   ('44444444-0000-4000-9213-000000000039', 'Monte Carlo Salon', 'A velvet salon table under a brass chandelier.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 149, JSON_OBJECT('game', 'blackjack', 'felt', '#0E3B2E', 'accent', '#D4AF37')),
+  ('44444444-0000-4000-9101-000000000040', 'Quill of Revelation', 'A raven quill that hums near common letters.', 'game_piece', 'epic', NULL, 1600, 'coins', 0, 1, 1, 1, 0, 150, JSON_OBJECT('game', 'hangman', 'piece', 'raven_quill')),
+  ('44444444-0000-4000-9213-000000000040', 'Midnight Study', 'A candlelit study wall of ticking letter tiles.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 151, JSON_OBJECT('game', 'hangman', 'felt', '#1C1628', 'accent', '#A78BFA')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

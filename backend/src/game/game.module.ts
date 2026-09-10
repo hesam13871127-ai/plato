@@ -50,6 +50,7 @@ import { BattleshipEngine } from './engine/battleship.engine';
 import { ReversiEngine } from './engine/reversi.engine';
 import { GomokuEngine } from './engine/gomoku.engine';
 import { BlackjackEngine } from './engine/blackjack.engine';
+import { HangmanEngine } from './engine/hangman.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -104,6 +105,7 @@ const ENTITIES = [
     ReversiEngine,
     GomokuEngine,
     BlackjackEngine,
+    HangmanEngine,
     EngineRegistry,
     // Services
     BotService,

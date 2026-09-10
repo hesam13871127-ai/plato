@@ -910,5 +910,35 @@ class GameTutorials {
         bodyFa: 'تک به‌علاوهٔ ده در همان دو کارت اول یعنی بلک‌جک: سه‌به‌دو می‌گیرد و مساوی با دیلر شرطت را پس می‌دهد.',
       ),
     ],
+    'hangman': [
+      TutorialStep(
+        emoji: '🔤',
+        titleEn: 'The sealed word',
+        titleFa: 'کلمهٔ مهر و موم‌شده',
+        bodyEn: 'Three secret words a game, shown only as empty slots. The word itself stays sealed on the server.',
+        bodyFa: 'سه کلمهٔ مخفی در هر بازی که فقط به شکل خانه‌های خالی دیده می‌شوند. خودِ کلمه سمت سرور مهر و موم می‌ماند.',
+      ),
+      TutorialStep(
+        emoji: '🔠',
+        titleEn: 'Guess in rotation',
+        titleFa: 'نوبتی حدس بزن',
+        bodyEn: 'Players pick letters in seat order. Every hit reveals all its slots and scores ten points per letter.',
+        bodyFa: 'بازیکنان به ترتیب صندلی حرف انتخاب می‌کنند. هر حدس درست همهٔ جاهای آن حرف را باز می‌کند و به ازای هر حرف ده امتیاز می‌گیرد.',
+      ),
+      TutorialStep(
+        emoji: '⚰️',
+        titleEn: 'Misses draw the figure',
+        titleFa: 'خطاها چوبه را کامل می‌کنند',
+        bodyEn: 'Each miss costs five points and draws one stroke of the figure — six misses and the word goes unbought.',
+        bodyFa: 'هر حدس غلط پنج امتیاز می‌سوزاند و یک خط از چوبهٔ دار را می‌کشد — شش خطا و کلمه بدون خریدار می‌ماند.',
+      ),
+      TutorialStep(
+        emoji: '🏅',
+        titleEn: 'Finish for the bonus',
+        titleFa: 'برای بونوس تمامش کن',
+        bodyEn: 'Complete a word for a twenty-five point bonus. After three words, the high score takes the game.',
+        bodyFa: 'کلمه را کامل کن تا بیست‌وپنج امتیاز بونوس بگیری. بعد از سه کلمه، بیشترین امتیاز بازی را می‌برد.',
+      ),
+    ],
   };
 }

@@ -316,6 +316,8 @@ String _gameEmoji(String slug) {
       return '⭕';
     case 'blackjack':
       return '🃏';
+    case 'hangman':
+      return '🔤';
     default:
       return '🎮';
   }
