@@ -274,6 +274,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'battleship',
+    name: 'Battleship',
+    description: 'Deploy five ships and trade salvos — first to sink the enemy fleet rules the waves.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

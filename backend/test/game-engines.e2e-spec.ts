@@ -25,6 +25,7 @@ import { ImpostorEngine, IMPOSTOR_LOCATIONS } from '../src/game/engine/impostor.
 import { DartsEngine, scoreDart } from '../src/game/engine/darts.engine';
 import { MinigolfEngine, MINIGOLF_HOLES } from '../src/game/engine/minigolf.engine';
 import { BankrollEngine } from '../src/game/engine/bankroll.engine';
+import { BattleshipEngine, BATTLESHIP_FLEET } from '../src/game/engine/battleship.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -63,6 +64,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'darts', build: () => new DartsEngine() },
   { name: 'minigolf', build: () => new MinigolfEngine() },
   { name: 'bankroll', build: () => new BankrollEngine() },
+  { name: 'battleship', build: () => new BattleshipEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -3633,6 +3635,190 @@ describe('bankroll rules', () => {
   });
 });
 
+
+describe('battleship rules', () => {
+  const engine = new BattleshipEngine();
+
+  interface ShipShape {
+    name: string;
+    size: number;
+    x: number;
+    y: number;
+    horizontal: boolean;
+    hits: boolean[];
+  }
+
+  interface NavalShape {
+    phase: 'place' | 'battle';
+    fleets: ShipShape[][];
+    shots: Array<Array<[number, number]>>;
+    lastShot: { seat: number; x: number; y: number; hit: boolean; sunk: string | null } | null;
+    sunk: string[][];
+    enemyRemaining: number[];
+    log: string[];
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): NavalShape {
+    return state.board as unknown as NavalShape;
+  }
+
+  /** Five ships in tidy rows: rows 0/2/4/6/8 starting at x=0. */
+  const tidyFleet = BATTLESHIP_FLEET.map((spec, i) => ({
+    name: spec.name,
+    size: spec.size,
+    x: 0,
+    y: i * 2,
+    horizontal: true,
+  }));
+
+  function deploy(state: GameState, fleet: unknown, random = false): GameState {
+    return engine.applyAction(state, {
+      seat: state.currentSeat,
+      type: 'deploy',
+      payload: random ? { random: true } : { fleet },
+    });
+  }
+
+  function fire(state: GameState, x: number, y: number): GameState {
+    return engine.applyAction(state, { seat: state.currentSeat, type: 'fire', payload: { x, y } });
+  }
+
+  test('fleets deploy in turn and open the battle', () => {
+    let state = start();
+    expect(state.currentSeat).toBe(0);
+    state = deploy(state, tidyFleet);
+    expect(board(state).fleets[0]).toHaveLength(5);
+    expect(state.currentSeat).toBe(1);
+    state = deploy(state, tidyFleet);
+    expect(board(state).phase).toBe('battle');
+    expect(state.currentSeat).toBe(0);
+  });
+
+  test('illegal fleets are rejected', () => {
+    const state = start();
+    const overlapping = tidyFleet.map((s) => ({ ...s }));
+    overlapping[1] = { ...overlapping[1], y: 0 }; // stacks onto the Carrier row
+    expect(engine.validate(state, { seat: 0, type: 'deploy', payload: { fleet: overlapping } }).ok).toBe(false);
+    const offshore = tidyFleet.map((s) => ({ ...s }));
+    offshore[0] = { ...offshore[0], x: 7 }; // carrier runs off the right edge
+    expect(engine.validate(state, { seat: 0, type: 'deploy', payload: { fleet: offshore } }).ok).toBe(false);
+    const shortFleet = tidyFleet.slice(0, 3);
+    expect(engine.validate(state, { seat: 0, type: 'deploy', payload: { fleet: shortFleet } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'deploy', payload: { random: true } }).ok).toBe(true);
+    expect(engine.validate(state, { seat: 1, type: 'deploy', payload: { fleet: tidyFleet } }).ok).toBe(false); // not your turn
+  });
+
+  test('salvos hit, miss, sink and alternate', () => {
+    let state = start();
+    state = deploy(state, tidyFleet);
+    state = deploy(state, tidyFleet);
+    // Seat 0 aims at the enemy Carrier bow: (0,0) — a hit.
+    state = fire(state, 0, 0);
+    expect(board(state).lastShot).toMatchObject({ seat: 0, x: 0, y: 0, hit: true, sunk: null });
+    expect(state.currentSeat).toBe(1);
+    // Seat 1 splashes in open water: (9,9).
+    state = fire(state, 9, 9);
+    expect(board(state).lastShot).toMatchObject({ seat: 1, hit: false });
+    // No double-tapping the same cell, and no firing outside the grid.
+    expect(engine.validate(state, { seat: 0, type: 'fire', payload: { x: 0, y: 0 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'fire', payload: { x: 10, y: 0 } }).ok).toBe(false);
+    // Sinking the Carrier: cells (1..4, 0).
+    state = fire(state, 1, 0);
+    state = fire(state, 9, 8);
+    state = fire(state, 2, 0);
+    state = fire(state, 8, 9);
+    state = fire(state, 3, 0);
+    state = fire(state, 9, 7);
+    state = fire(state, 4, 0);
+    const b = board(state);
+    expect(b.lastShot).toMatchObject({ seat: 0, hit: true, sunk: 'Carrier' });
+    expect(b.sunk[1]).toEqual(['Carrier']);
+    expect(b.log.some((l) => l.includes('sunk the Carrier!'))).toBe(true);
+    expect(state.phase).toBe('in_progress');
+  });
+
+  test('the first admiral to sink all seventeen cells wins', () => {
+    let state = start();
+    state = deploy(state, tidyFleet);
+    state = deploy(state, tidyFleet);
+    // Both fleets are the tidy rows; seat 0 sweeps them cell by cell, seat 1
+    // fires harmlessly into column 9 (never finishing) — seat 0 sinks first.
+    const sweep: Array<[number, number]> = [];
+    for (let row = 0; row < 9; row += 2) {
+      const width = [5, 4, 3, 3, 2][row / 2];
+      for (let x = 0; x < width; x++) sweep.push([x, row]);
+    }
+    expect(sweep).toHaveLength(17);
+    const waste: Array<[number, number]> = [];
+    for (const x of [9, 8]) {
+      for (let y = 0; y < 10; y++) waste.push([x, y]);
+    }
+    let a = 0;
+    let b = 0;
+    while (state.phase === 'in_progress') {
+      const seat = state.currentSeat;
+      const [x, y] = seat === 0 ? sweep[a] : waste[b];
+      state = fire(state, x, y);
+      if (seat === 0) {
+        a++;
+        if (a >= sweep.length) break; // seat 0 has fired all 17 winning shots
+      } else {
+        b++;
+      }
+    }
+    // Seat 0 fires the 17th sinking shot on its 17th turn; seat 1 had 16 harmless turns.
+    expect(state.phase).toBe('completed');
+    expect(state.winnerSeat).toBe(0);
+    expect(board(state).sunk[1]).toEqual(['Carrier', 'Battleship', 'Cruiser', 'Submarine', 'Destroyer']);
+    expect(state.scores).toEqual([1, 0]);
+  });
+
+  test('the enemy fleet never leaks through a player view', () => {
+    let state = start();
+    state = deploy(state, tidyFleet);
+    state = deploy(state, tidyFleet);
+    const view = engine.playerView(state, 0);
+    const vb = view.board as unknown as NavalShape;
+    expect(vb.fleets[0]).toHaveLength(5); // own fleet intact
+    expect(vb.fleets[1]).toHaveLength(0); // enemy fleet redacted
+    const spectator = engine.spectatorView(state);
+    const sb = spectator.board as unknown as NavalShape;
+    expect(sb.fleets[0]).toHaveLength(0);
+    expect(sb.fleets[1]).toHaveLength(0);
+  });
+
+  test('bots deploy legal fleets and fire legal, unrepeated cells', () => {
+    let state = start();
+    // Placement.
+    for (let seat = 0; seat < 2; seat++) {
+      const move = engine.chooseBotMove(state, seat, 'hard');
+      expect(move.action.type).toBe('deploy');
+      expect(engine.validate(state, { ...move.action, seat }).ok).toBe(true);
+      state = engine.applyAction(state, { ...move.action, seat });
+    }
+    expect(board(state).phase).toBe('battle');
+    // Barrage.
+    const seen = new Set<string>();
+    for (let volley = 0; volley < 6; volley++) {
+      for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+        const seat = state.currentSeat;
+        const move = engine.chooseBotMove(state, seat, difficulty);
+        expect(move.action.type).toBe('fire');
+        const action = { ...move.action, seat };
+        expect(engine.validate(state, action).ok).toBe(true);
+        const key = `${seat}:${action.payload.x},${action.payload.y}`;
+        expect(seen.has(key)).toBe(false);
+        seen.add(key);
+        state = engine.applyAction(state, action);
+      }
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -3661,9 +3847,10 @@ describe('engine registry', () => {
       new DartsEngine(),
       new MinigolfEngine(),
       new BankrollEngine(),
+      new BattleshipEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -3672,7 +3859,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

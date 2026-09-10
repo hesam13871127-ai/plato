@@ -36,7 +36,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000025', 'impostor', 'Impostor', 'One player does not know the place — blend in, sniff them out, eject them.', NULL, 4, 8, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000026', 'darts', 'Darts', 'Fifteen darts at the clock board — trebles, bulls and bruised egos.', NULL, 2, 4, 6, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000027', 'minigolf', 'Mini Golf', 'Nine compact holes — bank the walls, dodge the blocks, hole out in fewer strokes.', NULL, 2, 4, 8, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000028', 'bankroll', 'Bankroll', 'Hot-seat dice poker — stake your stack, dodge the craps, rake the pot.', NULL, 2, 4, 7, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000028', 'bankroll', 'Bankroll', 'Hot-seat dice poker — stake your stack, dodge the craps, rake the pot.', NULL, 2, 4, 7, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000029', 'battleship', 'Battleship', 'Deploy five ships and trade salvos — first to sink the enemy fleet rules the waves.', NULL, 2, 2, 8, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -116,6 +117,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9213-000000000034', 'Midnight Windmill Course', 'A neon-lit midnight course with spinning windmills.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 139, JSON_OBJECT('game', 'minigolf', 'felt', '#0B1F12', 'accent', '#34D399')),
   ('44444444-0000-4000-9101-000000000035', 'Golden Chip Set', 'A minted gold chip set only whales get to touch.', 'game_piece', 'epic', NULL, 1900, 'coins', 0, 1, 1, 1, 0, 140, JSON_OBJECT('game', 'bankroll', 'piece', 'golden_chips')),
   ('44444444-0000-4000-9213-000000000035', 'High Roller Penthouse', 'A penthouse table above the neon strip, whiskey included.', 'game_skin', 'rare', NULL, 1600, 'coins', 0, 1, 1, 1, 0, 141, JSON_OBJECT('game', 'bankroll', 'felt', '#0F172A', 'accent', '#EAB308')),
+  ('44444444-0000-4000-9101-000000000036', 'Admiral’s Sextant', 'A brass sextant that swears it can smell a carrier.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 142, JSON_OBJECT('game', 'battleship', 'piece', 'admirals_sextant')),
+  ('44444444-0000-4000-9213-000000000036', 'Arctic Convoy Waters', 'A freezing night sea with drifting pack ice.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 143, JSON_OBJECT('game', 'battleship', 'felt', '#0C1B2A', 'accent', '#22D3EE')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

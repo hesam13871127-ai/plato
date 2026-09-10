@@ -25,6 +25,7 @@ import { ImpostorEngine } from './impostor.engine';
 import { DartsEngine } from './darts.engine';
 import { MinigolfEngine } from './minigolf.engine';
 import { BankrollEngine } from './bankroll.engine';
+import { BattleshipEngine } from './battleship.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -63,6 +64,7 @@ export class EngineRegistry {
     darts: DartsEngine,
     minigolf: MinigolfEngine,
     bankroll: BankrollEngine,
+    battleship: BattleshipEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -89,6 +91,7 @@ export class EngineRegistry {
     this.register(darts);
     this.register(minigolf);
     this.register(bankroll);
+    this.register(battleship);
   }
 
   register(engine: BaseGameEngine): void {

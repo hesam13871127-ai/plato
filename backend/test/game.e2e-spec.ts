@@ -16,6 +16,7 @@ import { ImpostorEngine } from '../src/game/engine/impostor.engine';
 import { DartsEngine } from '../src/game/engine/darts.engine';
 import { MinigolfEngine } from '../src/game/engine/minigolf.engine';
 import { BankrollEngine } from '../src/game/engine/bankroll.engine';
+import { BattleshipEngine } from '../src/game/engine/battleship.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -289,6 +290,7 @@ void (0 as unknown as ImpostorEngine); // driver type anchor
 void (0 as unknown as DartsEngine); // driver type anchor
 void (0 as unknown as MinigolfEngine); // driver type anchor
 void (0 as unknown as BankrollEngine); // driver type anchor
+void (0 as unknown as BattleshipEngine); // driver type anchor
 
 function humanActionFor(
   session: NonNullable<ReturnType<GameSessionService['get']>>,
@@ -490,6 +492,29 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'battleship') {
+    const phase = (board.phase as string) ?? 'place';
+    if (phase === 'place') return { type: 'deploy', payload: { random: true } };
+    // Full server sight: walk the enemy fleet cells that are still dry.
+    const fleets = (board.fleets as Array<Array<{ name: string; size: number; x: number; y: number; horizontal: boolean }>>) ?? [];
+    const shots = (board.shots as Array<Array<[number, number]>>) ?? [];
+    const enemy = fleets[1 - seat] ?? [];
+    const fired = new Set((shots[seat] ?? []).map(([x, y]) => `${x},${y}`));
+    for (const ship of enemy) {
+      for (let i = 0; i < ship.size; i++) {
+        const x = ship.horizontal ? ship.x + i : ship.x;
+        const y = ship.horizontal ? ship.y : ship.y + i;
+        if (!fired.has(`${x},${y}`)) return { type: 'fire', payload: { x, y } };
+      }
+    }
+    for (let x = 0; x < 10; x++) {
+      for (let y = 0; y < 10; y++) {
+        if (!fired.has(`${x},${y}`)) return { type: 'fire', payload: { x, y } };
+      }
+    }
+    return null;
   }
 
   if (slug === 'bankroll') {

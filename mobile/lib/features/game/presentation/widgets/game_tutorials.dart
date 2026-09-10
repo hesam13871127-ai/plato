@@ -789,6 +789,36 @@ class GameTutorials {
         bodyEn: 'After five rounds the richest stack wins — protect a big lead with a well-timed fold in the last round.',
         bodyFa: 'بعد از پنج دور، پرپول‌ترین برد می‌کند — پیشتازی بزرگ را با یک فولدِ به‌موقع در دور آخر حفظ کن.',
       ),
+    ]
+    'battleship': [
+      TutorialStep(
+        emoji: '🚢',
+        titleEn: 'Deploy your fleet',
+        titleFa: 'ناوگانت را مستقر کن',
+        bodyEn: 'Hide five ships — carrier, battleship, cruiser, submarine and destroyer — on your ten-by-ten grid.',
+        bodyFa: 'پنج کشتی — هواپیمابر، رزم‌ناو، رزمناو، زیردریایی و ناوشکن — را در گرید ده‌در دهٔ خودت پنهان کن.',
+      ),
+      TutorialStep(
+        emoji: '🎯',
+        titleEn: 'Trade salvos',
+        titleFa: 'آتشبار رد و بدل کن',
+        bodyEn: 'Call a cell each turn: hit or miss, the turn passes. You learn a ship has drowned only when she goes down.',
+        bodyFa: 'هر نوبت یک خانه را نشانه برو: hit یا miss، نوبت رد می‌شود. نام کشتی فقط وقت غرق شدن لو می‌رود.',
+      ),
+      TutorialStep(
+        emoji: '🧠',
+        titleEn: 'Hunt in patterns',
+        titleFa: 'الگویی شکار کن',
+        bodyEn: 'Search in checkerboard lanes — every ship crosses them — then finish off a wounded hull along its line.',
+        bodyFa: 'به صورت شطرنجی جست‌وجو کن — هر کشتی از آن می‌گذرد — بعد بدنهٔ زخمی را در امتداد خطش تمام کن.',
+      ),
+      TutorialStep(
+        emoji: '⚓',
+        titleEn: 'Rule the waves',
+        titleFa: 'فرمانروای دریا شو',
+        bodyEn: 'First admiral to sink all seventeen enemy cells wins the duel. Your fleet stays hidden from the enemy view.',
+        bodyFa: 'اولین دریاسالاری که هر هفده‌خانهٔ دشمن را غرق کند برنده است. ناوگان خودت از دید حریف مخفی می‌ماند.',
+      ),
     ],
   };
 }
