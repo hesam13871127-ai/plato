@@ -26,6 +26,7 @@ import { DartsEngine, scoreDart } from '../src/game/engine/darts.engine';
 import { MinigolfEngine, MINIGOLF_HOLES } from '../src/game/engine/minigolf.engine';
 import { BankrollEngine } from '../src/game/engine/bankroll.engine';
 import { BattleshipEngine, BATTLESHIP_FLEET } from '../src/game/engine/battleship.engine';
+import { ReversiEngine, legalMoves, flipsFor } from '../src/game/engine/reversi.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -65,6 +66,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'minigolf', build: () => new MinigolfEngine() },
   { name: 'bankroll', build: () => new BankrollEngine() },
   { name: 'battleship', build: () => new BattleshipEngine() },
+  { name: 'reversi', build: () => new ReversiEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -3819,6 +3821,109 @@ describe('battleship rules', () => {
   });
 });
 
+
+describe('reversi rules', () => {
+  const engine = new ReversiEngine();
+
+  interface RevShape {
+    grid: Array<0 | 1 | 2>;
+    passes: number;
+    lastMove: { seat: number; x: number; y: number; flipped: number } | null;
+    log: string[];
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): RevShape {
+    return state.board as unknown as RevShape;
+  }
+
+  function place(state: GameState, x: number, y: number, seat = state.currentSeat): GameState {
+    return engine.applyAction(state, { seat, type: 'place', payload: { x, y } });
+  }
+
+  test('starts on the classic cross with four legal black moves', () => {
+    const state = start();
+    const b = board(state);
+    expect(b.grid.filter((c) => c === 1)).toHaveLength(2);
+    expect(b.grid.filter((c) => c === 2)).toHaveLength(2);
+    expect(b.grid[3 * 8 + 4]).toBe(1);
+    expect(b.grid[4 * 8 + 3]).toBe(1);
+    expect(b.grid[3 * 8 + 3]).toBe(2);
+    expect(b.grid[4 * 8 + 4]).toBe(2);
+    const moves = legalMoves(b.grid, 1).map(([x, y]) => `${x},${y}`).sort();
+    expect(moves).toEqual(['2,3', '3,2', '4,5', '5,4']);
+  });
+
+  test('a placement flips exactly the sandwiched line', () => {
+    const state = start();
+    // Black at d3 flips the white disc at d4.
+    expect(flipsFor(board(state).grid, 3, 2, 1)).toEqual([[3, 3]]);
+    const next = place(state, 3, 2);
+    const b = board(next);
+    expect(b.grid[2 * 8 + 3]).toBe(1); // placed
+    expect(b.grid[3 * 8 + 3]).toBe(1); // flipped
+    expect(b.grid[4 * 8 + 3]).toBe(1); // was black
+    expect(b.lastMove).toEqual({ seat: 0, x: 3, y: 2, flipped: 1 });
+    expect(next.scores).toEqual([4, 1]);
+    expect(next.currentSeat).toBe(1);
+  });
+
+  test('illegal placements are rejected by shape and by flip count', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 0, type: 'place', payload: { x: 0, y: 0 } }).ok).toBe(false); // flips nothing
+    expect(engine.validate(state, { seat: 0, type: 'place', payload: { x: 3, y: 3 } }).ok).toBe(false); // occupied
+    expect(engine.validate(state, { seat: 0, type: 'place', payload: { x: 8, y: 0 } }).ok).toBe(false); // off board
+    expect(engine.validate(state, { seat: 1, type: 'place', payload: { x: 3, y: 2 } }).ok).toBe(false); // not your turn
+    expect(engine.validate(state, { seat: 0, type: 'move', payload: { x: 3, y: 2 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'place', payload: { x: 2, y: 3 } }).ok).toBe(true);
+  });
+
+  test('a stranded opponent passes automatically and the double pass ends the game', () => {
+    const state = start();
+    const b = state.board as unknown as RevShape;
+    // Craft: everything black except (0,0) empty, (0,1) white and (7,7) empty.
+    b.grid.fill(1);
+    b.grid[0] = 0;
+    b.grid[1] = 2; // (0,1) white
+    b.grid[7 * 8 + 7] = 0;
+    state.currentSeat = 0;
+    state.scores = [62, 1];
+
+    const next = place(state, 0, 0); // black flips (0,1) — white keeps no discs
+    const nb = board(next);
+    expect(next.phase).toBe('completed'); // white passes, black cannot play (7,7), double pass
+    expect(nb.log.some((l) => l.includes('has no legal move — passes'))).toBe(true);
+    expect(next.winnerSeat).toBe(0);
+    expect(next.scores).toEqual([63, 0]);
+  });
+
+  test('a full board ends immediately and the majority wins', () => {
+    const state = start();
+    const b = state.board as unknown as RevShape;
+    b.grid.fill(1);
+    b.grid[0] = 0;
+    b.grid[1] = 2; // (0,1) white, sandwiched by the placement at (0,0)
+    state.currentSeat = 0;
+    const next = place(state, 0, 0);
+    expect(next.phase).toBe('completed');
+    expect(next.winnerSeat).toBe(0);
+    expect(board(next).grid.every((c) => c === 1)).toBe(true);
+  });
+
+  test('bots always choose flipping placements', () => {
+    const state = start();
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(move.action.type).toBe('place');
+      const action = { ...move.action, seat: 0 };
+      expect(engine.validate(state, action).ok).toBe(true);
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -3848,9 +3953,10 @@ describe('engine registry', () => {
       new MinigolfEngine(),
       new BankrollEngine(),
       new BattleshipEngine(),
+      new ReversiEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -3859,7 +3965,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

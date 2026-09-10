@@ -820,5 +820,35 @@ class GameTutorials {
         bodyFa: 'اولین دریاسالاری که هر هفده‌خانهٔ دشمن را غرق کند برنده است. ناوگان خودت از دید حریف مخفی می‌ماند.',
       ),
     ],
+    'reversi': [
+      TutorialStep(
+        emoji: '⚫',
+        titleEn: 'The sandwich rule',
+        titleFa: 'قانون ساندویچ',
+        bodyEn: 'Place a disc so a straight line of enemy discs is caught between your new disc and one of yours — the whole line flips.',
+        bodyFa: 'مهره‌ای بگذار که یک خط مستقیم از مهره‌های حریف بین مهرهٔ جدید تو و یکی از مهره‌هایت گیر کند — کل خط برمی‌گردد.',
+      ),
+      TutorialStep(
+        emoji: '✨',
+        titleEn: 'Every move must flip',
+        titleFa: 'هر حرکت باید برگرداند',
+        bodyEn: 'A placement that flips nothing is illegal. If you have no flipping square at all, your turn passes automatically.',
+        bodyFa: 'گذراشتن مهره‌ای که چیزی برنمی‌گرداند غیرمجاز است. اگر اصلاً خانهٔ برگردانی نداشته باشی، نوبتت خودکار رد می‌شود.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Corners are gold',
+        titleFa: 'گوشه‌ها طلا هستند',
+        bodyEn: 'Corners can never be flipped and edges are hard to attack — grab them, and avoid handing your opponent one.',
+        bodyFa: 'گوشه‌ها هرگز برنمی‌گردند و حمله به لبه‌ها سخت است — آن‌ها را بگیر و مواظب باش گوشه‌ای به حریف ندهی.',
+      ),
+      TutorialStep(
+        emoji: '📊',
+        titleEn: 'Majority rules',
+        titleFa: 'اکثریت حکم می‌راند',
+        bodyEn: 'When neither side can move (or the board fills), the colour with more discs wins. Big flips early can mean big losses late.',
+        bodyFa: 'وقتی هیچ‌کس نتواند حرکت کند (یا صفحه پر شود)، رنگِ دارای مهرهٔ بیشتر برنده است. برگرداندن‌های بزرگ اوایل بازی ممکن است یعنی باخت‌های بزرگ آخرش.',
+      ),
+    ],
   };
 }

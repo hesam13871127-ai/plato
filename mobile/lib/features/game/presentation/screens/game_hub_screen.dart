@@ -310,6 +310,8 @@ String _gameEmoji(String slug) {
       return '💵';
     case 'battleship':
       return '🚢';
+    case 'reversi':
+      return '⚫';
     default:
       return '🎮';
   }

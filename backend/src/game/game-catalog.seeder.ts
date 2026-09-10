@@ -284,6 +284,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'reversi',
+    name: 'Reversi',
+    description: 'Sandwich enemy discs to flip whole lines — corners are gold, edges are silver.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 7,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

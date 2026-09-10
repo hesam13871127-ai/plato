@@ -17,6 +17,7 @@ import { DartsEngine } from '../src/game/engine/darts.engine';
 import { MinigolfEngine } from '../src/game/engine/minigolf.engine';
 import { BankrollEngine } from '../src/game/engine/bankroll.engine';
 import { BattleshipEngine } from '../src/game/engine/battleship.engine';
+import { ReversiEngine, legalMoves } from '../src/game/engine/reversi.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -291,6 +292,7 @@ void (0 as unknown as DartsEngine); // driver type anchor
 void (0 as unknown as MinigolfEngine); // driver type anchor
 void (0 as unknown as BankrollEngine); // driver type anchor
 void (0 as unknown as BattleshipEngine); // driver type anchor
+void (0 as unknown as ReversiEngine); // driver type anchor
 
 function humanActionFor(
   session: NonNullable<ReturnType<GameSessionService['get']>>,
@@ -492,6 +494,15 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'reversi') {
+    // Full server sight: take the first legal flip.
+    const grid = (board.grid as Array<0 | 1 | 2>) ?? [];
+    const seat = session.state.currentSeat;
+    const moves = legalMoves(grid, ((seat + 1) as 0 | 1 | 2));
+    if (moves.length > 0) return { type: 'place', payload: { x: moves[0][0], y: moves[0][1] } };
+    return null;
   }
 
   if (slug === 'battleship') {
