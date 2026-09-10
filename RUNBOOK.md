@@ -99,7 +99,14 @@ npm run test:e2e          # کل تست‌های e2e (فعلاً 292 ✓)
 npx jest --config ./test/jest-e2e.json --runInBand game-engines   # فقط قواعد بازی‌ها
 npm run lint              # ESLint
 npx tsc --noEmit -p tsconfig.json   # چک تایپ
+npm run audit:schema      # پریتی entityها ↔ schema.sql (نام ستون‌ها)
+npm run audit:enums       # پریتی مقادیر unionهای TS ↔ ENUMهای MySQL
 ```
+
+> دو اسکریپت `audit:*` همان شکافی را می‌بندند که تست‌های SQLite نمی‌بینند: تست‌ها
+> جدول‌ها را از خود entityها می‌سازند، ولی در MySQL واقعی جدول‌ها از `schema.sql`
+> ساخته می‌شوند — این اسکریپت‌ها هر دو طرف را با هم مقایسه می‌کنند. بعد از هر
+> تغییر entity یا `schema.sql` اجرایشان کنید.
 
 ---
 

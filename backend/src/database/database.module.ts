@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import type { AppConfig } from '../config/configuration';
 import { entities } from './entities';
+import { SnakeNamingStrategy } from './snake-naming.strategy';
 
 /**
  * Database wiring. Production / development uses MySQL 8.0 with migrations
@@ -10,6 +11,9 @@ import { entities } from './entities';
  * the canonical `schema.sql`). The test environment runs the same entity
  * metadata against in-memory SQLite with `synchronize` so the API can be
  * exercised without an external database.
+ *
+ * Both paths share the SnakeNamingStrategy so the test environment addresses
+ * exactly the same snake_case column names as the MySQL DDL.
  */
 @Module({
   imports: [

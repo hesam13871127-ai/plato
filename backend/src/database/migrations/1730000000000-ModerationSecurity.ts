@@ -5,9 +5,12 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  *
  * Adds the platform role column (`users.role`) and the moderation/observability
  * tables: automated content flags, the immutable audit trail, per-user conduct
- * strikes, and tracked error/security events. Every statement is idempotent so
- * it is safe on fresh MySQL 8 (where `synchronize` may already have created the
- * objects from entity metadata) and on upgraded databases.
+ * strikes, and tracked error/security events. Column names are snake_case to
+ * match the SnakeNamingStrategy entities and the rest of schema.sql (databases
+ * created by the earlier camelCase variant are upgraded by migration
+ * 1750000000000). Every statement is idempotent so it is safe on fresh MySQL 8
+ * (where `synchronize` may already have created the objects from entity
+ * metadata) and on upgraded databases.
  */
 export class ModerationSecurity1730000000000 implements MigrationInterface {
   name = 'ModerationSecurity1730000000000';
@@ -20,16 +23,16 @@ export class ModerationSecurity1730000000000 implements MigrationInterface {
       'moderation_flags',
       `CREATE TABLE \`moderation_flags\` (
         \`id\` CHAR(36) NOT NULL PRIMARY KEY,
-        \`targetType\` VARCHAR(16) NOT NULL DEFAULT 'message',
-        \`targetId\` VARCHAR(36) NOT NULL,
-        \`authorId\` VARCHAR(36) NULL,
+        \`target_type\` VARCHAR(16) NOT NULL DEFAULT 'message',
+        \`target_id\` VARCHAR(36) NOT NULL,
+        \`author_id\` VARCHAR(36) NULL,
         \`reason\` VARCHAR(24) NOT NULL,
         \`verdict\` VARCHAR(16) NOT NULL DEFAULT 'flagged',
         \`excerpt\` VARCHAR(512) NULL,
         \`details\` JSON NULL,
         \`status\` VARCHAR(16) NOT NULL DEFAULT 'open',
-        \`resolvedBy\` VARCHAR(36) NULL,
-        \`createdAt\` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+        \`resolved_by\` VARCHAR(36) NULL,
+        \`created_at\` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
     );
 
@@ -38,13 +41,13 @@ export class ModerationSecurity1730000000000 implements MigrationInterface {
       'moderation_audit_log',
       `CREATE TABLE \`moderation_audit_log\` (
         \`id\` CHAR(36) NOT NULL PRIMARY KEY,
-        \`actorId\` VARCHAR(36) NOT NULL DEFAULT 'system',
+        \`actor_id\` VARCHAR(36) NOT NULL DEFAULT 'system',
         \`action\` VARCHAR(32) NOT NULL,
-        \`targetType\` VARCHAR(16) NULL,
-        \`targetId\` VARCHAR(36) NULL,
+        \`target_type\` VARCHAR(16) NULL,
+        \`target_id\` VARCHAR(36) NULL,
         \`reason\` VARCHAR(255) NULL,
         \`metadata\` JSON NULL,
-        \`createdAt\` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+        \`created_at\` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
     );
 
@@ -53,14 +56,14 @@ export class ModerationSecurity1730000000000 implements MigrationInterface {
       'user_strikes',
       `CREATE TABLE \`user_strikes\` (
         \`id\` CHAR(36) NOT NULL PRIMARY KEY,
-        \`userId\` VARCHAR(36) NOT NULL,
-        \`issuedBy\` VARCHAR(36) NOT NULL DEFAULT 'auto',
+        \`user_id\` VARCHAR(36) NOT NULL,
+        \`issued_by\` VARCHAR(36) NOT NULL DEFAULT 'auto',
         \`reason\` VARCHAR(32) NOT NULL,
         \`weight\` TINYINT NOT NULL DEFAULT 1,
         \`consequence\` VARCHAR(16) NOT NULL DEFAULT 'note',
-        \`relatedFlagId\` VARCHAR(36) NULL,
-        \`createdAt\` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-        INDEX \`idx_strikes_user\` (\`userId\`, \`createdAt\`)
+        \`related_flag_id\` VARCHAR(36) NULL,
+        \`created_at\` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+        INDEX \`idx_strikes_user\` (\`user_id\`, \`created_at\`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
     );
 
@@ -76,23 +79,23 @@ export class ModerationSecurity1730000000000 implements MigrationInterface {
         \`stack\` TEXT NULL,
         \`method\` VARCHAR(10) NULL,
         \`path\` VARCHAR(512) NULL,
-        \`statusCode\` INT NULL,
-        \`userId\` VARCHAR(64) NULL,
+        \`status_code\` INT NULL,
+        \`user_id\` VARCHAR(64) NULL,
         \`context\` JSON NULL,
         \`occurrences\` INT NOT NULL DEFAULT 1,
-        \`firstSeenAt\` DATETIME(6) NULL,
-        \`createdAt\` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-        INDEX \`idx_errors_level_time\` (\`level\`, \`createdAt\`),
+        \`first_seen_at\` DATETIME(6) NULL,
+        \`created_at\` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+        INDEX \`idx_errors_level_time\` (\`level\`, \`created_at\`),
         INDEX \`idx_errors_fingerprint\` (\`fingerprint\`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
     );
 
-    await this.addIndexIfMissing(queryRunner, 'moderation_flags', 'idx_mod_flags_status', '`status`, `createdAt`');
-    await this.addIndexIfMissing(queryRunner, 'moderation_flags', 'idx_mod_flags_target', '`targetType`, `targetId`');
-    await this.addIndexIfMissing(queryRunner, 'moderation_flags', 'idx_mod_flags_author', '`authorId`');
-    await this.addIndexIfMissing(queryRunner, 'moderation_audit_log', 'idx_audit_created', '`createdAt`');
-    await this.addIndexIfMissing(queryRunner, 'moderation_audit_log', 'idx_audit_target', '`targetType`, `targetId`');
-    await this.addIndexIfMissing(queryRunner, 'moderation_audit_log', 'idx_audit_actor', '`actorId`');
+    await this.addIndexIfMissing(queryRunner, 'moderation_flags', 'idx_mod_flags_status', '`status`, `created_at`');
+    await this.addIndexIfMissing(queryRunner, 'moderation_flags', 'idx_mod_flags_target', '`target_type`, `target_id`');
+    await this.addIndexIfMissing(queryRunner, 'moderation_flags', 'idx_mod_flags_author', '`author_id`');
+    await this.addIndexIfMissing(queryRunner, 'moderation_audit_log', 'idx_audit_created', '`created_at`');
+    await this.addIndexIfMissing(queryRunner, 'moderation_audit_log', 'idx_audit_target', '`target_type`, `target_id`');
+    await this.addIndexIfMissing(queryRunner, 'moderation_audit_log', 'idx_audit_actor', '`actor_id`');
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

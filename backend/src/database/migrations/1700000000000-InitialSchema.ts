@@ -18,7 +18,14 @@ export class InitialSchema1700000000000 implements MigrationInterface {
     const sql = readFileSync(sqlPath, 'utf8');
 
     for (const statement of this.splitStatements(sql)) {
-      await queryRunner.query(statement);
+      // Idempotency: docker-compose also mounts schema.sql as the MySQL init
+      // script, so the tables may already exist when this migration runs.
+      // Rewriting CREATE TABLE as CREATE TABLE IF NOT EXISTS makes the re-run
+      // a no-op instead of failing with ER_TABLE_EXISTS_ERROR (and keeps
+      // schema.sql itself verbatim/canonical).
+      await queryRunner.query(
+        statement.replace(/^CREATE TABLE\s+/i, 'CREATE TABLE IF NOT EXISTS '),
+      );
     }
   }
 

@@ -27,6 +27,7 @@ CREATE TABLE users (
   password_hash       VARCHAR(255)  NULL,
   primary_provider    ENUM('phone','email') NOT NULL DEFAULT 'phone',
   status              ENUM('active','suspended','banned','deleted') NOT NULL DEFAULT 'active',
+  role                VARCHAR(16)   NOT NULL DEFAULT 'player',  -- platform role (moderation access); also added by migration 1730000000000 on upgraded DBs
   is_verified         TINYINT(1)    NOT NULL DEFAULT 0,
   is_bot              TINYINT(1)    NOT NULL DEFAULT 0,  -- INTERNAL: never exposed to clients
   gender              ENUM('male','female','other','unspecified') NOT NULL DEFAULT 'unspecified',
