@@ -304,6 +304,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'blackjack',
+    name: 'Blackjack',
+    description: 'Hot-seat twenty-one — hit or stand, beat the dealer to seventeen, blackjacks pay three to two.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 6,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

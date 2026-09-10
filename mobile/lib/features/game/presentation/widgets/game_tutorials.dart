@@ -880,5 +880,35 @@ class GameTutorials {
         bodyFa: 'مهره‌های نزدیک نقطهٔ ستاره به جهت‌های بیشتری می‌رسند — وسط صفحه جایی است که پنج‌ها زاده می‌شوند.',
       ),
     ],
+    'blackjack': [
+      TutorialStep(
+        emoji: '🃏',
+        titleEn: 'Beat the dealer',
+        titleFa: 'دیلر را شکست بده',
+        bodyEn: 'Get closer to twenty-one than the dealer without going over. Aces count eleven or one, faces count ten.',
+        bodyFa: 'نزدیک‌تر از دیلر به بیست‌ویک شو بدون عبور کردن. تک یک یا یازده حساب می‌شود و صورت‌ها ده.',
+      ),
+      TutorialStep(
+        emoji: '💵',
+        titleEn: 'Post your stake',
+        titleFa: 'شرطت را بگذار',
+        bodyEn: 'Three rounds, a thousand chips each: post a stake of five or more, or sit the round out and keep your stack.',
+        bodyFa: 'سه دور، هر کس هزار سکه: پنج یا بیشتر شرط بگذار، یا آن دور را بیرون بمان و سکه‌هایت را نگه دار.',
+      ),
+      TutorialStep(
+        emoji: '🎴',
+        titleEn: 'Hit or stand',
+        titleFa: 'کارت بکش یا بایست',
+        bodyEn: 'Take cards to build your hand, then stand. The dealer draws to seventeen — make them bust trying to beat you.',
+        bodyFa: 'کارت بکش تا دستت قوی شود، بعد بایست. دیلر تا هفده کارت می‌کشد — کاری کن که برای شکست دادنت بپرد.',
+      ),
+      TutorialStep(
+        emoji: '✨',
+        titleEn: 'Blackjack pays 3:2',
+        titleFa: 'بلک‌جک ۳ به ۲ می‌گیرد',
+        bodyEn: 'An ace plus a ten on the deal is a natural: it pays three to two, and a tie with the dealer returns your stake.',
+        bodyFa: 'تک به‌علاوهٔ ده در همان دو کارت اول یعنی بلک‌جک: سه‌به‌دو می‌گیرد و مساوی با دیلر شرطت را پس می‌دهد.',
+      ),
+    ],
   };
 }

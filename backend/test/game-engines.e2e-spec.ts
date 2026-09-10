@@ -28,6 +28,7 @@ import { BankrollEngine } from '../src/game/engine/bankroll.engine';
 import { BattleshipEngine, BATTLESHIP_FLEET } from '../src/game/engine/battleship.engine';
 import { ReversiEngine, legalMoves, flipsFor } from '../src/game/engine/reversi.engine';
 import { GomokuEngine, winningLineAt } from '../src/game/engine/gomoku.engine';
+import { BlackjackEngine, handValue } from '../src/game/engine/blackjack.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -69,6 +70,7 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'battleship', build: () => new BattleshipEngine() },
   { name: 'reversi', build: () => new ReversiEngine() },
   { name: 'gomoku', build: () => new GomokuEngine() },
+  { name: 'blackjack', build: () => new BlackjackEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -4038,6 +4040,192 @@ describe('gomoku rules', () => {
   });
 });
 
+
+describe('blackjack rules', () => {
+  const engine = new BlackjackEngine();
+
+  interface CardShape {
+    r: number;
+    s: number;
+  }
+
+  interface BjShape {
+    round: number;
+    phase: 'bet' | 'play';
+    bankrolls: number[];
+    bets: number[];
+    foldedRound: boolean[];
+    bettors: number[];
+    hands: CardShape[][];
+    dealer: CardShape[];
+    lastRound: { dealer: CardShape[]; results: string[] } | null;
+    log: string[];
+  }
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function board(state: GameState): BjShape {
+    return state.board as unknown as BjShape;
+  }
+
+  function act(state: GameState, type: string, payload: Record<string, unknown> = {}): GameState {
+    return engine.applyAction(state, { seat: state.currentSeat, type, payload });
+  }
+
+  const c = (r: number, s = 0): CardShape => ({ r, s });
+
+  test('hand values flex the aces', () => {
+    expect(handValue([c(1), c(10)])).toBe(21);
+    expect(handValue([c(1), c(1)])).toBe(12);
+    expect(handValue([c(1), c(5)])).toBe(16);
+    expect(handValue([c(1), c(5), c(9)])).toBe(15);
+    expect(handValue([c(10), c(8), c(3)])).toBe(21);
+    expect(handValue([c(13), c(12)])).toBe(20);
+    expect(handValue([c(10), c(10), c(5)])).toBe(25);
+  });
+
+  test('stakes post, cards deal, and the hole card stays hidden mid-hand', () => {
+    let state = start();
+    state = act(state, 'bet', { amount: 100 });
+    state = act(state, 'bet', { amount: 50 });
+    const b = board(state);
+    expect(b.phase).toBe('play');
+    expect(b.bettors).toEqual([0, 1]);
+    expect(b.hands[0]).toHaveLength(2);
+    expect(b.hands[1]).toHaveLength(2);
+    expect(b.dealer).toHaveLength(2);
+    expect(state.currentSeat).toBe(0);
+    // Views see only the dealer's up-card while the hand is live.
+    const view = engine.playerView(state, 0);
+    expect((view.board as unknown as BjShape).dealer).toHaveLength(1);
+    expect((view.board as unknown as BjShape).hands[0]).toHaveLength(2); // own hand intact
+  });
+
+  test('hitting draws and standing passes the deal', () => {
+    let state = start();
+    state = act(state, 'bet', { amount: 10 });
+    state = act(state, 'bet', { amount: 10 });
+    // Craft a safe nine so no random card can end the hand.
+    board(state).hands[0] = [c(5), c(4)];
+    state = act(state, 'hit');
+    expect(board(state).hands[0]).toHaveLength(3);
+    expect(state.currentSeat).toBe(0); // still their call under 21
+    state = act(state, 'stand');
+    expect(state.currentSeat).toBe(1);
+  });
+
+  test('the settle pays wins, losses and pushes against a standing dealer', () => {
+    let state = start();
+    state = act(state, 'bet', { amount: 100 });
+    state = act(state, 'bet', { amount: 100 });
+    const b = board(state);
+    b.hands[0] = [c(10), c(9)]; // 19 — beats 18
+    b.hands[1] = [c(10), c(7)]; // 17 — loses to 18
+    b.dealer = [c(10), c(8)]; // 18 — no draw
+    state = act(state, 'stand'); // seat 0
+    state = act(state, 'stand'); // seat 1 → settle
+    const nb = board(state);
+    expect(nb.round).toBe(2);
+    expect(nb.phase).toBe('bet');
+    expect(nb.bankrolls[0]).toBe(1100); // stake back + even-money win
+    expect(nb.bankrolls[1]).toBe(900); // stake lost
+    expect(nb.lastRound!.results[0]).toContain('beats 18');
+    expect(nb.lastRound!.results[1]).toContain('loses to 18');
+    expect(nb.lastRound!.dealer).toHaveLength(2); // history is open
+  });
+
+  test('blackjack pays three to two and a push returns the stake', () => {
+    // Seat 0: natural 21. Seat 1: eighteen against the dealer's eighteen.
+    let state = start();
+    state = act(state, 'bet', { amount: 100 });
+    state = act(state, 'bet', { amount: 60 });
+    const b = board(state);
+    b.hands[0] = [c(1), c(12)]; // blackjack
+    b.hands[1] = [c(10), c(8)]; // 18
+    b.dealer = [c(9), c(9)]; // 18
+    state = act(state, 'stand');
+    state = act(state, 'stand');
+    const nb = board(state);
+    expect(nb.bankrolls[0]).toBe(1000 - 100 + 250); // 3:2 → +150
+    expect(nb.bankrolls[1]).toBe(1000 - 60 + 60); // push
+    expect(nb.lastRound!.results[0]).toContain('blackjack');
+    expect(nb.lastRound!.results[1]).toContain('push');
+  });
+
+  test('a busted hand loses even when the dealer would have busted too', () => {
+    let state = start();
+    state = act(state, 'bet', { amount: 80 });
+    state = act(state, 'fold');
+    const b = board(state);
+    b.hands[0] = [c(10), c(10), c(5)]; // 25 — bust
+    b.dealer = [c(10), c(8)]; // 18 stands
+    state = act(state, 'stand');
+    const nb = board(state);
+    expect(nb.bankrolls[0]).toBe(920);
+    expect(nb.lastRound!.results[0]).toContain('bust');
+    expect(nb.bettors).toEqual([]); // swept for the next round
+  });
+
+  test('three rounds decide the richest stack', () => {
+    let state = start();
+    let guard = 0;
+    while (state.phase === 'in_progress' && guard++ < 200) {
+      const b = board(state);
+      if (b.phase === 'bet') {
+        state = act(state, b.bankrolls[state.currentSeat] >= 5 ? 'bet' : 'fold', { amount: 5 });
+      } else {
+        // Stand on 17+, hit below — mirror of basic play.
+        const value = handValue(b.hands[state.currentSeat]);
+        state = act(state, value < 17 ? 'hit' : 'stand');
+      }
+    }
+    expect(state.phase).toBe('completed');
+    expect(board(state).round).toBe(3);
+    const b = board(state);
+    expect(state.scores).toEqual(b.bankrolls);
+    const max = Math.max(...b.bankrolls);
+    const leaders = b.bankrolls.map((v, i) => ({ v, i })).filter((x) => x.v === max).map((x) => x.i);
+    if (leaders.length === 1) {
+      expect(state.winnerSeat).toBe(leaders[0]);
+    } else {
+      expect(state.winnerSeat).toBeNull();
+    }
+  });
+
+  test('actions are validated by phase, seat and amount', () => {
+    const state = start();
+    expect(engine.validate(state, { seat: 0, type: 'bet', payload: { amount: 4 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'bet', payload: { amount: 1001 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 1, type: 'bet', payload: { amount: 10 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'hit', payload: {} }).ok).toBe(false); // bet phase
+    expect(engine.validate(state, { seat: 0, type: 'fold', payload: {} }).ok).toBe(true);
+    let s = act(state, 'bet', { amount: 10 });
+    s = act(s, 'fold'); // seat 1 folds → play with only seat 0
+    expect(engine.validate(s, { seat: 0, type: 'bet', payload: { amount: 10 } }).ok).toBe(false);
+    expect(engine.validate(s, { seat: 0, type: 'hit', payload: {} }).ok).toBe(true);
+    expect(engine.validate(s, { seat: 0, type: 'stand', payload: {} }).ok).toBe(true);
+  });
+
+  test('bots post legal stakes and play legal hits', () => {
+    const state = engine.createInitialState(makeConfig(engine, 4));
+    for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
+      const move = engine.chooseBotMove(state, 0, difficulty);
+      expect(move.action.type).toBe('bet');
+      const amount = Number(move.action.payload.amount);
+      expect(Number.isInteger(amount)).toBe(true);
+      expect(amount).toBeGreaterThanOrEqual(5);
+      expect(amount).toBeLessThanOrEqual(1000);
+    }
+    let s = state;
+    for (let i = 0; i < 4; i++) s = act(s, 'bet', { amount: 5 });
+    expect(board(s).phase).toBe('play');
+    const move = engine.chooseBotMove(s, board(s).bettors[0], 'hard');
+    expect(['hit', 'stand']).toContain(move.action.type);
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -4069,9 +4257,10 @@ describe('engine registry', () => {
       new BattleshipEngine(),
       new ReversiEngine(),
       new GomokuEngine(),
+      new BlackjackEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -4080,7 +4269,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

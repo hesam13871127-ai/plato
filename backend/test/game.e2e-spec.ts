@@ -19,6 +19,7 @@ import { BankrollEngine } from '../src/game/engine/bankroll.engine';
 import { BattleshipEngine } from '../src/game/engine/battleship.engine';
 import { ReversiEngine, legalMoves } from '../src/game/engine/reversi.engine';
 import { GomokuEngine } from '../src/game/engine/gomoku.engine';
+import { BlackjackEngine, handValue } from '../src/game/engine/blackjack.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -295,6 +296,7 @@ void (0 as unknown as BankrollEngine); // driver type anchor
 void (0 as unknown as BattleshipEngine); // driver type anchor
 void (0 as unknown as ReversiEngine); // driver type anchor
 void (0 as unknown as GomokuEngine); // driver type anchor
+void (0 as unknown as BlackjackEngine); // driver type anchor
 
 function humanActionFor(
   session: NonNullable<ReturnType<GameSessionService['get']>>,
@@ -496,6 +498,19 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'blackjack') {
+    const phase = (board.phase as string) ?? 'bet';
+    const bankrolls = (board.bankrolls as number[]) ?? [];
+    if (phase === 'bet') {
+      if ((bankrolls[seat] ?? 0) >= 5) return { type: 'bet', payload: { amount: 5 } };
+      return { type: 'fold', payload: {} };
+    }
+    // Basic play: hit below 17.
+    const hands = (board.hands as Array<Array<{ r: number; s: number }>>) ?? [];
+    const value = handValue(hands[seat] ?? []);
+    return { type: value < 17 ? 'hit' : 'stand', payload: {} };
   }
 
   if (slug === 'gomoku') {
