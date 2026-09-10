@@ -6,7 +6,6 @@
 process.env.NODE_ENV = 'test';
 process.env.DB_TYPE = 'sqlite';
 process.env.DB_SYNCHRONIZE = 'true';
-process.env.DB_RUN_MIGRATIONS = 'false';
 process.env.PORT = '0';
 process.env.JWT_ACCESS_SECRET = 'test-access-secret-which-is-long-enough-0001';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-which-is-long-enough-0001';

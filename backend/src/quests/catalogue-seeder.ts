@@ -7,7 +7,7 @@ import { QUEST_CATALOGUE } from './catalogue';
 /**
  * Ensures the daily-quest catalogue exists in the database on startup.
  * Idempotent: existing quests (matched by fixed id/code) are left intact so
- * production data is never overwritten. Mirrors `database/seed.sql`.
+ * production data is never overwritten.
  */
 @Injectable()
 export class CatalogueSeeder implements OnApplicationBootstrap {

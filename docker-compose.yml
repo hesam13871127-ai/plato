@@ -1,8 +1,8 @@
 version: "3.9"
 
 # Full VibeTable stack: MySQL 8.0 + NestJS API.
-# The API waits for MySQL to be healthy, then runs migrations automatically
-# (DB_RUN_MIGRATIONS=true), which creates every table from database/schema.sql.
+# The API waits for MySQL to be healthy, then TypeORM `synchronize` creates
+# the whole schema from the entity metadata on boot (no SQL files).
 
 services:
   mysql:
@@ -22,7 +22,6 @@ services:
       - --default-authentication-plugin=mysql_native_password
     volumes:
       - vibetable-mysql-data:/var/lib/mysql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uvibetable", "-pvibetable"]
       interval: 5s
@@ -47,8 +46,8 @@ services:
       DB_USERNAME: vibetable
       DB_PASSWORD: vibetable
       DB_DATABASE: vibetable
-      DB_SYNCHRONIZE: "false"
-      DB_RUN_MIGRATIONS: "true"
+      # TypeORM keeps the schema in sync with the entities (single source of truth).
+      DB_SYNCHRONIZE: "true"
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-please-change-me-to-a-long-random-secret-0001}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-please-change-me-to-a-long-random-secret-0002}
       JWT_ACCESS_TTL: 900s

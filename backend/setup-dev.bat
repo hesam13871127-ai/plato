@@ -27,9 +27,9 @@ if not exist ".env" (
       echo CORS_ORIGINS=*
       echo.
       echo # Zero-setup database: in-memory SQLite, no MySQL required.
+      echo # TypeORM creates the schema from the entities automatically.
       echo DB_TYPE=sqlite
       echo DB_SYNCHRONIZE=true
-      echo DB_RUN_MIGRATIONS=false
       echo.
       echo JWT_ACCESS_SECRET=dev-access-secret-change-me-please-32chars-long
       echo JWT_REFRESH_SECRET=dev-refresh-secret-change-me-please-32chars-long

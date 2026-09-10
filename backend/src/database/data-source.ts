@@ -7,10 +7,9 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
 loadEnv();
 
 /**
- * CLI TypeORM data source used by the `typeorm`, `migration:run` and
- * `migration:revert` npm scripts. Targets MySQL 8.0. Uses the same
- * SnakeNamingStrategy as the application so CLI and runtime agree on the
- * snake_case column names of database/schema.sql.
+ * CLI TypeORM data source. Targets MySQL 8.0 and uses the same
+ * SnakeNamingStrategy as the application so any CLI tooling agrees on the
+ * snake_case column names the runtime creates via `synchronize`.
  */
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -21,8 +20,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_DATABASE ?? 'vibetable',
   entities,
   namingStrategy: new SnakeNamingStrategy(),
-  migrations: [`${__dirname}/migrations/*{.ts,.js}`],
-  migrationsTableName: 'typeorm_migrations',
+  synchronize: true,
   charset: 'utf8mb4',
   logging: false,
 });

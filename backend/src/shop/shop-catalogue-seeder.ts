@@ -6,8 +6,7 @@ import { SHOP_CATALOGUE } from './shop-catalogue';
 
 /**
  * Ensures the shop catalogue exists in the database on startup. Idempotent:
- * items are matched by fixed id and left intact if already present. Mirrors
- * `database/seed.sql`.
+ * items are matched by fixed id and left intact if already present.
  */
 @Injectable()
 export class ShopCatalogueSeeder implements OnApplicationBootstrap {

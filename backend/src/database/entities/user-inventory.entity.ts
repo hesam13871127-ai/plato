@@ -12,9 +12,9 @@ import { UserEntity } from './user.entity';
 
 /**
  * An item owned by a user. Unique items have one row; consumables accumulate
- * `quantity`. The one-per-user constraint for unique items is enforced at the
- * database level by a generated `unique_key` column in `schema.sql` (MySQL) and
- * by the purchase service transaction elsewhere.
+ * `quantity`. The one-per-user rule for unique items is enforced by the shop
+ * purchase transaction, which takes a `FOR UPDATE` lock on the buyer's
+ * profile row so concurrent purchases of the same item serialize safely.
  */
 @Entity('user_inventory')
 @Index('idx_inventory_user', ['userId'])

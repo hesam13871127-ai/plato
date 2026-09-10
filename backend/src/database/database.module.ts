@@ -6,14 +6,17 @@ import { entities } from './entities';
 import { SnakeNamingStrategy } from './snake-naming.strategy';
 
 /**
- * Database wiring. Production / development uses MySQL 8.0 with migrations
- * (see `database/migrations/1700000000000-InitialSchema.ts`, which executes
- * the canonical `schema.sql`). The test environment runs the same entity
- * metadata against in-memory SQLite with `synchronize` so the API can be
- * exercised without an external database.
+ * Database wiring. There are no SQL files and no migrations in this project:
+ * TypeORM's `synchronize` keeps the database schema in lockstep with the
+ * entity metadata on every boot (fresh databases are created, existing
+ * databases are updated incrementally without touching data).
  *
- * Both paths share the SnakeNamingStrategy so the test environment addresses
- * exactly the same snake_case column names as the MySQL DDL.
+ * Production / development uses MySQL 8.0; the test environment runs the same
+ * entity metadata against in-memory SQLite with `synchronize` so the API can
+ * be exercised without an external database.
+ *
+ * Both paths share the SnakeNamingStrategy so all drivers address exactly
+ * the same snake_case column names.
  */
 @Module({
   imports: [
@@ -39,7 +42,7 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
         }
 
         logger.log(
-          `driver: mysql (${db.host}:${db.port}/${db.database}) | column naming: snake_case [ok]`,
+          `driver: mysql (${db.host}:${db.port}/${db.database}) | column naming: snake_case [ok] | synchronize: ${db.synchronize}`,
         );
 
         return {
@@ -51,9 +54,6 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
           database: db.database,
           entities,
           synchronize: db.synchronize,
-          migrationsRun: db.runMigrations && !db.synchronize,
-          migrations: [`${__dirname}/migrations/*{.ts,.js}`],
-          migrationsTableName: 'typeorm_migrations',
           logging: db.logging,
           timezone: 'Z',
           charset: 'utf8mb4',

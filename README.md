@@ -7,7 +7,7 @@ authentication and project setup, fully working and ready to run.
 | ------ | ----- |
 | Mobile client | **Flutter 3.24+** with **Riverpod 2.x**, clean architecture |
 | Backend API | **NestJS** (latest) — modules, guards, interceptors, Swagger |
-| Database | **MySQL 8.0+** (InnoDB, `utf8mb4`), TypeORM + SQL migrations |
+| Database | **MySQL 8.0+** (InnoDB, `utf8mb4`), TypeORM — schema auto-synced from entities |
 | Realtime | **Socket.io** (JWT-authenticated gateway) |
 | Auth | JWT access + refresh token (rotation + reuse detection), Phone OTP (SMS), Google, Apple |
 
@@ -26,14 +26,11 @@ plato/
 │   │   ├── users/           # profile read/update + public user serializer
 │   │   ├── health/          # liveness + DB connectivity
 │   │   ├── realtime/        # Socket.io gateway
-│   │   ├── database/        # entities (24), data source, migrations
+│   │   ├── database/        # entities (single source of truth for the schema)
 │   │   ├── common/          # filters, guards, interceptors, decorators, utils
 │   │   └── config/          # typed configuration + Joi validation
 │   ├── test/                # e2e integration tests (in-memory SQLite)
 │   └── Dockerfile
-├── database/
-│   ├── schema.sql           # ⭐ canonical MySQL 8.0 schema (source of truth)
-│   └── seed.sql             # optional starter data (games, season, shop, bot)
 ├── mobile/                  # Flutter app
 │   └── lib/
 │       ├── core/            # theme, networking, storage, routing, widgets
@@ -54,18 +51,14 @@ plato/
 docker compose up --build
 ```
 
-This starts MySQL 8 (schema auto-loaded), then the API which runs migrations on
-boot. Services:
+This starts MySQL 8, then the API — TypeORM `synchronize` creates the whole
+schema from the entity metadata on boot (no SQL files, no migrations).
+Starter data (games, season, shop items, quests, lounge) is seeded
+automatically by the API at startup. Services:
 
 - API base: `http://localhost:3000/api`
 - Swagger docs: `http://localhost:3000/docs`
 - Health: `http://localhost:3000/health`
-
-Optional seed data:
-
-```bash
-docker exec -i vibetable-mysql mysql -uvibetable -pvibetable vibetable < database/seed.sql
-```
 
 ---
 
@@ -81,21 +74,19 @@ npm install
 # Create the database (once)
 mysql -u root -p -e "CREATE DATABASE vibetable CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# Option A — apply the canonical SQL directly
-mysql -u vibetable -p vibetable < ../database/schema.sql
-
-# Option B — let TypeORM run the migration (it executes schema.sql)
-npm run migration:run
-
 npm run start:dev
 ```
+
+The first boot creates every table from the entities via TypeORM
+`synchronize`; on later boots it updates the schema to match any entity
+changes. No SQL files or migrations to manage.
 
 ### Without MySQL (instant spin-up for UI/dev)
 
 The API can run on in-memory SQLite for a zero-database demo (used by tests):
 
 ```bash
-NODE_ENV=development DB_TYPE=sqlite DB_SYNCHRONIZE=true DB_RUN_MIGRATIONS=false \
+NODE_ENV=development DB_TYPE=sqlite \
 JWT_ACCESS_SECRET=dev-access-secret-change-me-please-32chars \
 JWT_REFRESH_SECRET=dev-refresh-secret-change-me-please-32chars \
 npm run start
@@ -148,22 +139,22 @@ Errors are wrapped: `{ statusCode, error, message, path, timestamp }`.
 
 ## Database
 
-`database/schema.sql` is the canonical MySQL 8.0 DDL (24 tables) and is executed
-verbatim by the TypeORM initial migration. Highlights:
+There are **no SQL files and no migrations** — the TypeORM entities in
+`backend/src/database/entities/` are the single source of truth. TypeORM
+`synchronize` (enabled by `DB_SYNCHRONIZE=true`, the default) creates the
+schema on first boot and keeps it in sync with the entities on every boot,
+without touching existing data.
 
-- UUID primary keys (`CHAR(36)`), `DATETIME(6)` UTC timestamps, `BIGINT` money.
+Highlights of the entity model:
+
+- UUID primary keys, `DATETIME(6)` UTC timestamps, `BIGINT` money.
 - Full foreign-key graph with `CASCADE` / `RESTRICT` / `SET NULL` as appropriate.
 - Targeted indexes for hot paths (leaderboards, message history, wallet ledger).
-- `CHECK` constraints for non-negative wallets, valid player counts, date
-  ranges and self-referential bans.
-- `ENUM`s for statuses; a generated-column uniqueness guarantee for owned
-  shop items.
+- `ENUM`s for statuses (see `backend/src/database/enums.ts`).
 
-Tables: `users`, `profiles`, `refresh_tokens`, `otp_codes`, `bots`,
-`friendships`, `groups`, `group_members`, `games`, `rooms`, `room_players`,
-`seasons`, `matches`, `match_players`, `rankings`, `shop_items`,
-`user_inventory`, `transactions`, `chats`, `chat_participants`, `messages`,
-`message_reads`, `reports`, `bans`.
+Starter data (game catalogue, shop items, daily quests, first season, public
+lounge, bot pool, dev admin) is seeded by runtime seeders in the API at
+startup — idempotent, so reboots never duplicate or overwrite it.
 
 ---
 
