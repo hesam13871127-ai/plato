@@ -943,9 +943,9 @@ class _PromotionSheet extends StatelessWidget {
                           child: Center(
                             child: Text(
                               _glyphs[entry.key] ?? '♛',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 26,
-                                color: palette == PiecePalette.white ? Color(0xFF3A3428) : Color(0xFFEDE7DA),
+                                color: palette == PiecePalette.white ? const Color(0xFF3A3428) : const Color(0xFFEDE7DA),
                               ),
                             ),
                           ),

@@ -1,4 +1,4 @@
-import '../../../core/i18n/app_localizations.dart';
+import '../../../../core/i18n/app_localizations.dart';
 
 /// One step of a "how to play" tutorial sheet.
 class TutorialStep {
@@ -399,7 +399,7 @@ class GameTutorials {
         bodyEn: 'Score 63+ across ones to sixes for a +50 bonus, and five matching dice bank a mighty Yatzy: 50 points!',
         bodyFa: 'در جمع ۱ها تا ۶ها به ۶۳+ برسی ۵۰ امتیاز بونوس می‌گیری و پنج تاس یکسان یعنی یاتزی: ۵۰ امتیاز!',
       ),
-    ]
+    ],
     'backgammon': [
       TutorialStep(
         emoji: '🎲',
@@ -429,7 +429,7 @@ class GameTutorials {
         bodyEn: 'Gather all fifteen checkers in your home board, then bear them off. First to clear everything wins — gammons score double!',
         bodyFa: 'هر پانزده مهره را در خانهٔ خودت جمع کن و بعد تخلیه‌شان کن. اولین تخلیه‌کننده برنده است — گامون دو برابر امتیاز دارد!',
       ),
-    ]
+    ],
     'mancala': [
       TutorialStep(
         emoji: '🫘',
@@ -459,7 +459,7 @@ class GameTutorials {
         bodyEn: 'When either side runs empty, both sweep their leftovers. The bigger store takes the game!',
         bodyFa: 'وقتی یک سمت خالی شود، هر دو باقی‌ماندهٔ خود را جمع می‌کنند. انبار بزرگ‌تر برنده است!',
       ),
-    ]
+    ],
     'bowling': [
       TutorialStep(
         emoji: '🎳',
@@ -489,7 +489,7 @@ class GameTutorials {
         bodyEn: 'Strikes earn the next two balls as bonus, spares the next one — twelve strikes make a perfect 300.',
         bodyFa: 'استرایک دو توپ بعدی را بونوس می‌گیرد و اسپیر یکی را — دوازده استرایک یعنی امتیاز کامل ۳۰۰!',
       ),
-    ]
+    ],
     'trivia': [
       TutorialStep(
         emoji: '🧠',
@@ -519,7 +519,7 @@ class GameTutorials {
         bodyEn: 'When the deck runs out the leaderboard decides. Equal points? More correct answers breaks the tie.',
         bodyFa: 'وقتی دک تمام شود جدول امتیازات تصمیم می‌گیرد. امتیاز برابر؟ تعداد پاسخ درست بیشتر، برنده است.',
       ),
-    ]
+    ],
     'word_chain': [
       TutorialStep(
         emoji: '🔗',
@@ -549,7 +549,7 @@ class GameTutorials {
         bodyEn: 'Every player gets ten turns and a word banks one point per letter. Dead-end letters re-roll so the chain never stalls.',
         bodyFa: 'هر بازیکن ده نوبت دارد و هر کلمه به ازای هر حرف یک امتیاز می‌گیرد. حرف‌های بن‌بست عوض می‌شوند تا زنجیره نایستد.',
       ),
-    ]
+    ],
     'emoji_charades': [
       TutorialStep(
         emoji: '🎭',
@@ -579,7 +579,7 @@ class GameTutorials {
         bodyEn: 'Three misses kill a round and reveal the answer. After eight riddles the sharpest reader takes the crown.',
         bodyFa: 'سه خطا راند را می‌کشد و جواب را لو می‌دهد. بعد از هشت ریدل، تیزبین‌ترین خواننده برنده است.',
       ),
-    ]
+    ],
     'memory': [
       TutorialStep(
         emoji: '🃏',
@@ -609,7 +609,7 @@ class GameTutorials {
         bodyEn: 'When the last pair is claimed, the player holding the most pairs takes the game.',
         bodyFa: 'وقتی آخرین جفت برداشته شود، کسی که بیشترین جفت را دارد بازی را می‌برد.',
       ),
-    ]
+    ],
     'sketch': [
       TutorialStep(
         emoji: '✏️',
@@ -639,7 +639,7 @@ class GameTutorials {
         bodyEn: 'A correct guess banks ten for the guesser and five for the artist. Everyone takes the brush before the gallery closes.',
         bodyFa: 'حدس درست ده امتیاز برای حدس‌زننده و پنج امتیاز برای نقاش دارد. همه قبل از بسته‌شدن گالری قلم‌مو به دست می‌گیرند.',
       ),
-    ]
+    ],
     'werewolf': [
       TutorialStep(
         emoji: '🐺',
@@ -669,7 +669,7 @@ class GameTutorials {
         bodyEn: 'The village wins by banishing every wolf; the wolves win the moment they match the survivors.',
         bodyFa: 'روستا با اخراج همهٔ گرگ‌ها می‌برد؛ گرگ‌ها به محض رسیدن به تعداد بازماندگان برنده می‌شوند.',
       ),
-    ]
+    ],
     'impostor': [
       TutorialStep(
         emoji: '🕵️',
@@ -699,7 +699,7 @@ class GameTutorials {
         bodyEn: 'Caught impostors get one guess at the location — name it right and steal the win from the gallows!',
         bodyFa: 'جاسوسِ لو رفته یک شانس حدس مکان دارد — درست بگو و برد را از چالهٔ داروغه بقاپ!',
       ),
-    ]
+    ],
     'darts': [
       TutorialStep(
         emoji: '🎯',
@@ -729,7 +729,7 @@ class GameTutorials {
         bodyEn: 'After fifteen darts the highest total wins — hunt the treble twenty and the bullseye.',
         bodyFa: 'بعد از پانزده دارت، بیشترین امتیاز برنده است — تریبلِ بیست و گاوه را شکار کن.',
       ),
-    ]
+    ],
     'minigolf': [
       TutorialStep(
         emoji: '⛳',
@@ -759,7 +759,7 @@ class GameTutorials {
         bodyEn: 'Six strokes cap a hole — the seventh is charged automatically, so play the safe line first.',
         bodyFa: 'شش ضربه سقف هر حفره است — هفتمی خودکار حساب می‌شود، پس اول خط مطمئن را بازی کن.',
       ),
-    ]
+    ],
     'bankroll': [
       TutorialStep(
         emoji: '💵',
@@ -789,7 +789,7 @@ class GameTutorials {
         bodyEn: 'After five rounds the richest stack wins — protect a big lead with a well-timed fold in the last round.',
         bodyFa: 'بعد از پنج دور، پرپول‌ترین برد می‌کند — پیشتازی بزرگ را با یک فولدِ به‌موقع در دور آخر حفظ کن.',
       ),
-    ]
+    ],
     'battleship': [
       TutorialStep(
         emoji: '🚢',

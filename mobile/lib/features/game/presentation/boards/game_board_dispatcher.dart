@@ -53,6 +53,12 @@ class GameBoardDispatcher extends StatelessWidget {
     switch (session.gameSlug) {
       case 'dominoes':
         return DominoesBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'ludo':
+        return LudoBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'ocho':
+        return OchoBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'connect4':
+        return Connect4Board(session: session, mySeat: mySeat, onAction: onAction);
       case 'checkers':
         return CheckersBoard(session: session, mySeat: mySeat, onAction: onAction);
       case 'chess':

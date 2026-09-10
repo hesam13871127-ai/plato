@@ -333,7 +333,7 @@ class _BingoBoardState extends State<BingoBoard> with SingleTickerProviderStateM
       child: Row(
         children: [
           const SizedBox(width: 4),
-          Icon(Icons/format_list_numbered_rounded,
+          Icon(Icons.format_list_numbered,
               color: AppColors.textSecondary.withValues(alpha: 0.8), size: 16),
           const SizedBox(width: 6),
           Expanded(

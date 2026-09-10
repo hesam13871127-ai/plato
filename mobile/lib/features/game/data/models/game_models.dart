@@ -68,6 +68,7 @@ class GameSessionModel extends GameSessionView {
     required super.board,
     required super.winnerSeat,
     required super.scores,
+    super.winnerSeats,
     super.gameSlug,
   });
 

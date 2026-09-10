@@ -246,7 +246,7 @@ class _BowlingBoardState extends State<BowlingBoard> with SingleTickerProviderSt
                           behavior: HitTestBehavior.opaque,
                           onPanUpdate: (d) {
                             if (!_myTurn || _animating) return;
-                            setState(() => _aim = (_aim - d.dx / 900).clamp(-0.45, 0.45));
+                            setState(() => _aim = (_aim - d.delta.dx / 900).clamp(-0.45, 0.45).toDouble());
                           },
                           child: CustomPaint(
                             size: Size.infinite,

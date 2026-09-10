@@ -12,7 +12,7 @@ class _WwView {
       : players = _players(b['players']),
         phase = (b['phase'] as String?) ?? 'night_kill',
         day = (b['day'] as num?)?.toInt() ?? 1,
-        killTarget = b['killTarget'] as num?,
+        killTarget = (b['killTarget'] as num?)?.toInt(),
         seerNotes = _notes(b['seerNotes']),
         votes = _votes(b['votes']),
         log = _log(b['log']);
@@ -294,7 +294,7 @@ class _WerewolfBoardState extends State<WerewolfBoard> {
                   ),
                   const SizedBox(width: 6),
                   if (!p.alive)
-                    const Icon(Icons.skull_rounded, size: 13, color: AppColors.textSecondary),
+                    const Icon(Icons.close_rounded, size: 13, color: AppColors.textSecondary),
                   const Spacer(),
                   if (votesFor > 0)
                     Padding(

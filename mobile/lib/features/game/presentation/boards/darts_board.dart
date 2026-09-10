@@ -8,6 +8,9 @@ import '../../domain/entities/game_entities.dart';
 import '../utils/game_feedback.dart';
 import '../widgets/table_widgets.dart';
 
+/// Standard dartboard segment order, clockwise from the top.
+const _kSegments = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+
 /// Parsed darts view.
 class _DartsView {
   _DartsView(Map<String, dynamic> b)
@@ -84,7 +87,6 @@ class _DartsBoardState extends State<DartsBoard> {
   bool get _myTurn =>
       widget.session.isInProgress && widget.session.currentSeat == widget.mySeat;
 
-  static const _segments = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
 
   Future<void> _throwDart() async {
     if (!_myTurn) return;
@@ -380,7 +382,7 @@ class _DartsPainter extends CustomPainter {
       wedge.arcTo(Rect.fromCircle(center: c, radius: r1), startDeg * math.pi / 180, 18 * math.pi / 180, false);
       wedge.close();
       final segPath = Path.combine(PathOperation.intersect, annulus, wedge);
-      final seg = _segments[segIndex % 20];
+      final seg = _kSegments[segIndex % 20];
       final even = segIndex % 2 == 0;
       final color = inner
           ? (even ? const Color(0xFF1E3A8A) : const Color(0xFFEDE3D2))
@@ -408,7 +410,7 @@ class _DartsPainter extends CustomPainter {
       );
       final tp = TextPainter(
         text: TextSpan(
-          text: '${_segments[i]}',
+          text: '${_kSegments[i]}',
           style: const TextStyle(color: Color(0xFFE8E2D6), fontSize: 11, fontWeight: FontWeight.w800),
         ),
         textDirection: TextDirection.ltr,

@@ -34,6 +34,8 @@ class ShopItemCard extends StatelessWidget {
         ShopItemType.chatBubble => Icons.chat_bubble_rounded,
         ShopItemType.theme => Icons.palette_rounded,
         ShopItemType.gameSkin => Icons.sports_esports_rounded,
+        ShopItemType.gamePiece => Icons.extension_rounded,
+        ShopItemType.boardTheme => Icons.format_paint_rounded,
         ShopItemType.idColor => Icons.badge_rounded,
         ShopItemType.usernameChange => Icons.alternate_email_rounded,
         ShopItemType.diceSet => Icons.casino_rounded,

@@ -271,7 +271,7 @@ class _LudoBoardState extends State<LudoBoard> with SingleTickerProviderStateMix
     if (view.subPhase == 'roll') {
       return view.sixStreak > 0 ? 'Your roll — six streak ×${view.sixStreak + 1}?' : 'Your roll — tap the dice!';
     }
-    if (movable.isEmpty) return 'Rolled ${view.dice} — no legal move';
+    if (_movable.isEmpty) return 'Rolled ${view.dice} — no legal move';
     return 'Rolled ${view.dice} — tap a glowing token';
   }
 }

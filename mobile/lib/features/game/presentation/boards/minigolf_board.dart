@@ -74,10 +74,13 @@ class _GolfView {
     final m = raw as Map;
     final frames = ((m['frames'] as List?) ?? const [])
         .whereType<List>()
-        .map((f) => Offset(
-              (f.whereType<num>().toList().isNotEmpty ? f.whereType<num>().first).toDouble(),
-              (f.whereType<num>().toList().length > 1 ? f.whereType<num>().toList()[1]).toDouble(),
-            ))
+        .map((f) {
+          final nums = f.whereType<num>().toList();
+          return Offset(
+            nums.isNotEmpty ? nums.first.toDouble() : 0,
+            nums.length > 1 ? nums[1].toDouble() : 0,
+          );
+        })
         .toList();
     return _Shot(
       (m['seat'] as num?)?.toInt() ?? 0,

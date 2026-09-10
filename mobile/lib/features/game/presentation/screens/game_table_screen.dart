@@ -76,7 +76,7 @@ class _GameTableScreenState extends ConsumerState<GameTableScreen> {
     final session = table.session;
     final slug = session?.gameSlug ?? '';
 
-    final gameName = _titles[slug] ?? 'Game';
+    final gameName = _titleFor(slug);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

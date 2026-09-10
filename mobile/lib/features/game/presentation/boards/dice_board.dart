@@ -245,6 +245,7 @@ class _DiceBoardState extends State<DiceBoard> {
 
   Widget _scorecard(_DiceView view) {
     final myScores = view.scores.length > widget.mySeat ? view.scores[widget.mySeat] : const <int>[];
+    final canRoll = _myTurn && view.rollsUsed < 3;
     return Column(
       children: [
         Row(
