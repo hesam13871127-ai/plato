@@ -388,7 +388,7 @@ CREATE TABLE shop_items (
   id               CHAR(36)     NOT NULL,
   name             VARCHAR(100) NOT NULL,
   description      VARCHAR(512) NULL,
-  type             ENUM('avatar_frame','banner','chat_bubble','theme','game_skin','id_color','username_change','dice_set','emote','bundle','consumable') NOT NULL,
+  type             ENUM('avatar_frame','banner','chat_bubble','theme','game_skin','game_piece','board_theme','id_color','username_change','dice_set','emote','bundle','consumable') NOT NULL,
   rarity           ENUM('common','rare','epic','legendary') NOT NULL DEFAULT 'common',
   image_url        VARCHAR(512) NULL,
   price            BIGINT       NOT NULL DEFAULT 0,

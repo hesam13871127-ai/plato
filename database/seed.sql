@@ -9,10 +9,9 @@ SET NAMES utf8mb4;
 -- The catalogue is rebuilt wave by wave (engine + 3D board + shop items per
 -- game). Rows are appended below as each game lands; the API's runtime
 -- GameCatalogSeeder is the source of truth and seeds the same list on boot.
--- INSERT INTO games (id, slug, name, description, icon_url, min_players, max_players, avg_duration_minutes, supports_bots, ranked_enabled, status)
 INSERT INTO games (id, slug, name, description, icon_url, min_players, max_players, avg_duration_minutes, supports_bots, ranked_enabled, status)
 VALUES
-  ('11111111-0000-4000-8000-000000000002', 'dominoes', 'Dominoes', 'Classic Draw Dominoes for 2-4 players. Empty your hand or block the table!', NULL, 2, 4, 10, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000002', 'dominoes', 'Dominoes', 'Classic Draw Dominoes for 2–4 players. Empty your hand or block the table!', NULL, 2, 4, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000005', 'ludo', 'Ludo', 'Roll the dice and race all four tokens home. Capture rivals and chase that six!', NULL, 2, 4, 20, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000006', 'ocho', 'Ocho', 'Match colours and numbers, slam skips and wilds. The classic crazy-eights party game.', NULL, 2, 4, 10, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000007', 'connect4', '4 in a Row', 'Drop discs and connect four before your rival. Fast, sharp and tactical.', NULL, 2, 2, 5, 1, 1, 'active'),
@@ -71,14 +70,14 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('33333333-0000-4000-8400-000000000002', 'Ocean Theme',       'Soft cyan interface theme.',      'theme', 'rare',       NULL, 1000, 'coins', 20, 1, 1, 1, 0, 41, JSON_OBJECT('accent', '#00E5FF')),
   -- Game skins
   ('33333333-0000-4000-8500-000000000001', 'Neon Felt Table',   'Glowing purple table skin.',      'game_skin', 'epic',   NULL, 1500, 'coins', 0, 1, 1, 1, 0, 50, JSON_OBJECT('felt', '#7B5CFF')),
-  ('44444444-0000-4000-9101-000000000011', 'Obsidian Dominoes', 'Volcanic-black tiles with molten gold pips.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 81, JSON_OBJECT('game', 'dominoes', 'piece', 'obsidian')),
-  ('44444444-0000-4000-9202-000000000011', 'Domino Duel Felt',  'Sun-bleached terracotta domino felt.', 'game_skin', 'rare', NULL, 1300, 'coins', 10, 1, 1, 1, 0, 97, JSON_OBJECT('game', 'dominoes', 'felt', '#8A4B2E')),
-  ('44444444-0000-4000-9101-000000000012', 'Aurora Ludo Tokens', 'Iridescent violet-to-cyan ludo tokens.', 'game_piece', 'epic', NULL, 2400, 'coins', 0, 1, 1, 1, 0, 82, JSON_OBJECT('game', 'ludo', 'piece', 'aurora')),
-  ('44444444-0000-4000-9203-000000000012', 'Neon Circuit Track', 'Glowing cyber-circuit ludo ring.', 'game_skin', 'epic', NULL, 1900, 'coins', 0, 1, 1, 1, 0, 98, JSON_OBJECT('game', 'ludo', 'felt', '#0E21A8')),
-  ('44444444-0000-4000-9101-000000000013', 'Gilded Ocho Deck', 'Black-and-gold ocho cards with foil edges.', 'game_piece', 'legendary', NULL, 2900, 'coins', 0, 1, 1, 1, 0, 83, JSON_OBJECT('game', 'ocho', 'piece', 'gilded')),
-  ('44444444-0000-4000-9204-000000000013', 'Velvet Card Lounge', 'Deep velvet lounge felt for card nights.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 99, JSON_OBJECT('game', 'ocho', 'felt', '#4A1D5C')),
+  ('44444444-0000-4000-9101-000000000011', 'Obsidian Dominoes', 'Volcanic-black tiles with molten gold pips — dominoes, but dramatic.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 81, JSON_OBJECT('game', 'dominoes', 'piece', 'obsidian')),
+  ('44444444-0000-4000-9202-000000000011', 'Domino Duel Felt',  'Sun-bleached terracotta felt made for long domino nights.', 'game_skin', 'rare', NULL, 1300, 'coins', 10, 1, 1, 1, 0, 97, JSON_OBJECT('game', 'dominoes', 'felt', '#8A4B2E', 'accent', '#F59E0B')),
+  ('44444444-0000-4000-9101-000000000012', 'Aurora Ludo Tokens', 'Iridescent tokens that shimmer violet-to-cyan as they race.', 'game_piece', 'epic', NULL, 2400, 'coins', 0, 1, 1, 1, 0, 82, JSON_OBJECT('game', 'ludo', 'piece', 'aurora')),
+  ('44444444-0000-4000-9203-000000000012', 'Neon Circuit Track', 'A glowing cyber-circuit ring for high-voltage ludo races.', 'game_skin', 'epic', NULL, 1900, 'coins', 0, 1, 1, 1, 0, 98, JSON_OBJECT('game', 'ludo', 'felt', '#0E21A8', 'accent', '#22D3EE')),
+  ('44444444-0000-4000-9101-000000000013', 'Gilded Ocho Deck', 'Black-and-gold cards with foil edges for high-rollers.', 'game_piece', 'legendary', NULL, 2900, 'coins', 0, 1, 1, 1, 0, 83, JSON_OBJECT('game', 'ocho', 'piece', 'gilded')),
+  ('44444444-0000-4000-9204-000000000013', 'Velvet Card Lounge', 'Deep velvet lounge felt for card nights — ocho in style.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 99, JSON_OBJECT('game', 'ocho', 'felt', '#4A1D5C', 'accent', '#EC4899')),
   ('44444444-0000-4000-9101-000000000014', 'Hologram Discs', 'Translucent neon-rimmed connect-4 discs.', 'game_piece', 'rare', NULL, 1200, 'coins', 10, 1, 1, 1, 0, 84, JSON_OBJECT('game', 'connect4', 'piece', 'hologram')),
-  ('44444444-0000-4000-9205-000000000014', 'Arcade Neon Frame', 'Retro arcade frame with glowing columns.', 'game_skin', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 100, JSON_OBJECT('game', 'connect4', 'felt', '#14103C')),
+  ('44444444-0000-4000-9205-000000000014', 'Arcade Neon Frame', 'Retro arcade frame with glowing columns for 4-in-a-row.', 'game_skin', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 100, JSON_OBJECT('game', 'connect4', 'felt', '#14103C', 'accent', '#8B5CF6')),
   ('44444444-0000-4000-9101-000000000015', 'Onyx Crown Checkers', 'Obsidian checkers with molten-gold crown rings.', 'game_piece', 'epic', NULL, 2100, 'coins', 0, 1, 1, 1, 0, 85, JSON_OBJECT('game', 'checkers', 'piece', 'onyx')),
   ('44444444-0000-4000-9206-000000000015', 'Marble Royal Board', 'Polished marble draughts board with brass inlay.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 86, JSON_OBJECT('game', 'checkers', 'felt', '#3B2F2F', 'accent', '#F59E0B')),
   ('44444444-0000-4000-9101-000000000016', 'Regal Gold Chessmen', 'Gilded ivory-and-obsidian chess set with a brass king.', 'game_piece', 'epic', NULL, 2200, 'coins', 0, 1, 1, 1, 0, 87, JSON_OBJECT('game', 'chess', 'piece', 'gilded')),
@@ -139,7 +138,24 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   -- Username change (consumable — not a unique cosmetic, not giftable)
   ('33333333-0000-4000-8700-000000000001', 'Username Change',   'Change your username once.',      'username_change', 'common', NULL, 500, 'coins', 0, 0, 0, 1, 0, 70, JSON_OBJECT('service', 'rename')),
   -- Emote pack (consumable quantity / collection)
-  ('33333333-0000-4000-8800-000000000001', 'Victory Emote Pack','Five flashy victory emotes.',     'emote', 'common',      NULL, 300, 'coins', 0, 1, 1, 1, 0, 80, JSON_OBJECT('emotes', 5))
+  ('33333333-0000-4000-8800-000000000001', 'Victory Emote Pack', 'Five flashy victory emotes.', 'emote', 'common', NULL, 300, 'coins', 0, 1, 1, 1, 0, 71, JSON_OBJECT('emotes', 5)),
+
+  -- Dice set (every dice game)
+  ('44444444-0000-4000-9100-000000000001', 'Golden Dice Set', 'Shiny 3D gold dice for every dice game.', 'dice_set', 'epic', NULL, 2200, 'coins', 0, 1, 1, 1, 0, 80, JSON_OBJECT('dice', 'gold')),
+  -- Board themes (every table)
+  ('44444444-0000-4000-9200-000000000001', 'Midnight Velvet Board', 'Deep navy 3D table with purple velvet cushions.', 'board_theme', 'epic', NULL, 2400, 'coins', 0, 1, 1, 1, 0, 90, JSON_OBJECT('theme', 'midnight')),
+  ('44444444-0000-4000-9201-000000000002', 'Gold Casino Board', 'Luxury gold-trimmed casino table for every game.', 'board_theme', 'legendary', NULL, 420, 'pips', 0, 1, 1, 1, 0, 91, JSON_OBJECT('theme', 'gold_casino')),
+  ('44444444-0000-4000-9202-000000000003', 'Emerald Felt Table', 'Classic green felt — perfect for pool, dominoes and cards.', 'board_theme', 'rare', NULL, 1600, 'coins', 0, 1, 1, 1, 0, 92, JSON_OBJECT('theme', 'emerald')),
+  ('44444444-0000-4000-9203-000000000004', 'Crimson Royale Board', 'Deep red velvet with gold rail — royal casino style.', 'board_theme', 'epic', NULL, 2200, 'coins', 0, 1, 1, 1, 0, 93, JSON_OBJECT('theme', 'crimson')),
+  ('44444444-0000-4000-9204-000000000005', 'Cosmic Nebula Board', 'Purple nebula felt with star-dust cushions. Out of this world.', 'board_theme', 'legendary', NULL, 380, 'pips', 0, 1, 1, 1, 0, 94, JSON_OBJECT('theme', 'cosmic')),
+  ('44444444-0000-4000-9205-000000000006', 'Amber Wood Table', 'Warm polished wood — chess, checkers and carrom shine here.', 'board_theme', 'rare', NULL, 1800, 'coins', 10, 1, 1, 1, 0, 95, JSON_OBJECT('theme', 'wood')),
+  ('44444444-0000-4000-9206-000000000007', 'Arctic Ice Board', 'Icy blue felt with frosted rail — cool & crisp for every table.', 'board_theme', 'epic', NULL, 2000, 'coins', 0, 1, 1, 1, 0, 96, JSON_OBJECT('theme', 'arctic')),
+  -- Bundles (coins + pips + cosmetics)
+  ('55555555-0000-4000-a000-000000000001', 'Starter Pack', 'Great start: 5,000 coins + Cyan Ring + Glass Bubble.', 'bundle', 'rare', NULL, 1200, 'coins', 15, 0, 1, 1, 0, 160, JSON_OBJECT('bundle', 'starter', 'coins', 5000, 'items', JSON_ARRAY('Cyan Ring Frame', 'Glass Bubble'))),
+  ('55555555-0000-4000-a001-000000000002', 'Aurora Pro Pack', 'For grinders: 20,000 coins + 500 pips + Neon Halo + Aurora Banner + Gold Dice.', 'bundle', 'epic', NULL, 2200, 'coins', 20, 0, 1, 1, 0, 161, JSON_OBJECT('bundle', 'aurora_pro', 'coins', 20000, 'pips', 500)),
+  ('55555555-0000-4000-a002-000000000003', 'Cosmic Legends Bundle', 'Legends only: all 6 board themes + 30,000 coins for piece sets.', 'bundle', 'legendary', NULL, 850, 'pips', 25, 1, 1, 1, 0, 162, JSON_OBJECT('bundle', 'cosmic_legends', 'theme', 'all', 'coins', 30000)),
+  ('55555555-0000-4000-b000-000000000004', '10K Coins', 'Top up 10,000 coins for shop & gifts.', 'bundle', 'common', NULL, 400, 'pips', 0, 0, 0, 1, 0, 163, JSON_OBJECT('coins', 10000, 'purchase', 'coins')),
+  ('55555555-0000-4000-b001-000000000005', '500 Pips', 'Premium pips for legendary boards & frames.', 'bundle', 'rare', NULL, 9000, 'coins', 0, 0, 0, 1, 0, 164, JSON_OBJECT('pips', 500, 'purchase', 'pips'))
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── Daily quests ───────────────────────────────────────────────────────────
