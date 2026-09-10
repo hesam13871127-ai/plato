@@ -28,6 +28,7 @@ import 'minigolf_board.dart';
 import 'bankroll_board.dart';
 import 'battleship_board.dart';
 import 'reversi_board.dart';
+import 'gomoku_board.dart';
 
 typedef BoardAction = Future<void> Function(String type, Map<String, dynamic> payload);
 
@@ -106,6 +107,8 @@ class GameBoardDispatcher extends StatelessWidget {
         return BattleshipBoard(session: session, mySeat: mySeat, onAction: onAction);
       case 'reversi':
         return ReversiBoard(session: session, mySeat: mySeat, onAction: onAction);
+      case 'gomoku':
+        return GomokuBoard(session: session, mySeat: mySeat, onAction: onAction);
       default:
         return _UnknownBoard(slug: session.gameSlug);
     }

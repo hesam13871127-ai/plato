@@ -294,6 +294,16 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'gomoku',
+    name: 'Gomoku',
+    description: 'Five in a row on a fifteen-by-fifteen grid — connect your stones before they connect theirs.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 6,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

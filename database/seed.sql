@@ -38,7 +38,8 @@ VALUES
   ('11111111-0000-4000-8000-000000000027', 'minigolf', 'Mini Golf', 'Nine compact holes — bank the walls, dodge the blocks, hole out in fewer strokes.', NULL, 2, 4, 8, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000028', 'bankroll', 'Bankroll', 'Hot-seat dice poker — stake your stack, dodge the craps, rake the pot.', NULL, 2, 4, 7, 1, 1, 'active'),
   ('11111111-0000-4000-8000-000000000029', 'battleship', 'Battleship', 'Deploy five ships and trade salvos — first to sink the enemy fleet rules the waves.', NULL, 2, 2, 8, 1, 1, 'active'),
-  ('11111111-0000-4000-8000-000000000030', 'reversi', 'Reversi', 'Sandwich enemy discs to flip whole lines — corners are gold, edges are silver.', NULL, 2, 2, 7, 1, 1, 'active')
+  ('11111111-0000-4000-8000-000000000030', 'reversi', 'Reversi', 'Sandwich enemy discs to flip whole lines — corners are gold, edges are silver.', NULL, 2, 2, 7, 1, 1, 'active'),
+  ('11111111-0000-4000-8000-000000000031', 'gomoku', 'Gomoku', 'Five in a row on a fifteen-by-fifteen grid — connect your stones before they connect theirs.', NULL, 2, 2, 6, 1, 1, 'active')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ── First season ───────────────────────────────────────────────────────────
@@ -122,6 +123,8 @@ INSERT INTO shop_items (id, name, description, type, rarity, image_url, price, c
   ('44444444-0000-4000-9213-000000000036', 'Arctic Convoy Waters', 'A freezing night sea with drifting pack ice.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 143, JSON_OBJECT('game', 'battleship', 'felt', '#0C1B2A', 'accent', '#22D3EE')),
   ('44444444-0000-4000-9101-000000000037', 'Obsidian Disc Set', 'Mirror-polished obsidian discs that flip with authority.', 'game_piece', 'epic', NULL, 1700, 'coins', 0, 1, 1, 1, 0, 144, JSON_OBJECT('game', 'reversi', 'piece', 'obsidian_discs')),
   ('44444444-0000-4000-9213-000000000037', 'Bamboo Garden Board', 'A zen garden board raked from black volcanic sand.', 'game_skin', 'rare', NULL, 1400, 'coins', 0, 1, 1, 1, 0, 145, JSON_OBJECT('game', 'reversi', 'felt', '#14301F', 'accent', '#34D399')),
+  ('44444444-0000-4000-9101-000000000038', 'Jade Stone Set', 'Cold jade stones that feel heavier than they look.', 'game_piece', 'epic', NULL, 1800, 'coins', 0, 1, 1, 1, 0, 146, JSON_OBJECT('game', 'gomoku', 'piece', 'jade_stones')),
+  ('44444444-0000-4000-9213-000000000038', 'Kaya Wood Goban', 'A kaya-wood board with perfectly cut star points.', 'game_skin', 'rare', NULL, 1500, 'coins', 0, 1, 1, 1, 0, 147, JSON_OBJECT('game', 'gomoku', 'felt', '#D9B380', 'accent', '#EAB308')),
   ('33333333-0000-4000-8500-000000000002', 'Cyan Dice Set',     'Translucent cyan dice.',          'dice_set', 'rare',     NULL, 800,  'coins', 10, 1, 1, 1, 0, 51, JSON_OBJECT('dice', '#00E5FF')),
   -- ID color
   ('33333333-0000-4000-8600-000000000001', 'Purple ID Color',   'Electric-purple username color.', 'id_color', 'epic',    NULL, 200, 'pips', 0, 1, 1, 1, 0, 60, JSON_OBJECT('color', '#7B5CFF')),

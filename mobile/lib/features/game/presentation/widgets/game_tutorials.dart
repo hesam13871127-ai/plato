@@ -850,5 +850,35 @@ class GameTutorials {
         bodyFa: 'وقتی هیچ‌کس نتواند حرکت کند (یا صفحه پر شود)، رنگِ دارای مهرهٔ بیشتر برنده است. برگرداندن‌های بزرگ اوایل بازی ممکن است یعنی باخت‌های بزرگ آخرش.',
       ),
     ],
+    'gomoku': [
+      TutorialStep(
+        emoji: '⭕',
+        titleEn: 'Five in a row',
+        titleFa: 'پنج تا پشت سر هم',
+        bodyEn: 'Black and white take turns placing stones on the intersections of a fifteen-by-fifteen grid.',
+        bodyFa: 'سیاه و سفید نوبتی روی تقاطع‌های یک صفحهٔ پانزده‌درپانزده مهره می‌گذارند.',
+      ),
+      TutorialStep(
+        emoji: '📏',
+        titleEn: 'Any direction counts',
+        titleFa: 'هر جهتی حساب است',
+        bodyEn: 'Line up five of your stones across, down or diagonally and you win on the spot — no captures, no flips.',
+        bodyFa: 'پنج مهرهٔ خودت را افقی، عمودی یا مورب در یک ردیف بچین و همان لحظه برنده می‌شوی — بدون زدن و برگرداندن.',
+      ),
+      TutorialStep(
+        emoji: '🛡️',
+        titleEn: 'Block and build',
+        titleFa: 'ساختن و سد کردن',
+        bodyEn: 'Watch for their open threes and fours — block them while quietly building your own line.',
+        bodyFa: 'سه‌تاها و چهارتاهای باز حریف را ببین — همزمان که می‌بندی، خط خودت را بی‌صدا بساز.',
+      ),
+      TutorialStep(
+        emoji: '⭐',
+        titleEn: 'Own the centre',
+        titleFa: 'مرکز را تصاحب کن',
+        bodyEn: 'Stones near the star point reach more directions — the middle of the board is where fives are born.',
+        bodyFa: 'مهره‌های نزدیک نقطهٔ ستاره به جهت‌های بیشتری می‌رسند — وسط صفحه جایی است که پنج‌ها زاده می‌شوند.',
+      ),
+    ],
   };
 }

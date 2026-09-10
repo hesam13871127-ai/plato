@@ -48,6 +48,7 @@ import { MinigolfEngine } from './engine/minigolf.engine';
 import { BankrollEngine } from './engine/bankroll.engine';
 import { BattleshipEngine } from './engine/battleship.engine';
 import { ReversiEngine } from './engine/reversi.engine';
+import { GomokuEngine } from './engine/gomoku.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -100,6 +101,7 @@ const ENTITIES = [
     BankrollEngine,
     BattleshipEngine,
     ReversiEngine,
+    GomokuEngine,
     EngineRegistry,
     // Services
     BotService,

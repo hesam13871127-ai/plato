@@ -27,6 +27,7 @@ import { MinigolfEngine } from './minigolf.engine';
 import { BankrollEngine } from './bankroll.engine';
 import { BattleshipEngine } from './battleship.engine';
 import { ReversiEngine } from './reversi.engine';
+import { GomokuEngine } from './gomoku.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -67,6 +68,7 @@ export class EngineRegistry {
     bankroll: BankrollEngine,
     battleship: BattleshipEngine,
     reversi: ReversiEngine,
+    gomoku: GomokuEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -95,6 +97,7 @@ export class EngineRegistry {
     this.register(bankroll);
     this.register(battleship);
     this.register(reversi);
+    this.register(gomoku);
   }
 
   register(engine: BaseGameEngine): void {

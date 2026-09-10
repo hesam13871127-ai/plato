@@ -18,6 +18,7 @@ import { MinigolfEngine } from '../src/game/engine/minigolf.engine';
 import { BankrollEngine } from '../src/game/engine/bankroll.engine';
 import { BattleshipEngine } from '../src/game/engine/battleship.engine';
 import { ReversiEngine, legalMoves } from '../src/game/engine/reversi.engine';
+import { GomokuEngine } from '../src/game/engine/gomoku.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -293,6 +294,7 @@ void (0 as unknown as MinigolfEngine); // driver type anchor
 void (0 as unknown as BankrollEngine); // driver type anchor
 void (0 as unknown as BattleshipEngine); // driver type anchor
 void (0 as unknown as ReversiEngine); // driver type anchor
+void (0 as unknown as GomokuEngine); // driver type anchor
 
 function humanActionFor(
   session: NonNullable<ReturnType<GameSessionService['get']>>,
@@ -494,6 +496,19 @@ function humanActionFor(
       Math.hypot(a.x - striker.x, a.y - striker.y) < Math.hypot(b.x - striker.x, b.y - striker.y) ? a : b,
     );
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
+  }
+
+  if (slug === 'gomoku') {
+    // Deterministic walk: claim points down the main diagonal, then column 0.
+    const grid = (board.grid as Array<0 | 1 | 2>) ?? [];
+    const played = new Set(grid.map((c, i) => (c === 0 ? -1 : i)).filter((i) => i >= 0));
+    for (let i = 0; i < 15; i++) {
+      if (!played.has(i * 15 + i)) return { type: 'place', payload: { x: i, y: i } };
+    }
+    for (let y = 0; y < 15; y++) {
+      if (!played.has(y * 15)) return { type: 'place', payload: { x: 0, y } };
+    }
+    return null;
   }
 
   if (slug === 'reversi') {

@@ -312,6 +312,8 @@ String _gameEmoji(String slug) {
       return '🚢';
     case 'reversi':
       return '⚫';
+    case 'gomoku':
+      return '⭕';
     default:
       return '🎮';
   }
