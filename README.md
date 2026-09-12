@@ -1,6 +1,9 @@
 # VibeTable 🎲
 
-A social table-games platform. **Phase 1 — Foundation**: architecture, database,
+A social table-games platform modeled on Plato, with the same line-up of
+**24 multiplayer games** — Ocho, Pool, Carrom, Chess, Backgammon, Dice Party,
+Bankroll (property trading), Sea Battle, Minesweepers, Go Fish, No-limit Poker,
+Werewolf and more. **Phase 1 — Foundation**: architecture, database,
 authentication and project setup, fully working and ready to run.
 
 | Layer | Stack |

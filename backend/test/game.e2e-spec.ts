@@ -7,22 +7,16 @@ import { AppModule } from '../src/app.module';
 import { GameSessionService } from '../src/game/game-session.service';
 import { ChessEngine } from '../src/game/engine/chess.engine';
 import { BackgammonEngine } from '../src/game/engine/backgammon.engine';
-import { WordChainEngine } from '../src/game/engine/word-chain.engine';
-import { EmojiCharadesEngine } from '../src/game/engine/emoji-charades.engine';
-import { MemoryEngine } from '../src/game/engine/memory.engine';
 import { SketchEngine } from '../src/game/engine/sketch.engine';
 import { WerewolfEngine } from '../src/game/engine/werewolf.engine';
-import { ImpostorEngine } from '../src/game/engine/impostor.engine';
 import { DartsEngine } from '../src/game/engine/darts.engine';
 import { MinigolfEngine } from '../src/game/engine/minigolf.engine';
 import { BankrollEngine } from '../src/game/engine/bankroll.engine';
 import { BattleshipEngine } from '../src/game/engine/battleship.engine';
 import { ReversiEngine, legalMoves } from '../src/game/engine/reversi.engine';
-import { GomokuEngine } from '../src/game/engine/gomoku.engine';
-import { BlackjackEngine, handValue } from '../src/game/engine/blackjack.engine';
-import { HangmanEngine } from '../src/game/engine/hangman.engine';
-import { TicTacToeEngine } from '../src/game/engine/tic-tac-toe.engine';
-import { TileDuelEngine, applyDir as tileDuelApplyDir, type Dir } from '../src/game/engine/tile-duel.engine';
+import { MinesweeperEngine } from '../src/game/engine/minesweeper.engine';
+import { GoFishEngine } from '../src/game/engine/gofish.engine';
+import { PokerEngine } from '../src/game/engine/poker.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -298,15 +292,14 @@ async function playToCompletion(
  * (play/draw/pass), connect4 (drop) and checkers (move).
  */
 void (0 as unknown as WerewolfEngine); // driver type anchor
-void (0 as unknown as ImpostorEngine); // driver type anchor
 void (0 as unknown as DartsEngine); // driver type anchor
 void (0 as unknown as MinigolfEngine); // driver type anchor
 void (0 as unknown as BankrollEngine); // driver type anchor
 void (0 as unknown as BattleshipEngine); // driver type anchor
 void (0 as unknown as ReversiEngine); // driver type anchor
-void (0 as unknown as GomokuEngine); // driver type anchor
-void (0 as unknown as BlackjackEngine); // driver type anchor
-void (0 as unknown as HangmanEngine); // driver type anchor
+void (0 as unknown as MinesweeperEngine); // driver type anchor
+void (0 as unknown as GoFishEngine); // driver type anchor
+void (0 as unknown as PokerEngine); // driver type anchor
 
 function humanActionFor(
   session: NonNullable<ReturnType<GameSessionService['get']>>,
@@ -510,46 +503,9 @@ function humanActionFor(
     return { type: 'shoot', payload: { angle: Math.atan2(t.y - striker.y, t.x - striker.x), power: 0.85 } };
   }
 
-  if (slug === 'hangman') {
-    // Full server sight: reveal the secret letter by letter.
-    const secret = (board.secret as string) ?? '';
-    const masked = (board.masked as string[]) ?? [];
-    const wrong = (board.wrong as string[]) ?? [];
-    const taken = new Set<string>([...wrong, ...masked.filter((c) => c !== '_')]);
-    const letter = secret.split('').find((c) => !taken.has(c));
-    if (letter) return { type: 'guess', payload: { letter } };
-    for (const c of 'etaoinshrdlcumwfgypbvkjxqz') {
-      if (!taken.has(c)) return { type: 'guess', payload: { letter: c } };
-    }
-    return null;
-  }
-
-  if (slug === 'blackjack') {
-    const phase = (board.phase as string) ?? 'bet';
-    const bankrolls = (board.bankrolls as number[]) ?? [];
-    if (phase === 'bet') {
-      if ((bankrolls[seat] ?? 0) >= 5) return { type: 'bet', payload: { amount: 5 } };
-      return { type: 'fold', payload: {} };
-    }
-    // Basic play: hit below 17.
-    const hands = (board.hands as Array<Array<{ r: number; s: number }>>) ?? [];
-    const value = handValue(hands[seat] ?? []);
-    return { type: value < 17 ? 'hit' : 'stand', payload: {} };
-  }
-
-  if (slug === 'gomoku') {
-    // Deterministic walk: claim points down the main diagonal, then column 0.
-    const grid = (board.grid as Array<0 | 1 | 2>) ?? [];
-    const played = new Set(grid.map((c, i) => (c === 0 ? -1 : i)).filter((i) => i >= 0));
-    for (let i = 0; i < 15; i++) {
-      if (!played.has(i * 15 + i)) return { type: 'place', payload: { x: i, y: i } };
-    }
-    for (let y = 0; y < 15; y++) {
-      if (!played.has(y * 15)) return { type: 'place', payload: { x: 0, y } };
-    }
-    return null;
-  }
-
+  
+  
+  
   if (slug === 'reversi') {
     // Full server sight: take the first legal flip.
     const grid = (board.grid as Array<0 | 1 | 2>) ?? [];
@@ -583,12 +539,14 @@ function humanActionFor(
   }
 
   if (slug === 'bankroll') {
-    // Stakes in the bet phase, dice in the roll phase.
-    const phase = (board.phase as string) ?? 'bet';
-    const bankrolls = (board.bankrolls as number[]) ?? [];
-    if (phase === 'roll') return { type: 'roll', payload: {} };
-    if ((bankrolls[seat] ?? 0) >= 5) return { type: 'bet', payload: { amount: 5 } };
-    return { type: 'fold', payload: {} };
+    // Property race: decide pending purchases, otherwise roll.
+    const pending = board.pendingBuy as { seat: number } | null | undefined;
+    if (pending && pending.seat === seat) {
+      const cash = (board.cash as number[])?.[seat] ?? 0;
+      const price = (board.pendingBuy as { price: number }).price;
+      return { type: cash - price >= 100 ? 'buy' : 'pass', payload: {} };
+    }
+    return { type: 'roll', payload: {} };
   }
 
   if (slug === 'minigolf') {
@@ -601,24 +559,7 @@ function humanActionFor(
     return { type: 'throw', payload: { aimX: 0.02, aimY: 0.57, power: 0.9 } };
   }
 
-  if (slug === 'impostor') {
-    // Acting with full server sight: speak, vote, or steal.
-    const phase = board.phase as string | undefined;
-    const pending = (board.pending as number[]) ?? [];
-    if (!pending.includes(seat)) return null;
-    if (phase === 'clue') {
-      return { type: 'clue', payload: { word: 'noisy' } };
-    }
-    if (phase === 'vote') {
-      const players = session.state.seats.map((_, i) => i).filter((i) => i !== seat);
-      return { type: 'vote', payload: { target: players[0] } };
-    }
-    if (phase === 'guess') {
-      return { type: 'guess', payload: { location: (board.location as string) ?? 'airport' } };
-    }
-    return null;
-  }
-
+  
   if (slug === 'werewolf') {
     // Acting with full server sight: play your card for the current phase.
     const players = (board.players as Array<{ role: string; alive: boolean }>) ?? [];
@@ -663,35 +604,60 @@ function humanActionFor(
     return { type: 'guess', payload: { word } };
   }
 
-  if (slug === 'memory') {
-    // The driver acts with full server sight: snap up a matching pair.
-    const cards = (board.cards as Array<{ symbol: string; matched: boolean }>) ?? [];
-    for (let i = 0; i < cards.length; i++) {
-      if (cards[i].matched) continue;
-      for (let j = i + 1; j < cards.length; j++) {
-        if (!cards[j].matched && cards[j].symbol === cards[i].symbol) {
-          return { type: 'flip', payload: { a: i, b: j } };
-        }
+  
+  
+  
+  
+  if (slug === 'minesweepers') {
+    // Full server sight: dig a guaranteed-safe cell.
+    const mines = (board.mines as boolean[]) ?? [];
+    const revealed = (board.revealed as boolean[]) ?? [];
+    for (let i = 0; i < mines.length; i++) {
+      if (!revealed[i] && !mines[i]) return { type: 'reveal', payload: { index: i } };
+    }
+    return null;
+  }
+
+  if (slug === 'gofish') {
+    // Ask for the rank we hold most of, from any opponent with cards.
+    const hands = (board.hands as string[][]) ?? [];
+    const counts = new Map<string, number>();
+    for (const c of hands[seat] ?? []) {
+      const r = c.slice(0, c.length - 1);
+      counts.set(r, (counts.get(r) ?? 0) + 1);
+    }
+    let bestRank = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (!bestRank) return null;
+    const n = session.state.seats.length;
+    for (let k = 1; k <= n; k++) {
+      const t = (seat + k) % n;
+      if (t !== seat && (hands[t]?.length ?? 0) > 0) {
+        return { type: 'ask', payload: { target: t, rank: bestRank } };
       }
     }
     return null;
   }
 
-  if (slug === 'emoji_charades') {
-    const eliminated = ((board.eliminated as number[] | undefined) ?? []);
-    const live = [0, 1, 2, 3].filter((c) => !eliminated.includes(c));
-    if (live.length === 0) return null;
-    return { type: 'guess', payload: { choice: live[Math.floor(Math.random() * live.length)] } };
-  }
-
-  if (slug === 'word_chain') {
-    const legal = new WordChainEngine().chainMoves(session.state, 20);
-    if (legal.length === 0) return null;
-    return { type: 'word', payload: { word: legal[0] } };
-  }
-
-  if (slug === 'trivia') {
-    return { type: 'answer', payload: { choice: Math.floor(Math.random() * 4) } };
+  if (slug === 'poker') {
+    // Push-or-fold: shove whenever possible, call shoves with real hands.
+    const chips = (board.chips as number[]) ?? [];
+    const bet = (board.bet as number[]) ?? [];
+    const toCall = ((board.currentBet as number) ?? 0) - (bet[seat] ?? 0);
+    const hole = (board.hole as string[][])?.[seat] ?? [];
+    const rankOf = (c: string) => c.slice(0, c.length - 1);
+    const ranks = '2345678910JQKA';
+    const rv = (r: string) => (r === 'A' ? 14 : r === 'K' ? 13 : r === 'Q' ? 12 : r === 'J' ? 11 : r === '10' ? 10 : Number(r));
+    const pair = hole.length === 2 && rankOf(hole[0]) === rankOf(hole[1]);
+    const premium = hole.length === 2 && hole.every((c) => rv(rankOf(c)) >= 11);
+    if (toCall <= 0) {
+      if (pair || premium || Math.random() < 0.25) {
+        return { type: 'raise', payload: { to: (bet[seat] ?? 0) + (chips[seat] ?? 0) } };
+      }
+      return { type: 'check', payload: {} };
+    }
+    if (pair || premium) return { type: 'call', payload: {} };
+    if (toCall <= 40 && Math.random() < 0.4) return { type: 'call', payload: {} };
+    return { type: 'fold', payload: {} };
   }
 
   if (slug === 'bowling') {
@@ -806,23 +772,7 @@ function humanActionFor(
     return null;
   }
 
-  if (slug === 'tile_duel') {
-    const grids = board.grids as number[][] | undefined;
-    const grid = grids?.[seat];
-    if (grid && Array.isArray(grid) && grid.length === 16) {
-      const legal = tileDuelLegalDirs(grid);
-      if (legal.length > 0) return { type: 'move', payload: { dir: legal[0] } };
-      return { type: 'pass', payload: {} };
-    }
-    return null;
-  }
-
   return null;
-}
-
-function tileDuelLegalDirs(grid: number[]): Dir[] {
-  const dirs: Dir[] = ['left', 'right', 'up', 'down'];
-  return dirs.filter((d) => tileDuelApplyDir(grid, d) !== null);
 }
 
 function allOwned(

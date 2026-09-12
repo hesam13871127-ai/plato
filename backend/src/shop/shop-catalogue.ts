@@ -17,7 +17,7 @@ export interface ShopCatalogueItem {
 }
 
 export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
-  {
+{
     id: '33333333-0000-4000-8100-000000000001',
     name: 'Neon Halo Frame',
     description: 'A glowing electric-purple halo.',
@@ -31,7 +31,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 10,
     metadata: { colors: ['#7B5CFF', '#00E5FF'], style: 'halo' },
   },
-  {
+{
     id: '33333333-0000-4000-8100-000000000002',
     name: 'Cyan Ring Frame',
     description: 'A crisp cyan rim.',
@@ -45,7 +45,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 11,
     metadata: { colors: ['#00E5FF'], style: 'ring' },
   },
-  {
+{
     id: '33333333-0000-4000-1000-000000000003',
     name: 'Golden Crown Frame',
     description: 'Legendary crown frame.',
@@ -59,7 +59,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 12,
     metadata: { colors: ['#FFC857'], style: 'crown' },
   },
-  {
+{
     id: '33333333-0000-4000-8200-000000000001',
     name: 'Aurora Banner',
     description: 'Shifting purple-cyan aurora.',
@@ -73,7 +73,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 20,
     metadata: { gradient: ['#7B5CFF', '#00E5FF'] },
   },
-  {
+{
     id: '33333333-0000-4000-8200-000000000002',
     name: 'Midnight Banner',
     description: 'Deep navy static banner.',
@@ -87,7 +87,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 21,
     metadata: { gradient: ['#0B1426', '#152241'] },
   },
-  {
+{
     id: '33333333-0000-4000-8300-000000000001',
     name: 'Glass Bubble',
     description: 'Frosted glass chat bubble.',
@@ -101,7 +101,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 30,
     metadata: { color: '#1AFFFFFF' },
   },
-  {
+{
     id: '33333333-0000-4000-8300-000000000002',
     name: 'Neon Bubble',
     description: 'Electric purple bubble.',
@@ -115,7 +115,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 31,
     metadata: { color: '#7B5CFF' },
   },
-  {
+{
     id: '33333333-0000-4000-8300-000000000003',
     name: 'Starter Bubble',
     description: 'A friendly little chat bubble.',
@@ -129,7 +129,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 29,
     metadata: { color: '#3300E5FF' },
   },
-  {
+{
     id: '33333333-0000-4000-8400-000000000001',
     name: 'Neon Night Theme',
     description: 'Purple & cyan interface theme.',
@@ -143,7 +143,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 40,
     metadata: { accent: '#7B5CFF' },
   },
-  {
+{
     id: '33333333-0000-4000-8400-000000000002',
     name: 'Ocean Theme',
     description: 'Soft cyan interface theme.',
@@ -157,7 +157,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 41,
     metadata: { accent: '#00E5FF' },
   },
-  {
+{
     id: '33333333-0000-4000-8500-000000000001',
     name: 'Neon Felt Table',
     description: 'Glowing purple table skin.',
@@ -171,7 +171,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 50,
     metadata: { felt: '#7B5CFF' },
   },
-  {
+{
     id: '33333333-0000-4000-8500-000000000002',
     name: 'Cyan Dice Set',
     description: 'Translucent cyan dice.',
@@ -185,7 +185,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 51,
     metadata: { dice: '#00E5FF' },
   },
-  {
+{
     id: '33333333-0000-4000-8600-000000000002',
     name: 'Cyan ID Color',
     description: 'Soft-cyan username color.',
@@ -199,7 +199,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 61,
     metadata: { color: '#00E5FF' },
   },
-  {
+{
     id: '33333333-0000-4000-8600-000000000001',
     name: 'Purple ID Color',
     description: 'Electric-purple username color.',
@@ -213,7 +213,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 60,
     metadata: { color: '#7B5CFF' },
   },
-  {
+{
     id: '33333333-0000-4000-8600-000000000003',
     name: 'Gold ID Color',
     description: 'Legendary gold username color.',
@@ -227,7 +227,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 62,
     metadata: { color: '#FFC857' },
   },
-  {
+{
     id: '33333333-0000-4000-8700-000000000001',
     name: 'Username Change',
     description: 'Change your username once.',
@@ -241,7 +241,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 70,
     metadata: { service: 'rename' },
   },
-  {
+{
     id: '33333333-0000-4000-8800-000000000001',
     name: 'Victory Emote Pack',
     description: 'Five flashy victory emotes.',
@@ -255,8 +255,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 71,
     metadata: { emotes: 5 },
   },
-  // ── Game pieces & dice ──────────────────────────────────────────────────
-  {
+{
     id: '44444444-0000-4000-9100-000000000001',
     name: 'Golden Dice Set',
     description: 'Shiny 3D gold dice for every dice game.',
@@ -270,7 +269,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 80,
     metadata: { dice: 'gold' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000011',
     name: 'Obsidian Dominoes',
     description: 'Volcanic-black tiles with molten gold pips — dominoes, but dramatic.',
@@ -284,7 +283,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 81,
     metadata: { game: 'dominoes', piece: 'obsidian' },
   },
-  {
+{
     id: '44444444-0000-4000-9202-000000000011',
     name: 'Domino Duel Felt',
     description: 'Sun-bleached terracotta felt made for long domino nights.',
@@ -298,7 +297,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 97,
     metadata: { game: 'dominoes', felt: '#8A4B2E', accent: '#F59E0B' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000012',
     name: 'Aurora Ludo Tokens',
     description: 'Iridescent tokens that shimmer violet-to-cyan as they race.',
@@ -312,7 +311,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 82,
     metadata: { game: 'ludo', piece: 'aurora' },
   },
-  {
+{
     id: '44444444-0000-4000-9203-000000000012',
     name: 'Neon Circuit Track',
     description: 'A glowing cyber-circuit ring for high-voltage ludo races.',
@@ -326,7 +325,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 98,
     metadata: { game: 'ludo', felt: '#0E21A8', accent: '#22D3EE' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000013',
     name: 'Gilded Ocho Deck',
     description: 'Black-and-gold cards with foil edges for high-rollers.',
@@ -340,7 +339,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 83,
     metadata: { game: 'ocho', piece: 'gilded' },
   },
-  {
+{
     id: '44444444-0000-4000-9204-000000000013',
     name: 'Velvet Card Lounge',
     description: 'Deep velvet lounge felt for card nights — ocho in style.',
@@ -354,7 +353,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 99,
     metadata: { game: 'ocho', felt: '#4A1D5C', accent: '#EC4899' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000014',
     name: 'Hologram Discs',
     description: 'Translucent neon-rimmed connect-4 discs.',
@@ -368,7 +367,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 84,
     metadata: { game: 'connect4', piece: 'hologram' },
   },
-  {
+{
     id: '44444444-0000-4000-9205-000000000014',
     name: 'Arcade Neon Frame',
     description: 'Retro arcade frame with glowing columns for 4-in-a-row.',
@@ -382,7 +381,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 100,
     metadata: { game: 'connect4', felt: '#14103C', accent: '#8B5CF6' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000015',
     name: 'Onyx Crown Checkers',
     description: 'Obsidian checkers with molten-gold crown rings.',
@@ -396,7 +395,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 85,
     metadata: { game: 'checkers', piece: 'onyx' },
   },
-  {
+{
     id: '44444444-0000-4000-9206-000000000015',
     name: 'Marble Royal Board',
     description: 'Polished marble draughts board with brass inlay.',
@@ -410,7 +409,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 86,
     metadata: { game: 'checkers', felt: '#3B2F2F', accent: '#F59E0B' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000016',
     name: 'Regal Gold Chessmen',
     description: 'Gilded ivory-and-obsidian chess set with a brass king.',
@@ -424,7 +423,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 87,
     metadata: { game: 'chess', piece: 'gilded' },
   },
-  {
+{
     id: '44444444-0000-4000-9207-000000000016',
     name: 'Grandmaster Marble',
     description: 'Cararra-marble battlefield with walnut inlay for grandmasters.',
@@ -438,7 +437,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 88,
     metadata: { game: 'chess', felt: '#2E2A25', accent: '#F5C542' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000017',
     name: 'Celestial Glow Cue',
     description: 'Aurora-lit cue with a starlit ebony butt.',
@@ -452,7 +451,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 89,
     metadata: { game: 'pool', piece: 'celestial' },
   },
-  {
+{
     id: '44444444-0000-4000-9208-000000000017',
     name: 'Midnight Baize',
     description: 'Deep midnight-green match baize with brass pockets.',
@@ -466,7 +465,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 103,
     metadata: { game: 'pool', felt: '#0B3D2E', accent: '#22D3EE' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000018',
     name: 'Ivory Royale Men',
     description: 'Hand-carved ivory-tone carrom men with a gilded striker.',
@@ -480,7 +479,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 104,
     metadata: { game: 'carrom', piece: 'ivory' },
   },
-  {
+{
     id: '44444444-0000-4000-9209-000000000018',
     name: 'Rosewood Arena',
     description: 'Tournament rosewood carrom board with silver inlay.',
@@ -494,7 +493,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 105,
     metadata: { game: 'carrom', felt: '#5C3A21', accent: '#F59E0B' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000019',
     name: 'Chrome Neon Nodes',
     description: 'Liquid-chrome dots with laser neon lines.',
@@ -508,7 +507,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 106,
     metadata: { game: 'dots_and_boxes', piece: 'chrome' },
   },
-  {
+{
     id: '44444444-0000-4000-9210-000000000019',
     name: 'Hologram Grid',
     description: 'Glass hologram board with refracting square washes.',
@@ -522,35 +521,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 107,
     metadata: { game: 'dots_and_boxes', felt: '#101A33', accent: '#22D3EE' },
   },
-  {
-    id: '44444444-0000-4000-9101-000000000020',
-    name: 'Jade Serpent Tokens',
-    description: 'Carved jade racing tokens with gold inlay.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1800,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 108,
-    metadata: { game: 'snakes_ladders', piece: 'jade' },
-  },
-  {
-    id: '44444444-0000-4000-9211-000000000020',
-    name: 'Jungle Temple Board',
-    description: 'Vine-woven temple board with gilded snakes.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1400,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 109,
-    metadata: { game: 'snakes_ladders', felt: '#1E4029', accent: '#2E9E5B' },
-  },
-  {
+{
     id: '44444444-0000-4000-9101-000000000021',
     name: 'Gilded Dabber Set',
     description: 'Gold-cap daubers that stamp glowing royal marks.',
@@ -564,7 +535,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 112,
     metadata: { game: 'bingo', piece: 'gilded' },
   },
-  {
+{
     id: '44444444-0000-4000-9212-000000000021',
     name: 'Vegas Neon Hall',
     description: 'Casino-floor bingo hall with neon cage lights.',
@@ -578,7 +549,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 113,
     metadata: { game: 'bingo', felt: '#3B1060', accent: '#EC4899' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000022',
     name: 'Nebula Party Dice',
     description: 'Galaxy-flecked dice that glow on every six.',
@@ -592,7 +563,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 114,
     metadata: { game: 'dice_party', piece: 'nebula' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000022',
     name: 'Confetti Ballroom',
     description: 'Party ballroom felt with falling confetti lights.',
@@ -606,7 +577,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 115,
     metadata: { game: 'dice_party', felt: '#3E1A5C', accent: '#F5C542' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000023',
     name: 'Ivory & Onyx Checkers',
     description: 'Hand-carved ivory and onyx checkers with brass pips.',
@@ -620,7 +591,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 116,
     metadata: { game: 'backgammon', piece: 'ivory_onyx' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000023',
     name: 'Sultan Palace Felt',
     description: 'Ottoman palace felt with gilded triangles.',
@@ -634,7 +605,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 117,
     metadata: { game: 'backgammon', felt: '#2A1A4A', accent: '#D4AF37' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000024',
     name: 'Golden Bean Set',
     description: 'Polished golden beans that clink like coins.',
@@ -648,7 +619,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 118,
     metadata: { game: 'mancala', piece: 'golden_beans' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000024',
     name: 'Baobab Wood Board',
     description: 'Carved baobab board with deep dark hollows.',
@@ -662,7 +633,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 119,
     metadata: { game: 'mancala', felt: '#3A2413', accent: '#D9A94A' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000025',
     name: 'Comet Strike Ball',
     description: 'A deep-space resin ball with a comet-ice core.',
@@ -676,7 +647,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 120,
     metadata: { game: 'bowling', piece: 'comet_ball' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000025',
     name: 'Neon Arcade Lanes',
     description: 'Midnight lanes under buzzing neon signage.',
@@ -690,119 +661,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 121,
     metadata: { game: 'bowling', felt: '#101A3C', accent: '#22D3EE' },
   },
-  {
-    id: '44444444-0000-4000-9101-000000000026',
-    name: 'Golden Envelope Pack',
-    description: 'Wax-sealed golden envelopes for high-stakes questions.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1700,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 122,
-    metadata: { game: 'trivia', piece: 'golden_envelope' },
-  },
-  {
-    id: '44444444-0000-4000-9213-000000000026',
-    name: 'Game Show Stage',
-    description: 'Spotlights, podiums and that tense quiz-show hum.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1400,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 123,
-    metadata: { game: 'trivia', felt: '#1E1B4B', accent: '#FACC15' },
-  },
-  {
-    id: '44444444-0000-4000-9101-000000000027',
-    name: 'Quill & Ink Set',
-    description: 'A raven quill that dances over the chain ribbon.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1700,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 124,
-    metadata: { game: 'word_chain', piece: 'quill_ink' },
-  },
-  {
-    id: '44444444-0000-4000-9213-000000000027',
-    name: 'Grand Library Desk',
-    description: 'A wood-panelled library desk under brass lamps.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1400,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 125,
-    metadata: { game: 'word_chain', felt: '#2B1E10', accent: '#B98A3C' },
-  },
-  {
-    id: '44444444-0000-4000-9101-000000000028',
-    name: 'Neon Mask Pair',
-    description: 'Glowing comedy-tragedy masks that smirk on every guess.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1700,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 126,
-    metadata: { game: 'emoji_charades', piece: 'neon_masks' },
-  },
-  {
-    id: '44444444-0000-4000-9213-000000000028',
-    name: 'Mask Parade Stage',
-    description: 'A carnival stage with streamers and spotlight beams.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1400,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 127,
-    metadata: { game: 'emoji_charades', felt: '#3D1250', accent: '#F472B6' },
-  },
-  {
-    id: '44444444-0000-4000-9101-000000000029',
-    name: 'Gilded Tarot Deck',
-    description: 'Gold-leaf tarot cards that shimmer on every flip.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1700,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 128,
-    metadata: { game: 'memory', piece: 'gilded_tarot' },
-  },
-  {
-    id: '44444444-0000-4000-9213-000000000029',
-    name: 'Mystic Velvet Table',
-    description: 'A fortune-teller table with candle-lit velvet.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1400,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 129,
-    metadata: { game: 'memory', felt: '#260D2E', accent: '#A78BFA' },
-  },
-  {
+{
     id: '44444444-0000-4000-9101-000000000030',
     name: 'Peacock Brush Set',
     description: 'Iridescent peacock-feather brushes for masterpieces.',
@@ -816,7 +675,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 130,
     metadata: { game: 'sketch', piece: 'peacock_brush' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000030',
     name: 'Atelier Loft Studio',
     description: 'A sunlit artist loft with paint-splattered easels.',
@@ -830,7 +689,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 131,
     metadata: { game: 'sketch', felt: '#1F2430', accent: '#22D3EE' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000031',
     name: 'Silver Fang Charm',
     description: 'A silver fang pendant that glints under the full moon.',
@@ -844,7 +703,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 132,
     metadata: { game: 'werewolf', piece: 'silver_fang' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000031',
     name: 'Blood Moon Village',
     description: 'A haunted village square beneath a blood-red moon.',
@@ -858,35 +717,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 133,
     metadata: { game: 'werewolf', felt: '#2B0A0A', accent: '#EF4444' },
   },
-  {
-    id: '44444444-0000-4000-9101-000000000032',
-    name: 'Smoke Bomb Charm',
-    description: 'A pewter smoke bomb that fizzes when caught.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1700,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 134,
-    metadata: { game: 'impostor', piece: 'smoke_bomb' },
-  },
-  {
-    id: '44444444-0000-4000-9213-000000000032',
-    name: 'Noir Rooftop Bar',
-    description: 'A rainy rooftop bar lit by flickering neon.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1400,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 135,
-    metadata: { game: 'impostor', felt: '#101827', accent: '#F59E0B' },
-  },
-  {
+{
     id: '44444444-0000-4000-9101-000000000033',
     name: 'Treble Twenty Flights',
     description: 'Precision-milled brass flights for the big scores.',
@@ -900,7 +731,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 136,
     metadata: { game: 'darts', piece: 'brass_flights' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000033',
     name: 'Pub Championship Oche',
     description: 'A worn pub oche with chalk scores and spilled bitter.',
@@ -914,7 +745,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 137,
     metadata: { game: 'darts', felt: '#1F1509', accent: '#FACC15' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000034',
     name: 'Titanium Putter Head',
     description: 'A machined putter head with impossible balance.',
@@ -928,7 +759,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 138,
     metadata: { game: 'minigolf', piece: 'titanium_putter' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000034',
     name: 'Midnight Windmill Course',
     description: 'A neon-lit midnight course with spinning windmills.',
@@ -942,7 +773,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 139,
     metadata: { game: 'minigolf', felt: '#0B1F12', accent: '#34D399' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000035',
     name: 'Golden Chip Set',
     description: 'A minted gold chip set only whales get to touch.',
@@ -956,7 +787,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 140,
     metadata: { game: 'bankroll', piece: 'golden_chips' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000035',
     name: 'High Roller Penthouse',
     description: 'A penthouse table above the neon strip, whiskey included.',
@@ -970,7 +801,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 141,
     metadata: { game: 'bankroll', felt: '#0F172A', accent: '#EAB308' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000036',
     name: 'Admiral’s Sextant',
     description: 'A brass sextant that swears it can smell a carrier.',
@@ -984,7 +815,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 142,
     metadata: { game: 'battleship', piece: 'admirals_sextant' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000036',
     name: 'Arctic Convoy Waters',
     description: 'A freezing night sea with drifting pack ice.',
@@ -998,7 +829,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 143,
     metadata: { game: 'battleship', felt: '#0C1B2A', accent: '#22D3EE' },
   },
-  {
+{
     id: '44444444-0000-4000-9101-000000000037',
     name: 'Obsidian Disc Set',
     description: 'Mirror-polished obsidian discs that flip with authority.',
@@ -1012,7 +843,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 144,
     metadata: { game: 'reversi', piece: 'obsidian_discs' },
   },
-  {
+{
     id: '44444444-0000-4000-9213-000000000037',
     name: 'Bamboo Garden Board',
     description: 'A zen garden board raked from black volcanic sand.',
@@ -1026,92 +857,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 145,
     metadata: { game: 'reversi', felt: '#14301F', accent: '#34D399' },
   },
-  {
-    id: '44444444-0000-4000-9101-000000000038',
-    name: 'Jade Stone Set',
-    description: 'Cold jade stones that feel heavier than they look.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1800,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 146,
-    metadata: { game: 'gomoku', piece: 'jade_stones' },
-  },
-  {
-    id: '44444444-0000-4000-9213-000000000038',
-    name: 'Kaya Wood Goban',
-    description: 'A kaya-wood board with perfectly cut star points.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1500,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 147,
-    metadata: { game: 'gomoku', felt: '#D9B380', accent: '#EAB308' },
-  },
-  {
-    id: '44444444-0000-4000-9101-000000000039',
-    name: 'Vegas Dealer Visor',
-    description: 'A green dealer visor that sees right through bluffs.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1700,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 148,
-    metadata: { game: 'blackjack', piece: 'dealer_visor' },
-  },
-  {
-    id: '44444444-0000-4000-9213-000000000039',
-    name: 'Monte Carlo Salon',
-    description: 'A velvet salon table under a brass chandelier.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1500,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 149,
-    metadata: { game: 'blackjack', felt: '#0E3B2E', accent: '#D4AF37' },
-  },
-  {
-    id: '44444444-0000-4000-9101-000000000040',
-    name: 'Quill of Revelation',
-    description: 'A raven quill that hums near common letters.',
-    type: 'game_piece',
-    rarity: 'epic',
-    price: 1600,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 150,
-    metadata: { game: 'hangman', piece: 'raven_quill' },
-  },
-  {
-    id: '44444444-0000-4000-9213-000000000040',
-    name: 'Midnight Study',
-    description: 'A candlelit study wall of ticking letter tiles.',
-    type: 'game_skin',
-    rarity: 'rare',
-    price: 1400,
-    currency: 'coins',
-    discountPercent: 0,
-    isUniqueOwned: true,
-    giftable: true,
-    sortOrder: 151,
-    metadata: { game: 'hangman', felt: '#1C1628', accent: '#A78BFA' },
-  },
-  // ── 3D board themes ─────────────────────────────────────────────────────
-  {
+{
     id: '44444444-0000-4000-9200-000000000001',
     name: 'Midnight Velvet Board',
     description: 'Deep navy 3D table with purple velvet cushions.',
@@ -1125,7 +871,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 90,
     metadata: { theme: 'midnight' },
   },
-  {
+{
     id: '44444444-0000-4000-9201-000000000002',
     name: 'Gold Casino Board',
     description: 'Luxury gold-trimmed casino table for every game.',
@@ -1139,8 +885,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 91,
     metadata: { theme: 'gold_casino' },
   },
-  // ── Aurora board skins (match mobile BoardSkin) ─────────────────────────
-  {
+{
     id: '44444444-0000-4000-9202-000000000003',
     name: 'Emerald Felt Table',
     description: 'Classic green felt — perfect for pool, dominoes and cards.',
@@ -1154,7 +899,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 92,
     metadata: { theme: 'emerald' },
   },
-  {
+{
     id: '44444444-0000-4000-9203-000000000004',
     name: 'Crimson Royale Board',
     description: 'Deep red velvet with gold rail — royal casino style.',
@@ -1168,7 +913,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 93,
     metadata: { theme: 'crimson' },
   },
-  {
+{
     id: '44444444-0000-4000-9204-000000000005',
     name: 'Cosmic Nebula Board',
     description: 'Purple nebula felt with star-dust cushions. Out of this world.',
@@ -1182,7 +927,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 94,
     metadata: { theme: 'cosmic' },
   },
-  {
+{
     id: '44444444-0000-4000-9205-000000000006',
     name: 'Amber Wood Table',
     description: 'Warm polished wood — chess, checkers and carrom shine here.',
@@ -1196,7 +941,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 95,
     metadata: { theme: 'wood' },
   },
-  {
+{
     id: '44444444-0000-4000-9206-000000000007',
     name: 'Arctic Ice Board',
     description: 'Icy blue felt with frosted rail — cool & crisp for every table.',
@@ -1210,8 +955,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 96,
     metadata: { theme: 'arctic' },
   },
-  // ── Plato-like bundles (coins + pips + theme + frame) ───────────────────
-  {
+{
     id: '55555555-0000-4000-a000-000000000001',
     name: 'Starter Pack',
     description: 'Great start: 5,000 coins + Cyan Ring + Glass Bubble.',
@@ -1225,7 +969,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 160,
     metadata: { bundle: 'starter', coins: 5000, items: ['Cyan Ring Frame', 'Glass Bubble'] },
   },
-  {
+{
     id: '55555555-0000-4000-a001-000000000002',
     name: 'Aurora Pro Pack',
     description: 'For grinders: 20,000 coins + 500 pips + Neon Halo + Aurora Banner + Gold Dice.',
@@ -1239,7 +983,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 161,
     metadata: { bundle: 'aurora_pro', coins: 20000, pips: 500 },
   },
-  {
+{
     id: '55555555-0000-4000-a002-000000000003',
     name: 'Cosmic Legends Bundle',
     description: 'Legends only: all 6 board themes + 30,000 coins for piece sets.',
@@ -1253,7 +997,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 162,
     metadata: { bundle: 'cosmic_legends', theme: 'all', coins: 30000 },
   },
-  {
+{
     id: '55555555-0000-4000-b000-000000000004',
     name: '10K Coins',
     description: 'Top up 10,000 coins for shop & gifts.',
@@ -1267,7 +1011,7 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     sortOrder: 163,
     metadata: { coins: 10000, purchase: 'coins' },
   },
-  {
+{
     id: '55555555-0000-4000-b001-000000000005',
     name: '500 Pips',
     description: 'Premium pips for legendary boards & frames.',
@@ -1280,5 +1024,90 @@ export const SHOP_CATALOGUE: ShopCatalogueItem[] = [
     giftable: false,
     sortOrder: 164,
     metadata: { pips: 500, purchase: 'pips' },
+  }
+,
+  {
+    id: '44444444-0000-4000-9101-000000000091',
+    name: 'Radar Scope',
+    description: 'A spinning radar ring that sweeps the minefield with you.',
+    type: 'game_piece',
+    rarity: 'rare',
+    price: 900,
+    currency: 'coins',
+    discountPercent: 0,
+    isUniqueOwned: true,
+    giftable: true,
+    sortOrder: 165,
+    metadata: { game: 'minesweepers', piece: 'radar_scope' },
+  },
+  {
+    id: '44444444-0000-4000-9213-000000000091',
+    name: 'Sapper Field',
+    description: 'Dusty khaki field grid with warning stripes.',
+    type: 'game_skin',
+    rarity: 'rare',
+    price: 1400,
+    currency: 'coins',
+    discountPercent: 0,
+    isUniqueOwned: true,
+    giftable: true,
+    sortOrder: 166,
+    metadata: { game: 'minesweepers', felt: '#2B2A1E', accent: '#E0B23C' },
+  },
+  {
+    id: '44444444-0000-4000-9101-000000000092',
+    name: 'Angler\u2019s Lure',
+    description: 'A shimmering lure that dangles over your hand of cards.',
+    type: 'game_piece',
+    rarity: 'rare',
+    price: 900,
+    currency: 'coins',
+    discountPercent: 0,
+    isUniqueOwned: true,
+    giftable: true,
+    sortOrder: 167,
+    metadata: { game: 'gofish', piece: 'anglers_lure' },
+  },
+  {
+    id: '44444444-0000-4000-9213-000000000092',
+    name: 'Lakeside Dock',
+    description: 'Sun-bleached planks and calm morning water.',
+    type: 'game_skin',
+    rarity: 'rare',
+    price: 1400,
+    currency: 'coins',
+    discountPercent: 0,
+    isUniqueOwned: true,
+    giftable: true,
+    sortOrder: 168,
+    metadata: { game: 'gofish', felt: '#123B4F', accent: '#59C3E3' },
+  },
+  {
+    id: '44444444-0000-4000-9101-000000000093',
+    name: 'High Roller Chips',
+    description: 'Ivory-and-gold clay chips for fearless betting.',
+    type: 'game_piece',
+    rarity: 'epic',
+    price: 1700,
+    currency: 'coins',
+    discountPercent: 0,
+    isUniqueOwned: true,
+    giftable: true,
+    sortOrder: 169,
+    metadata: { game: 'poker', piece: 'high_roller' },
+  },
+  {
+    id: '44444444-0000-4000-9213-000000000093',
+    name: 'Velvet Card Room',
+    description: 'Deep green felt, brass rails and low lamplight.',
+    type: 'game_skin',
+    rarity: 'epic',
+    price: 1800,
+    currency: 'coins',
+    discountPercent: 0,
+    isUniqueOwned: true,
+    giftable: true,
+    sortOrder: 170,
+    metadata: { game: 'poker', felt: '#0E3B2E', accent: '#C9A227' },
   },
 ];

@@ -9,36 +9,29 @@ import { ChessEngine } from './chess.engine';
 import { PoolEngine } from './pool.engine';
 import { CarromEngine } from './carrom.engine';
 import { DotsAndBoxesEngine } from './dots-and-boxes.engine';
-import { SnakesLaddersEngine } from './snakes-ladders.engine';
 import { BingoEngine } from './bingo.engine';
 import { DicePartyEngine } from './dice-party.engine';
 import { BackgammonEngine } from './backgammon.engine';
 import { MancalaEngine } from './mancala.engine';
 import { BowlingEngine } from './bowling.engine';
-import { TriviaEngine } from './trivia.engine';
-import { WordChainEngine } from './word-chain.engine';
-import { EmojiCharadesEngine } from './emoji-charades.engine';
-import { MemoryEngine } from './memory.engine';
 import { SketchEngine } from './sketch.engine';
 import { WerewolfEngine } from './werewolf.engine';
-import { ImpostorEngine } from './impostor.engine';
 import { DartsEngine } from './darts.engine';
 import { MinigolfEngine } from './minigolf.engine';
 import { BankrollEngine } from './bankroll.engine';
 import { BattleshipEngine } from './battleship.engine';
 import { ReversiEngine } from './reversi.engine';
-import { GomokuEngine } from './gomoku.engine';
-import { BlackjackEngine } from './blackjack.engine';
-import { HangmanEngine } from './hangman.engine';
-import { TicTacToeEngine } from './tic-tac-toe.engine';
-import { TileDuelEngine } from './tile-duel.engine';
+import { MinesweeperEngine } from './minesweeper.engine';
+import { GoFishEngine } from './gofish.engine';
+import { PokerEngine } from './poker.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
  * the system (matchmaking, rooms, gateway) stays generic.
  *
- * The catalogue is being rebuilt wave by wave (logic + 3D board + shop items
- * per game); every wave injects its engines here.
+ * The catalogue mirrors the Plato line-up: every slug below is a real Plato
+ * title with a fully rules-correct engine, a Flutter board, a tutorial and a
+ * bundled logo. Nothing is listed that cannot be played end to end.
  */
 @Injectable()
 export class EngineRegistry {
@@ -54,29 +47,21 @@ export class EngineRegistry {
     pool: PoolEngine,
     carrom: CarromEngine,
     dots: DotsAndBoxesEngine,
-    snakes: SnakesLaddersEngine,
     bingo: BingoEngine,
     dice: DicePartyEngine,
     backgammon: BackgammonEngine,
     mancala: MancalaEngine,
     bowling: BowlingEngine,
-    trivia: TriviaEngine,
-    wordChain: WordChainEngine,
-    charades: EmojiCharadesEngine,
-    memory: MemoryEngine,
     sketch: SketchEngine,
     werewolf: WerewolfEngine,
-    impostor: ImpostorEngine,
     darts: DartsEngine,
     minigolf: MinigolfEngine,
     bankroll: BankrollEngine,
     battleship: BattleshipEngine,
     reversi: ReversiEngine,
-    gomoku: GomokuEngine,
-    blackjack: BlackjackEngine,
-    hangman: HangmanEngine,
-    ticTacToe: TicTacToeEngine,
-    tileDuel: TileDuelEngine,
+    minesweeper: MinesweeperEngine,
+    gofish: GoFishEngine,
+    poker: PokerEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -87,29 +72,21 @@ export class EngineRegistry {
     this.register(pool);
     this.register(carrom);
     this.register(dots);
-    this.register(snakes);
     this.register(bingo);
     this.register(dice);
     this.register(backgammon);
     this.register(mancala);
     this.register(bowling);
-    this.register(trivia);
-    this.register(wordChain);
-    this.register(charades);
-    this.register(memory);
     this.register(sketch);
     this.register(werewolf);
-    this.register(impostor);
     this.register(darts);
     this.register(minigolf);
     this.register(bankroll);
     this.register(battleship);
     this.register(reversi);
-    this.register(gomoku);
-    this.register(blackjack);
-    this.register(hangman);
-    this.register(ticTacToe);
-    this.register(tileDuel);
+    this.register(minesweeper);
+    this.register(gofish);
+    this.register(poker);
   }
 
   register(engine: BaseGameEngine): void {
@@ -122,9 +99,7 @@ export class EngineRegistry {
 
   require(slug: string): BaseGameEngine {
     const engine = this.engines.get(slug);
-    if (!engine) {
-      throw new Error(`No engine registered for game "${slug}".`);
-    }
+    if (!engine) throw new Error(`No engine registered for game "${slug}".`);
     return engine;
   }
 
@@ -132,6 +107,7 @@ export class EngineRegistry {
     return this.engines.has(slug);
   }
 
+  /** Registration order — used by the catalog seeder and the hub ordering. */
   get slugs(): string[] {
     return [...this.engines.keys()];
   }

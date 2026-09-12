@@ -56,7 +56,7 @@ class GameHubScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${games.length} games · Wave 7',
+                      '${games.length} games',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6),
                     ),
@@ -284,8 +284,6 @@ String _gameEmoji(String slug) {
       return '🎯';
     case 'dots_and_boxes':
       return '🔹';
-    case 'snakes_ladders':
-      return '🐍';
     case 'bingo':
       return '🎱';
     case 'dice_party':
@@ -296,20 +294,10 @@ String _gameEmoji(String slug) {
       return '🫘';
     case 'bowling':
       return '🎳';
-    case 'trivia':
-      return '🧠';
-    case 'word_chain':
-      return '🔗';
-    case 'emoji_charades':
-      return '🎭';
-    case 'memory':
-      return '🃏';
     case 'sketch':
       return '✏️';
     case 'werewolf':
       return '🐺';
-    case 'impostor':
-      return '🕵️';
     case 'darts':
       return '🎯';
     case 'minigolf':
@@ -320,12 +308,12 @@ String _gameEmoji(String slug) {
       return '🚢';
     case 'reversi':
       return '⚫';
-    case 'gomoku':
-      return '⭕';
-    case 'blackjack':
-      return '🃏';
-    case 'hangman':
-      return '🔤';
+    case 'minesweepers':
+      return '💣';
+    case 'gofish':
+      return '🎣';
+    case 'poker':
+      return '♠️';
     default:
       return '🎮';
   }

@@ -2,57 +2,123 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { BaseGameEngine } from './base-game.engine';
 import type { ActionResult, BotMove, GameAction, GameState, MatchConfig, SeatInfo } from './types';
 
-interface RollResult {
-  seat: number;
-  dice: [number, number];
-  sum: number;
-  bust: boolean;
+/** Starting cash and the net-worth target (Plato Bankroll style). */
+const START_CASH = 1000;
+const GOAL = 3000;
+const SALARY = 300;
+const TAX = 120;
+
+export type TileKind = 'start' | 'property' | 'chance' | 'tax';
+
+export interface BankrollTile {
+  kind: TileKind;
+  /** Display name. */
+  name: string;
+  /** Colour group for properties (0..8), -1 otherwise. */
+  group: number;
+  /** Purchase price for properties, 0 otherwise. */
+  price: number;
+  /** Base rent (doubled when the owner holds the whole group). */
+  rent: number;
 }
+
+const GROUP_NAMES = ['Harbor', 'Old Town', 'Green Park', 'Market', 'Copper Hill', 'Museum Row', 'Skyline', 'Palm Bay', 'Crown Center'];
+
+function buildTiles(): BankrollTile[] {
+  const tiles: BankrollTile[] = BANKROLL_TILES_LAYOUT.map((kind) => {
+    if (kind === 'start') return { kind, name: 'Start', group: -1, price: 0, rent: 0 };
+    if (kind === 'chance') return { kind, name: 'Chance', group: -1, price: 0, rent: 0 };
+    if (kind === 'tax') return { kind, name: 'Tax Office', group: -1, price: 0, rent: 0 };
+    // Property placeholder — replaced with the real district below.
+    return { kind: 'property', name: '?', group: -1, price: 0, rent: 0 };
+  });
+  // Assign the 18 property slots to 9 groups of 2, cheapest near Start.
+  const propSlots = [1, 2, 4, 5, 7, 8, 10, 11, 12, 13, 15, 16, 18, 19, 20, 21, 22, 23];
+  propSlots.forEach((slot, n) => {
+    const group = Math.floor(n / 2);
+    const price = 120 + group * 40;
+    tiles[slot] = {
+      kind: 'property',
+      name: `${GROUP_NAMES[group]} ${n % 2 === 0 ? 'I' : 'II'}`,
+      group,
+      price,
+      rent: Math.round(price * 0.45),
+    };
+  });
+  return tiles;
+}
+
+/** Circular board layout: 1 Start + 18 properties + 3 Chance + 2 Tax. */
+const BANKROLL_TILES_LAYOUT: TileKind[] = [
+  'start',       // 0
+  'property', 'property', // 1,2  g0
+  'chance',      // 3
+  'property', 'property', // 4,5  g1
+  'tax',         // 6
+  'property', 'property', // 7,8  g2
+  'chance',      // 9
+  'property', 'property', // 10,11 g3
+  'property', 'property', // 12,13 g4
+  'tax',         // 14
+  'property', 'property', // 15,16 g5
+  'chance',      // 17
+  'property', 'property', // 18,19 g6
+  'property', 'property', // 20,21 g7
+  'property', 'property', // 22,23 g8
+];
+
+/** Public tile layout (exported for the rules suite and mirrored on board). */
+export const BANKROLL_TILES: BankrollTile[] = buildTiles();
+
+/** Chance deck: each effect runs twice through the deck. */
+type ChanceEffect =
+  | { kind: 'cash'; amount: number }
+  | { kind: 'to_start' }
+  | { kind: 'advance'; steps: number }
+  | { kind: 'collect'; amount: number }
+  | { kind: 'pay_each'; amount: number };
+
+const CHANCE_DECK: ChanceEffect[] = [
+  { kind: 'cash', amount: 200 },
+  { kind: 'cash', amount: -80 },
+  { kind: 'to_start' },
+  { kind: 'advance', steps: 3 },
+  { kind: 'collect', amount: 150 },
+  { kind: 'pay_each', amount: 40 },
+  { kind: 'cash', amount: 120 },
+  { kind: 'cash', amount: -120 },
+  { kind: 'advance', steps: -4 },
+  { kind: 'collect', amount: 60 },
+  { kind: 'pay_each', amount: 25 },
+  { kind: 'cash', amount: -60 },
+];
 
 interface BankrollBoard extends Record<string, unknown> {
-  /** 1-based betting round; ROUNDS rounds a game. */
-  round: number;
-  /** 'bet' (hot-seat stakes) or 'roll' (the dice decide). */
-  phase: 'bet' | 'roll';
-  /** Chips each seat still holds. */
-  bankrolls: number[];
-  /** Chips on the table. */
-  pot: number;
-  /** Highest stake this round. */
-  roundStake: number;
-  /** Seats that bet — they roll, in this order. */
-  bettors: number[];
-  /** Dice results this round. */
-  results: RollResult[];
-  /** Who folded this round (keeps their chips, cannot win). */
-  foldedRound: boolean[];
-  log: string[];
-}
-
-const ROUNDS = 5;
-const START_BANKROLL = 1000;
-const MIN_BET = 5;
-
-function rollDie(): number {
-  return 1 + Math.floor(Math.random() * 6);
+  tiles: BankrollTile[];
+  /** Tile → owning seat, null = bank. */
+  owner: Array<number | null>;
+  positions: number[];
+  cash: number[];
+  bankrupt: boolean[];
+  /** Server-only shuffled chance deck. Stripped from client views. */
+  chanceDeck: ChanceEffect[];
+  /** Public description of the most recent chance draw. */
+  lastChance: { seat: number; text: string } | null;
+  /** Pending purchase decision (engine waits for buy/pass). */
+  pendingBuy: { seat: number; tile: number; price: number } | null;
+  lastRoll: { seat: number; dice: [number, number]; from: number; to: number; passedStart: boolean } | null;
+  log: Array<{ seat: number; text: string }>;
+  turnCount: number;
 }
 
 /**
- * Bankroll — hot-seat dice poker, wave-5 rebuild of the quick-challenges
- * family.
- *
- * Five betting rounds around one table. Each round every player either
- * pushes chips into the pot ('bet', at least five, up to their whole
- * bankroll) or folds and sits the round out. When the table is set, everyone
- * who bet rolls two dice in seat order: a seven or eleven is safe, craps —
- * two, three or twelve — busts you out of the running, and any other total
- * is your score. The highest total rakes the pot (ties split it); if every
- * bettor craps out, the pot carries over and swells the next round. After
- * five rounds the richest stack wins — so a fat lead in the last round is
- * worth protecting with a well-timed fold. No hidden information.
- *
- * Bots size their bets by difficulty — easy whales splash big, expert
- * grinders keep it small — and never fold while they can afford the minimum.
+ * Bankroll — Plato's property-trading race, rebuilt to match the real game:
+ * roll, lap the board collecting your salary, buy districts, charge rent,
+ * dodge taxes and chance, and be the FIRST player whose net worth (cash +
+ * properties) reaches the target. Land on an unowned district and the sale
+ * waits on your decision; everything else resolves automatically. A player
+ * who cannot pay auto-liquidates districts at half price, and if that is not
+ * enough they go bankrupt. Last solvent player also wins.
  */
 @Injectable()
 export class BankrollEngine extends BaseGameEngine {
@@ -63,17 +129,19 @@ export class BankrollEngine extends BaseGameEngine {
 
   createInitialState(config: MatchConfig): GameState {
     const board: BankrollBoard = {
-      round: 1,
-      phase: 'bet',
-      bankrolls: config.seats.map(() => START_BANKROLL),
-      pot: 0,
-      roundStake: 0,
-      bettors: [],
-      results: [],
-      foldedRound: config.seats.map(() => false),
-      log: ['Round 1 of 5 — place your stakes.'],
+      tiles: BANKROLL_TILES.map((t) => ({ ...t })),
+      owner: BANKROLL_TILES.map(() => null),
+      positions: config.seats.map(() => 0),
+      cash: config.seats.map(() => START_CASH),
+      bankrupt: config.seats.map(() => false),
+      chanceDeck: this.shuffledChance(),
+      lastChance: null,
+      pendingBuy: null,
+      lastRoll: null,
+      log: [],
+      turnCount: 0,
     };
-    return {
+    const state: GameState = {
       phase: 'in_progress',
       turn: 0,
       currentSeat: 0,
@@ -84,33 +152,33 @@ export class BankrollEngine extends BaseGameEngine {
         displayName: s.displayName,
         avatarUrl: s.avatarUrl,
         connected: true,
-        score: START_BANKROLL,
+        score: START_CASH,
       })),
       board: board as unknown as Record<string, unknown>,
       winnerSeat: null,
-      scores: config.seats.map(() => START_BANKROLL),
+      scores: config.seats.map(() => START_CASH),
       version: 1,
     };
+    this.syncScores(state);
+    return state;
   }
 
   validate(state: GameState, action: GameAction): ActionResult {
     if (state.phase !== 'in_progress') return { ok: false, error: 'The game is already over.' };
     if (action.seat !== state.currentSeat) return { ok: false, error: 'It is not your turn.' };
     const board = state.board as unknown as BankrollBoard;
-    if (board.phase === 'bet') {
-      if (action.type === 'fold') return { ok: true };
-      if (action.type !== 'bet') return { ok: false, error: 'Bet or fold.' };
-      const amount = Number(action.payload.amount);
-      if (!Number.isInteger(amount) || amount < MIN_BET) {
-        return { ok: false, error: `Minimum bet is ${MIN_BET}.` };
-      }
-      if (amount > board.bankrolls[action.seat]) {
-        return { ok: false, error: 'You cannot bet more than your bankroll.' };
-      }
+
+    if (action.type === 'roll') {
+      if (board.pendingBuy) return { ok: false, error: 'Decide on the property first.' };
       return { ok: true };
     }
-    if (board.phase === 'roll') {
-      if (action.type !== 'roll') return { ok: false, error: 'Roll the dice.' };
+    if (action.type === 'buy' || action.type === 'pass') {
+      if (!board.pendingBuy || board.pendingBuy.seat !== action.seat) {
+        return { ok: false, error: 'There is no property to decide on.' };
+      }
+      if (action.type === 'buy' && board.cash[action.seat] < board.pendingBuy.price) {
+        return { ok: false, error: 'Not enough cash for this district.' };
+      }
       return { ok: true };
     }
     return { ok: false, error: 'Unknown action.' };
@@ -122,148 +190,263 @@ export class BankrollEngine extends BaseGameEngine {
     const next = this.clone(state);
     const board = next.board as unknown as BankrollBoard;
     const seat = action.seat;
-    next.version += 1;
 
-    if (board.phase === 'bet') {
-      if (action.type === 'fold') {
-        board.foldedRound[seat] = true;
-        board.log.push(`Seat ${seat + 1} folds and keeps their stack.`);
-      } else {
-        const amount = Number(action.payload.amount);
-        board.bankrolls[seat] -= amount;
-        board.pot += amount;
-        board.roundStake = Math.max(board.roundStake, amount);
-        board.bettors.push(seat);
-        board.log.push(`Seat ${seat + 1} bets ${amount}.`);
-      }
-      if (seat < next.seats.length - 1) {
-        next.currentSeat = seat + 1;
-      } else {
-        // Table is set — hand the dice to the first bettor.
-        if (board.bettors.length === 0) {
-          board.log.push('Nobody bet — the pot carries over.');
-          return this.advanceRound(next, board);
-        }
-        board.phase = 'roll';
-        board.results = [];
-        next.currentSeat = board.bettors[0];
-        board.log.push('The dice are out — sevens and elevens are safe, craps bust.');
-      }
-      next.turnStartedAt = new Date().toISOString();
+    if (action.type === 'buy' && board.pendingBuy) {
+      const { tile, price } = board.pendingBuy;
+      board.cash[seat] -= price;
+      board.owner[tile] = seat;
+      board.log.push({ seat, text: `bought ${board.tiles[tile].name} for ${price}` });
+      board.pendingBuy = null;
+      this.endTurn(state, next, seat);
+      return next;
+    }
+    if (action.type === 'pass') {
+      board.log.push({ seat, text: `passed on ${board.tiles[board.pendingBuy!.tile].name}` });
+      board.pendingBuy = null;
+      this.endTurn(state, next, seat);
       return next;
     }
 
-    // Roll phase.
-    const d1 = rollDie();
-    const d2 = rollDie();
-    const sum = d1 + d2;
-    const bust = sum === 2 || sum === 3 || sum === 12;
-    board.results.push({ seat, dice: [d1, d2], sum, bust });
-    board.log.push(`Seat ${seat + 1} rolls ${d1}+${d2}=${sum}${bust ? ' — craps, busted!' : sum === 7 || sum === 11 ? ' — safe!' : '.'}`);
+    // roll
+    const d1 = 1 + Math.floor(Math.random() * 6);
+    const d2 = 1 + Math.floor(Math.random() * 6);
+    const steps = d1 + d2;
+    const from = board.positions[seat];
+    const to = (from + steps) % 24;
+    const passedStart = from + steps >= 24 || to === 0;
+    board.positions[seat] = to;
+    board.lastRoll = { seat, dice: [d1, d2], from, to, passedStart };
+    board.turnCount += 1;
 
-    const idx = board.bettors.indexOf(seat);
-    if (idx < board.bettors.length - 1) {
-      next.currentSeat = board.bettors[idx + 1];
-      next.turnStartedAt = new Date().toISOString();
-      return next;
+    if (passedStart) {
+      board.cash[seat] += SALARY;
+      board.log.push({ seat, text: `collects ${SALARY} salary` });
     }
-    return this.resolveRound(next, board);
+
+    this.resolveTile(state, next, seat, true);
+    if (next.phase !== 'in_progress') return next;
+    if (!board.pendingBuy) this.endTurn(state, next, seat);
+    return next;
   }
 
   chooseBotMove(state: GameState, seat: number, difficulty: SeatInfo['botDifficulty']): BotMove {
     const board = state.board as unknown as BankrollBoard;
-    if (board.phase === 'roll') {
-      return { action: { seat, type: 'roll', payload: {} }, delayMs: this.think(difficulty) };
+    const buffer = difficulty === 'easy' ? 220 : difficulty === 'medium' ? 120 : difficulty === 'hard' ? 60 : 20;
+
+    if (board.pendingBuy && board.pendingBuy.seat === seat) {
+      const { tile, price } = board.pendingBuy;
+      const tiles = board.tiles;
+      const partnerSlot = tiles.findIndex((t, i) => i !== tile && t.kind === 'property' && t.group === tiles[tile].group);
+      const completesSet = partnerSlot >= 0 && board.owner[partnerSlot] === seat;
+      const affordable = board.cash[seat] - price >= (completesSet ? 0 : buffer);
+      const buy = affordable || (completesSet && board.cash[seat] >= price);
+      return {
+        action: { seat, type: buy ? 'buy' : 'pass', payload: {} },
+        delayMs: this.think(difficulty),
+      };
     }
-    const bankroll = board.bankrolls[seat];
-    if (bankroll < MIN_BET) {
-      return { action: { seat, type: 'fold', payload: {} }, delayMs: this.think(difficulty) };
+    return { action: { seat, type: 'roll', payload: {} }, delayMs: this.think(difficulty) };
+  }
+
+  // ── rules ─────────────────────────────────────────────────────────────────
+
+  /** Resolves the tile the seat stands on (recursively for chance moves). */
+  private resolveTile(state: GameState, next: GameState, seat: number, deep: boolean): void {
+    const board = next.board as unknown as BankrollBoard;
+    const pos = board.positions[seat];
+    const tile = board.tiles[pos];
+
+    if (tile.kind === 'start') return; // salary already granted on pass/landing
+
+    if (tile.kind === 'tax') {
+      this.charge(state, next, seat, TAX, `pays ${TAX} tax`);
+      return;
     }
-    // Bet sizing: whales vs grinders.
-    const cap =
-      difficulty === 'easy' ? 250 : difficulty === 'medium' ? 120 : difficulty === 'hard' ? 70 : 50;
-    const ceiling = Math.min(bankroll, cap);
-    const amount = MIN_BET + Math.floor(Math.random() * Math.max(1, ceiling - MIN_BET + 1));
+
+    if (tile.kind === 'chance') {
+      if (board.chanceDeck.length === 0) board.chanceDeck = this.shuffledChance();
+      const card = board.chanceDeck.shift() as ChanceEffect;
+      switch (card.kind) {
+        case 'cash':
+          board.cash[seat] += card.amount;
+          board.lastChance = { seat, text: card.amount >= 0 ? `The bank pays you ${card.amount}` : `You are fined ${-card.amount}` };
+          break;
+        case 'to_start':
+          board.positions[seat] = 0;
+          board.cash[seat] += SALARY;
+          board.lastChance = { seat, text: `Move to Start — collect ${SALARY}` };
+          break;
+        case 'advance': {
+          const target = (board.positions[seat] + card.steps + 24) % 24;
+          const passed = card.steps > 0 && board.positions[seat] + card.steps >= 24;
+          board.positions[seat] = target;
+          if (passed) board.cash[seat] += SALARY;
+          board.lastChance = { seat, text: card.steps > 0 ? `Advance ${card.steps}` : `Go back ${-card.steps}` };
+          if (deep) this.resolveTile(state, next, seat, false);
+          break;
+        }
+        case 'collect': {
+          let total = 0;
+          for (let i = 0; i < board.cash.length; i++) {
+            if (i === seat || board.bankrupt[i]) continue;
+            const pay = Math.min(card.amount, board.cash[i]);
+            board.cash[i] -= pay;
+            total += pay;
+          }
+          board.cash[seat] += total;
+          board.lastChance = { seat, text: `Collect ${total} from the table` };
+          break;
+        }
+        case 'pay_each': {
+          for (let i = 0; i < board.cash.length; i++) {
+            if (i === seat || board.bankrupt[i]) continue;
+            const pay = Math.min(card.amount, board.cash[seat]);
+            board.cash[seat] -= pay;
+            board.cash[i] += pay;
+          }
+          board.lastChance = { seat, text: `Pay each player ${card.amount}` };
+          break;
+        }
+      }
+      board.log.push({ seat, text: `Chance: ${board.lastChance?.text ?? ''}` });
+      this.checkGoal(state, next);
+      return;
+    }
+
+    // property
+    const owner = board.owner[pos];
+    if (owner === null) {
+      board.pendingBuy = { seat, tile: pos, price: tile.price };
+      return;
+    }
+    if (owner === seat) return;
+    // Rent — doubles when the owner holds the whole group.
+    const monopoly = board.tiles.every((t, i) => t.kind !== 'property' || t.group !== tile.group || board.owner[i] === owner);
+    const due = monopoly ? tile.rent * 2 : tile.rent;
+    this.charge(state, next, seat, due, `pays ${due} rent to seat ${owner + 1}`, owner);
+  }
+
+  /**
+   * Charges cash, auto-liquidating properties at half price when short.
+   * Bankrupts the seat if even that is not enough.
+   */
+  private charge(state: GameState, next: GameState, seat: number, amount: number, logText: string, payee?: number): void {
+    const board = next.board as unknown as BankrollBoard;
+    let due = amount;
+    if (board.cash[seat] < due) {
+      // Liquidate cheapest properties first.
+      const owned = board.tiles
+        .map((t, i) => ({ t, i }))
+        .filter((x) => x.t.kind === 'property' && board.owner[x.i] === seat)
+        .sort((a, b) => a.t.price - b.t.price);
+      for (const { i } of owned) {
+        if (board.cash[seat] >= due) break;
+        const sale = Math.round(board.tiles[i].price / 2);
+        board.cash[seat] += sale;
+        board.owner[i] = null;
+        board.log.push({ seat, text: `liquidates ${board.tiles[i].name} for ${sale}` });
+      }
+    }
+    if (board.cash[seat] < due) {
+      // Bankrupt: everything back to the bank.
+      board.tiles.forEach((t, i) => {
+        if (t.kind === 'property' && board.owner[i] === seat) board.owner[i] = null;
+      });
+      board.cash[seat] = 0;
+      board.bankrupt[seat] = true;
+      board.log.push({ seat, text: 'is bankrupt!' });
+      this.checkLastStanding(state, next);
+      return;
+    }
+    board.cash[seat] -= due;
+    if (payee !== undefined) board.cash[payee] += due;
+    board.log.push({ seat, text: logText });
+    this.checkGoal(state, next);
+  }
+
+  private checkGoal(state: GameState, next: GameState): void {
+    const board = next.board as unknown as BankrollBoard;
+    for (let i = 0; i < board.cash.length; i++) {
+      if (board.bankrupt[i]) continue;
+      if (this.netWorth(board, i) >= GOAL) {
+        this.finish(state, next, i);
+        return;
+      }
+    }
+  }
+
+  private checkLastStanding(state: GameState, next: GameState): void {
+    const board = next.board as unknown as BankrollBoard;
+    const solvent = board.cash.map((_, i) => i).filter((i) => !board.bankrupt[i]);
+    if (solvent.length === 1) this.finish(state, next, solvent[0]);
+  }
+
+  private netWorth(board: BankrollBoard, seat: number): number {
+    return board.cash[seat] + board.tiles.reduce((sum, t, i) => (t.kind === 'property' && board.owner[i] === seat ? sum + t.price : sum), 0);
+  }
+
+  private syncScores(state: GameState): void {
+    const board = state.board as unknown as BankrollBoard;
+    state.scores = board.cash.map((_, i) => this.netWorth(board, i));
+    state.seats = state.seats.map((s, i) => ({ ...s, score: state.scores[i] }));
+  }
+
+  private endTurn(_state: GameState, next: GameState, from: number): void {
+    const board = next.board as unknown as BankrollBoard;
+    this.checkGoal(_state, next);
+    if (next.phase !== 'in_progress') return;
+    const n = board.cash.length;
+    let s = (from + 1) % n;
+    for (let i = 0; i < n; i++) {
+      if (!board.bankrupt[s]) break;
+      s = (s + 1) % n;
+    }
+    if (board.bankrupt[s]) {
+      // Everyone else bankrupt — cannot happen (checkLastStanding), guard anyway.
+      this.finish(_state, next, from);
+      return;
+    }
+    next.currentSeat = s;
+    next.turn += 1;
+    next.turnStartedAt = new Date().toISOString();
+    this.syncScores(next);
+  }
+
+  private finish(state: GameState, next: GameState, winner: number): void {
+    const board = next.board as unknown as BankrollBoard;
+    next.phase = 'completed';
+    next.winnerSeat = winner;
+    next.currentSeat = -1;
+    this.syncScores(next);
+    board.log.push({ seat: winner, text: 'reaches the net-worth goal and wins!' });
+  }
+
+  // ── shared ────────────────────────────────────────────────────────────────
+
+  private shuffledChance(): ChanceEffect[] {
+    const deck = CHANCE_DECK.map((c) => ({ ...c }));
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+  }
+
+  /** Hides the upcoming chance deck order from clients. */
+  protected redactHidden(state: GameState, _seat: number): GameState {
+    const board = state.board as unknown as BankrollBoard;
     return {
-      action: { seat, type: 'bet', payload: { amount: Math.min(bankroll, amount) } },
-      delayMs: this.think(difficulty),
+      ...state,
+      board: {
+        ...board,
+        chanceDeck: [],
+      } as unknown as Record<string, unknown>,
     };
   }
 
-  // ── round flow ────────────────────────────────────────────────────────────
-
-  private resolveRound(next: GameState, board: BankrollBoard): GameState {
-    const safe = board.results.filter((r) => !r.bust);
-    if (safe.length > 0) {
-      const best = Math.max(...safe.map((r) => r.sum));
-      const winners = safe.filter((r) => r.sum === best).map((r) => r.seat);
-      const share = Math.floor(board.pot / winners.length);
-      let remainder = board.pot - share * winners.length;
-      for (const w of winners.sort((a, b) => a - b)) {
-        board.bankrolls[w] += share;
-        if (remainder > 0) {
-          board.bankrolls[w] += 1;
-          remainder -= 1;
-        }
-      }
-      board.log.push(
-        winners.length === 1
-          ? `Seat ${winners[0] + 1} rakes the pot of ${board.pot} with a ${best}!`
-          : `A tie at ${best} — the pot of ${board.pot} splits between ${winners.map((w) => w + 1).join(' & ')}.`,
-      );
-      board.pot = 0;
-    } else {
-      board.log.push(`Everybody craps out — the pot of ${board.pot} carries over!`);
-    }
-    next.scores = [...board.bankrolls];
-    return this.advanceRound(next, board);
-  }
-
-  private advanceRound(next: GameState, board: BankrollBoard): GameState {
-    if (board.round >= ROUNDS) {
-      this.finish(next, board);
-      return next;
-    }
-    // A table where nobody can post the minimum is dead — call it.
-    const solvent = board.bankrolls.filter((b) => b >= MIN_BET).length;
-    if (solvent <= 1) {
-      board.log.push('The table cannot post the minimum — game called.');
-      this.finish(next, board);
-      return next;
-    }
-    board.round += 1;
-    board.phase = 'bet';
-    board.roundStake = 0;
-    board.bettors = [];
-    board.results = [];
-    board.foldedRound = board.foldedRound.map(() => false);
-    board.log.push(`Round ${board.round} of ${ROUNDS} — place your stakes.`);
-    next.currentSeat = 0;
-    next.turn += 1;
-    next.turnStartedAt = new Date().toISOString();
-    return next;
-  }
-
-  private finish(state: GameState, board: BankrollBoard): void {
-    const totals = [...board.bankrolls];
-    const max = Math.max(...totals);
-    const leaders = totals.map((s, i) => ({ s, i })).filter((x) => x.s === max).map((x) => x.i);
-    state.scores = totals;
-    state.phase = 'completed';
-    state.currentSeat = -1;
-    if (leaders.length === 1) {
-      state.winnerSeat = leaders[0];
-      (state as unknown as { winnerSeats?: number[] }).winnerSeats = undefined;
-    } else {
-      state.winnerSeat = null;
-      (state as unknown as { winnerSeats?: number[] }).winnerSeats = leaders;
-    }
-    state.seats = state.seats.map((s, i) => ({ ...s, score: totals[i] }));
-  }
-
   private think(difficulty: SeatInfo['botDifficulty']): number {
-    const base = difficulty === 'easy' ? 1400 : difficulty === 'medium' ? 1100 : difficulty === 'hard' ? 900 : 750;
-    return base + Math.floor(Math.random() * 600);
+    const base = difficulty === 'easy' ? 1300 : difficulty === 'medium' ? 1000 : difficulty === 'hard' ? 750 : 550;
+    return base + Math.floor(Math.random() * 700);
   }
 
   private clone(state: GameState): GameState {
@@ -274,11 +457,16 @@ export class BankrollEngine extends BaseGameEngine {
       scores: [...state.scores],
       board: {
         ...(board as Record<string, unknown>),
-        bankrolls: [...board.bankrolls],
-        bettors: [...board.bettors],
-        results: board.results.map((r) => ({ ...r, dice: [...r.dice] as [number, number] })),
-        foldedRound: [...board.foldedRound],
-        log: [...board.log],
+        tiles: board.tiles.map((t) => ({ ...t })),
+        owner: [...board.owner],
+        positions: [...board.positions],
+        cash: [...board.cash],
+        bankrupt: [...board.bankrupt],
+        chanceDeck: board.chanceDeck.map((c) => ({ ...c })),
+        lastChance: board.lastChance ? { ...board.lastChance } : null,
+        pendingBuy: board.pendingBuy ? { ...board.pendingBuy } : null,
+        lastRoll: board.lastRoll ? { ...board.lastRoll, dice: [...board.lastRoll.dice] as [number, number] } : null,
+        log: board.log.map((l) => ({ ...l })),
       } as unknown as Record<string, unknown>,
     };
   }

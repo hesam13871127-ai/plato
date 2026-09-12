@@ -44,7 +44,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'ocho',
     name: 'Ocho',
     description: 'Match colours and numbers, slam skips and wilds. The classic crazy-eights party game.',
@@ -54,7 +55,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'connect4',
     name: '4 in a Row',
     description: 'Drop discs and connect four before your rival. Fast, sharp and tactical.',
@@ -64,7 +66,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'checkers',
     name: 'Checkers',
     description: 'Classic draughts — jump, king and capture! Tactical, fast and perfect for duels.',
@@ -74,7 +77,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'chess',
     name: 'Chess',
     description: 'The immortal duel — castle, fork and checkmate your rival on the 64 squares.',
@@ -84,7 +88,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'pool',
     name: 'Pool',
     description: 'Arcade 8-ball — smash the break, sink your colours and crown the black.',
@@ -94,7 +99,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'carrom',
     name: 'Carrom',
     description: 'Flick, clack, pocket — classic carrom duels with the red queen.',
@@ -104,7 +110,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'dots_and_boxes',
     name: 'Dots & Boxes',
     description: 'Draw lines, steal squares, chain the board — tiny grid, huge mind games.',
@@ -114,17 +121,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
-    slug: 'snakes_ladders',
-    name: 'Snakes & Ladders',
-    description: 'Climb the ladders, dodge the fangs — pure dice drama for the whole table.',
-    minPlayers: 2,
-    maxPlayers: 4,
-    avgDurationMinutes: 7,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
+  },
+  {
     slug: 'bingo',
     name: 'Bingo',
     description: 'Balls roll, cards dab, five in a row shouts BINGO! Luck at its loudest.',
@@ -134,7 +132,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'dice_party',
     name: 'Dice Party',
     description: 'Roll, hold and bank the perfect Yatzy — fifteen ways to score big.',
@@ -144,7 +143,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'backgammon',
     name: 'Backgammon',
     description: 'The ancient race — break contact, anchor up and bear off before your rival.',
@@ -154,7 +154,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'mancala',
     name: 'Mancala',
     description: 'Sow, capture and hoard — the classic seed-counting duel of Kalah.',
@@ -164,7 +165,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'bowling',
     name: 'Bowling',
     description: 'Line up the pocket, hurl it down the boards and chase that perfect 300.',
@@ -174,47 +176,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
-    slug: 'trivia',
-    name: 'Trivia',
-    description: 'Quiz night at the Plato lounge — seven rounds a player, ten points a truth.',
-    minPlayers: 2,
-    maxPlayers: 4,
-    avgDurationMinutes: 8,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
-    slug: 'word_chain',
-    name: 'Word Chain',
-    description: 'Each word starts where the last one ended — ten turns to spell your way to the top.',
-    minPlayers: 2,
-    maxPlayers: 4,
-    avgDurationMinutes: 8,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
-    slug: 'emoji_charades',
-    name: 'Emoji Charades',
-    description: 'Read the emoji riddle, out-guess the table — wrong picks vanish for everyone.',
-    minPlayers: 2,
-    maxPlayers: 4,
-    avgDurationMinutes: 8,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
-    slug: 'memory',
-    name: 'Memory',
-    description: 'Sixteen cards, eight pairs — flip two, remember everything, sweep the deck.',
-    minPlayers: 2,
-    maxPlayers: 4,
-    avgDurationMinutes: 8,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
+  },
+  {
     slug: 'sketch',
     name: 'Sketch',
     description: 'Grab the brush, paint the secret word and let the table race to read your mind.',
@@ -224,7 +187,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'werewolf',
     name: 'Werewolf',
     description: 'Night falls, the village sleeps — find the wolves before the wolves find you.',
@@ -234,17 +198,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
-    slug: 'impostor',
-    name: 'Impostor',
-    description: 'One player does not know the place — blend in, sniff them out, eject them.',
-    minPlayers: 4,
-    maxPlayers: 8,
-    avgDurationMinutes: 8,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
+  },
+  {
     slug: 'darts',
     name: 'Darts',
     description: 'Fifteen darts at the clock board — trebles, bulls and bruised egos.',
@@ -254,7 +209,8 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'minigolf',
     name: 'Mini Golf',
     description: 'Nine compact holes — bank the walls, dodge the blocks, hole out in fewer strokes.',
@@ -264,27 +220,30 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'bankroll',
     name: 'Bankroll',
-    description: 'Hot-seat dice poker — stake your stack, dodge the craps, rake the pot.',
+    description: 'Lap the board, buy up districts and charge rent — first to the net-worth goal wins.',
     minPlayers: 2,
     maxPlayers: 4,
-    avgDurationMinutes: 7,
+    avgDurationMinutes: 12,
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'battleship',
-    name: 'Battleship',
-    description: 'Deploy five ships and trade salvos — first to sink the enemy fleet rules the waves.',
+    name: 'Sea Battle',
+    description: 'Deploy your fleet, call your shots and sink every ship before they sink yours.',
     minPlayers: 2,
     maxPlayers: 2,
     avgDurationMinutes: 8,
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
+  },
+  {
     slug: 'reversi',
     name: 'Reversi',
     description: 'Sandwich enemy discs to flip whole lines — corners are gold, edges are silver.',
@@ -294,53 +253,36 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
-    slug: 'gomoku',
-    name: 'Gomoku',
-    description: 'Five in a row on a fifteen-by-fifteen grid — connect your stones before they connect theirs.',
-    minPlayers: 2,
-    maxPlayers: 2,
-    avgDurationMinutes: 6,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
-    slug: 'blackjack',
-    name: 'Blackjack',
-    description: 'Hot-seat twenty-one — hit or stand, beat the dealer to seventeen, blackjacks pay three to two.',
+  },
+  {
+    slug: 'minesweepers',
+    name: 'Minesweepers',
+    description: 'One shared minefield, one dig a turn — clear safe cells for points and do not blow up.',
     minPlayers: 2,
     maxPlayers: 4,
     avgDurationMinutes: 6,
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
-  },  {
-    slug: 'hangman',
-    name: 'Hangman',
-    description: 'Guess the sealed word letter by letter — hits score, misses draw the figure.',
+  },
+  {
+    slug: 'gofish',
+    name: 'Go Fish',
+    description: 'Ask, draw and collect — gather four of a kind and land the most books at the table.',
     minPlayers: 2,
     maxPlayers: 4,
-    avgDurationMinutes: 5,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
-    slug: 'tic_tac_toe',
-    name: 'Tic-Tac-Toe',
-    description: 'The classic three-by-three — claim a row, column or diagonal before your rival does.',
-    minPlayers: 2,
-    maxPlayers: 2,
-    avgDurationMinutes: 2,
-    supportsBots: true,
-    rankedEnabled: true,
-    status: 'active',
-  },  {
-    slug: 'tile_duel',
-    name: '2048 Duel',
-    description: 'Each player owns a 2048 board — slide, merge and be the first to forge the 2048 tile.',
-    minPlayers: 2,
-    maxPlayers: 2,
     avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
+  },
+  {
+    slug: 'poker',
+    name: 'Poker',
+    description: 'No-limit Texas Hold\u2019em — read the table, chase your draws and take every chip on it.',
+    minPlayers: 2,
+    maxPlayers: 4,
+    avgDurationMinutes: 15,
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
@@ -387,6 +329,17 @@ export class GameCatalogSeeder {
             status: status as GameEntity['status'],
           }),
         );
+      }
+    }
+    // Retire catalogue rows for games that no longer ship, so stale entries
+    // never appear in the hub as playable.
+    const shipped = new Set(CATALOG.map((c) => c.slug));
+    const stale = await this.games.find();
+    for (const row of stale) {
+      if (!shipped.has(row.slug) && row.status !== 'inactive') {
+        row.status = 'inactive';
+        await this.games.save(row);
+        this.logger.warn(`Retired catalogue game "${row.slug}" (no engine).`);
       }
     }
     this.logger.log(`Game catalogue ensured (${CATALOG.length} games).`);

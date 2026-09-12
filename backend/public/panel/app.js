@@ -445,7 +445,7 @@ async function setStatus(g, status) {
 }
 function gameDialog(g) {
   openModal(modalForm(g ? `Edit ${g.name}` : 'Add a game', [
-    { name: 'slug', label: 'Slug (unique id, e.g. "blackjack")', type: 'text', value: g?.slug || '', full: true },
+    { name: 'slug', label: 'Slug (unique id, e.g. "poker")', type: 'text', value: g?.slug || '', full: true },
     { name: 'name', label: 'Display name', type: 'text', value: g?.name || '', full: true },
     { name: 'description', label: 'Description', type: 'textarea', value: g?.description || '', full: true },
     { name: 'minPlayers', label: 'Min players', type: 'number', value: g?.minPlayers ?? 2, step: 1 },

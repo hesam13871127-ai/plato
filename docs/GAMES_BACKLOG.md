@@ -1,108 +1,101 @@
-# Plato — Games Backlog
+# Plato — Games Catalogue & Verification
 
-_Last updated: 2026-09-12 · branch `arena/01a08bf1-plato`_
+_Last updated: 2026-09-12 · branch `arena/01a09662-plato`_
 
-Every entry below was audited in the "full rebuild" pass: engine rules,
-bot brains, server↔client state contract, and the Flutter board widget.
+The catalogue is aligned **1:1 with the real Plato line-up**: every shipped
+slug is a game Plato actually offers (Ocho, Pool, Carrom, Dice Party, Bankroll,
+Sea Battle, Minesweepers, Werewolf, Dots & Boxes, Poker…). Games that Plato
+does not have (2048 Duel, Tic-Tac-Toe, Blackjack, Hangman, Trivia, Gomoku,
+Memory, Word Chain, Emoji Charades, Impostor, Snakes & Ladders) were removed
+from the engines, catalogue, shop, boards and tutorials — the catalog seeder
+retires their rows at boot, so a stale database can never list them as playable.
 
 ---
 
 ## 1. How each game is verified
 
-A game is considered **done** only when all four layers pass:
+A game ships only when every layer below passes:
 
 | Layer | Check |
 |---|---|
 | **Rules logic** | `backend/test/game-engines.e2e-spec.ts` — per-game rule suites plus a *full bot play-through*: every engine is driven to completion by its own `hard`-difficulty bot (up to 4,000 turns), every move re-validated, a winner (or explicit draw) required. |
-| **State contract** | Scripted cross-audit of every key the Flutter board reads (`b['…']`) vs. every key the engine's board state / redacted view writes. **32/32 games match.** |
-| **Action contract** | Cross-audit of every `onAction('type', {…})` the board sends vs. every `action.type` / `action.payload.x` the engine validates. **32/32 games match.** |
-| **Appearance** | Manual review of every board widget's `build()` + painters: each game renders a real table surface (CustomPaint / card grid / canvas), never a placeholder. |
+| **Deep rules audit** | `backend/test/game-engines-new.e2e-spec.ts` — white-box rule probes for the rebuilt games: poker hand ranking + kicker order + wheel straight, blind schedules, min-raise legality, side-pot math, chopped pots; go-fish ask/draw/book flows; minesweeper adjacency + flood reveal + elimination; bankroll salary, doubled rent, forced liquidation, bankruptcy and the net-worth goal. |
+| **Server integration** | `backend/test/game.e2e-spec.ts` — matchmaking → bot-filled table → the *human* seat driven by protocol mirrors → settlement, for every game. |
+| **State contract** | Scripted cross-audit of every key the Flutter board reads (`b['…']`) vs. every key the engine's board state / redacted view writes. **24/24 games match.** |
+| **Action contract** | Cross-audit of every `onAction('type', {…})` the board sends vs. every `action.type` / `action.payload.x` the engine validates. **24/24 games match.** |
+| **Appearance** | Every board renders a real table surface (CustomPaint / card grid / canvas / game ring) with turn indicator, score strip, game-over state — plus a bundled 3D logo in `mobile/assets/game_logos/` and a bilingual (fa/en) tutorial. |
 
-Latest evidence: backend `tsc` clean, **298/298 e2e tests green** (10 suites),
-engine suite alone 231/231.
+Latest evidence: backend `tsc` clean, production `nest build` clean,
+**255/255 e2e tests green** (12 suites), Dart balance gate clean over all
+167 files, contract audit 24/24.
 
 ---
 
-## 2. Catalogue — current state (32 games, all playable)
+## 2. Catalogue — 24 games, all playable, all Plato titles
 
-| # | Slug | Name | Players | Visual surface | Status |
+| # | Slug | Name | Players | Engine highlights | Status |
 |---|---|---|---|---|---|
-| 1 | `dominoes` | Dominoes | 2–4 | Chain + hands + boneyard | ✅ done |
-| 2 | `ludo` | Ludo | 2–4 | Full cross board, tokens, dice | ✅ done |
-| 3 | `ocho` | Ocho (Crazy Eights) | 2–4 | 3D cards, deck, top card, hands | ✅ done |
-| 4 | `connect4` | 4 in a Row | 2 | 6×7 grid, win-line glow | ✅ done |
-| 5 | `checkers` | Checkers | 2 | 8×8, jump chains, trays | ✅ done |
-| 6 | `chess` | Chess | 2 | Full 8×8, pieces, captured trays | ✅ done |
-| 7 | `pool` | Pool | 2 | 2:1 table, balls, aim/pan | ✅ done |
-| 8 | `carrom` | Carrom | 2 | Full carrom board, striker physics | ✅ done |
-| 9 | `dots_and_boxes` | Dots & Boxes | 2 | Grid painter, claim glows | ✅ done |
-| 10 | `snakes_ladders` | Snakes & Ladders | 2–4 | 10×10 board, snakes, dice | ✅ done |
-| 11 | `bingo` | Bingo | 2–4 | BINGO card, cage strip, win line | ✅ done |
-| 12 | `dice_party` | Dice Party (Yahtzee) | 2–4 | Dice row + scorecard | ✅ done |
-| 13 | `backgammon` | Backgammon | 2 | Full 24-point board, dice tray | ✅ done |
-| 14 | `mancala` | Mancala | 2 | 6 pits × 2 + stores | ✅ done |
-| 15 | `bowling` | Bowling | 2–4 | Lane painter, pins, score sheet | ✅ done |
-| 16 | `trivia` | Trivia | 2–4 | Question cards, recap, scores | ✅ done |
-| 17 | `word_chain` | Word Chain | 2–4 | Letter tile, chain ribbon, input | ✅ done |
-| 18 | `emoji_charades` | Emoji Charades | 2–4 | Riddle card, guess input | ✅ done |
-| 19 | `memory` | Memory | 2–4 | 4×4 flip grid, pair tray | ✅ done |
-| 20 | `sketch` | Sketch (Pictionary) | 2–4 | Drawing canvas, tools, guesses | ✅ done |
-| 21 | `werewolf` | Werewolf | 5–8 | Night/day phases, player cards | ✅ done |
-| 22 | `impostor` | Impostor | 4–8 | Location card, cast, story log | ✅ done |
-| 23 | `darts` | Darts | 2–4 | Regulation dartboard, aim + power | ✅ done |
-| 24 | `minigolf` | Mini Golf | 2 | 9 painted holes, physics trail | ✅ done |
-| 25 | `bankroll` | Bankroll (Dice poker) | 2–4 | Pot card, cast ledger | ✅ done |
-| 26 | `battleship` | Battleship | 2 | Deploy + target grids, fleet | ✅ done |
-| 27 | `reversi` | Reversi | 2 | 8×8, legal-move hints, discs | ✅ done |
-| 28 | `gomoku` | Gomoku | 2 | 15×15 go board, win ribbon | ✅ done |
-| 29 | `blackjack` | Blackjack | 2–4 | Dealer/player rows, cards | ✅ done |
-| 30 | `hangman` | Hangman | 2–4 | Gallows painter, A–Z keypad | ✅ done |
-| 31 | `tic_tac_toe` | Tic-Tac-Toe | 2 | 3×3, X/O painters, win flash | ✅ **new** |
-| 32 | `tile_duel` | 2048 Duel | 2 | Dual 4×4 boards, tile palette | ✅ **new** |
+| 1 | `dominoes` | Dominoes | 2–4 | Draw dominoes, blocking, bot chains | ✅ |
+| 2 | `ludo` | Ludo | 2–4 | Capture rules, safe stars, exact-finish | ✅ |
+| 3 | `ocho` | Ocho (UNO-style) | 2–4 | Wilds, +2/+4 stacking, color calls | ✅ |
+| 4 | `connect4` | 4 in a Row | 2 | Win-line detection, minimax-style bot | ✅ |
+| 5 | `checkers` | Checkers | 2 | Forced captures, multi-jumps, kings | ✅ |
+| 6 | `chess` | Chess | 2 | Full orthodox rules: en passant, castling through check, promotion, 50-move, threefold, insufficient material | ✅ |
+| 7 | `pool` | Pool | 2 | 8-ball groups, fouls, aim/pan physics | ✅ |
+| 8 | `carrom` | Carrom | 2 | Striker placement, queen + cover | ✅ |
+| 9 | `dots_and_boxes` | Dots & Boxes | 2 | Extra-turn chains, box stealing | ✅ |
+| 10 | `bingo` | Bingo | 2–4 | Cage draws, dab, line calls | ✅ |
+| 11 | `dice_party` | Dice Party (Yatzy) | 2–4 | 15 categories, holds, bonus | ✅ |
+| 12 | `backgammon` | Backgammon | 2 | Blots, bearing off, doubles, legal-play enforcement | ✅ |
+| 13 | `mancala` | Mancala (Kalah) | 2 | Extra turns, capture, sweep finish | ✅ |
+| 14 | `bowling` | Bowling | 2–4 | 10 frames, strikes/spares scoring | ✅ |
+| 15 | `sketch` | Sketch (Pictionary) | 2–4 | Rounds, live strokes, guess scoring | ✅ |
+| 16 | `werewolf` | Werewolf | 5–8 | Night roles, day vote, faction win | ✅ |
+| 17 | `darts` | Darts | 2–4 | Real board segments, aim + power | ✅ |
+| 18 | `minigolf` | Mini Golf | 2–4 | 9 holes, walls, stroke counting | ✅ |
+| 19 | `bankroll` | Bankroll | 2–4 | **Rebuilt to Plato rules**: 24-tile property ring, salaries, doubled group rent, chance deck, tax, forced liquidation at half price, bankruptcy, net-worth goal (3000) race | ✅ **new rules** |
+| 20 | `battleship` | Sea Battle | 2 | Fleet deploy, salvo, sink detection | ✅ renamed to Plato's title |
+| 21 | `reversi` | Reversi | 2 | Legal flips, corner heuristics | ✅ |
+| 22 | `minesweepers` | Minesweepers | 2–4 | **NEW**: shared 12×12 field, 22 mines, competitive digs, flood-open pockets, elimination, score race | ✅ **new** |
+| 23 | `gofish` | Go Fish | 2–4 | **NEW**: asks, go-fish draws, lucky draws, auto books, 13-book finish | ✅ **new** |
+| 24 | `poker` | Poker (No-limit Hold'em) | 2–4 | **NEW**: blinds with heads-up button rules, min-raise tracking, all-in run-outs, full side pots, split pots, bust-outs, chip-leader match win | ✅ **new** |
 
 ---
 
-## 3. Fixed in this pass
+## 3. What changed in this pass
 
-| Issue | Where | Fix |
-|---|---|---|
-| Seat picker was hard-coded to `2/3/4` for **every** game — werewolf (needs 5–8) could only ever show invalid choices; 2-player games offered seats the engine rejects. | `mobile/…/create_room_screen.dart` | Picker now reads the catalogue entry and renders `minPlayers..maxPlayers`; default = `minPlayers`; final clamp before `createRoom` so the UI can never submit a seat count the engine rejects. (The server already clamped — now the UI agrees with it.) |
-| Catalogue had no quick classics for a 2-minute match. | backend + mobile | Added **Tic-Tac-Toe** (minimax bot — hard/expert play perfectly) and **2048 Duel** (each player owns a 2048 board; first to forge 2048 wins, stuck players pass, double-stuck → higher total wins). Full engine + board + tutorials (fa/en) + rules tests + bot play-throughs. |
+| Change | Where |
+|---|---|
+| Removed 11 non-Plato games (engines, tests, catalogue, shop items, boards, tutorials, hub entries, logos, fixtures) | backend + mobile |
+| **Bankroll rebuilt** from dice-poker to Plato's property-trading race (engine + board + tutorial + logo + rules suite) | `bankroll.engine.ts`, `bankroll_board.dart` |
+| **Minesweepers added** (engine + board + tutorial + logo + rules suite) — competitive shared-field variant matching Plato's party format | `minesweeper.engine.ts`, `minesweeper_board.dart` |
+| **Go Fish added** (engine + board + tutorial + logo + rules suite) | `gofish.engine.ts`, `gofish_board.dart` |
+| **Poker added** — full no-limit hold'em with side pots (engine + board + tutorial + logo + rules suite) | `poker.engine.ts`, `poker_board.dart` |
+| `battleship` renamed **Sea Battle** to match Plato's title (slug unchanged, no data migration) | catalogue + table titles |
+| Catalog seeder now **retires** rows for games without engines | `game-catalog.seeder.ts` |
+| Shop gained piece/skin cosmetics for the new games; removed games' cosmetics dropped | `shop-catalogue.ts` |
 
-### Verified NOT broken (audit evidence)
+### Bugs the audit caught and fixed
 
-- **Logic:** 298/298 e2e green, incl. the full-bot play-through that forces every game to a completed state with a winner.
-- **Data flow:** every board's parsed keys exist in its engine's state/view (scripted key audit, 32/32). Every action type and payload field a board sends is one the engine validates (32/32).
-- **Appearance:** all 30 pre-existing boards reviewed widget-by-widget — every one draws a real board (painter or card grid), with turn indicator, skin picker, score chips and game-over handling. No placeholder/TODO/empty-state remnants found.
-- **Room flow:** server clamps seat count to the game's legal range and pre-fills bots; start failures surface as SnackBar messages; success navigates to the table.
-
-> If an installed APK ever showed a game "with no board", it was built before the
-> wave rebuilds (or failed to compile on the known Dart errors fixed in
-> `3516949`). Rebuild the APK from this branch — the boards ship in it.
+- Poker `encodeScore` truncated hand categories (a pair could out-rank a straight) → fixed with 5-digit base-15 encoding.
+- Poker `check` did not mark the actor as having acted → streets never closed → fixed.
+- Poker street scan started *after* the designated first actor → first player skipped on every street → fixed with an inclusive scan.
+- Poker bots could attempt raises with `to ≤ currentBet` (illegal) → gated on real stack headroom.
+- Minesweeper flags locked cells forever (bots could deadlock) → flags are markers, revealing lifts them.
+- Minesweeper explosion left the flag attached → fixed.
 
 ---
 
-## 4. Backlog (next waves)
-
-### Games to add (candidates, ordered by value/effort)
+## 4. Backlog (candidate Plato titles for future waves)
 
 | Candidate | Why | Effort |
 |---|---|---|
-| **Poker (5-card draw, pot)** | Rounds, betting, hand ranking — strong party fit | M |
-| **Snakes & Ladders party mode** (4-up with events) | Extend existing engine | S |
-| **Aircraft (airplane) dice** | Persian-party classic, pure dice engine | M |
-| **Backgammon 4-player** | Variant of existing engine | M |
-| **Word scramble (timed anagrams)** | Fast rounds, trivia-style UI reuse | S |
-| **Ludo "sudden death" variant** | Race-to-first-home toggle | S |
-
-### Quality backlog (polish, not blocking)
-
-- [ ] Record a short "how the table starts" onboarding video/loop for first-time users.
-- [ ] Per-game win-streak stats on the profile screen.
-- [ ] Bot personalities (flavor chat lines per difficulty).
-- [ ] Haptics on merge/winning-line moments (2048 Duel, Tic-Tac-Toe, connect4).
-- [ ] Landscape layout pass for the two-grid games (battleship, 2048 Duel).
-- [ ] Audio: subtle table ambience + per-game win jingles.
+| **Spades / Hearts** | Plato card staples (trick-taking) | L |
+| **Gin Rummy** | Plato card staple, 2-player | M |
+| **Cribbage** | Plato board-card hybrid | M |
+| **Table Soccer / Archery / Bounce** | Plato sports arcade pack | M each |
+| **Literati / Wordbox** | Plato word games (needs dictionary service) | L |
+| **Disc-O (shuffleboard)** | Simple physics, high polish | M |
 
 ### Standing rules for any future game
 
@@ -110,4 +103,5 @@ engine suite alone 231/231.
 2. Ship the e2e rules suite **and** a full-bot play-through in the same commit.
 3. Board reads only keys the engine writes; sends only actions the engine validates (both audited automatically).
 4. Board must render on first frame with the initial state (no "waiting for data" look).
-5. Tutorial (fa/en) + catalogue entry + dispatcher case in the same wave.
+5. Tutorial (fa/en) + catalogue entry + dispatcher case + bundled logo in the same wave.
+6. New games must exist in Plato's real catalogue — no invented titles.

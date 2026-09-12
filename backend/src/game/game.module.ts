@@ -30,29 +30,21 @@ import { ChessEngine } from './engine/chess.engine';
 import { PoolEngine } from './engine/pool.engine';
 import { CarromEngine } from './engine/carrom.engine';
 import { DotsAndBoxesEngine } from './engine/dots-and-boxes.engine';
-import { SnakesLaddersEngine } from './engine/snakes-ladders.engine';
 import { BingoEngine } from './engine/bingo.engine';
 import { DicePartyEngine } from './engine/dice-party.engine';
 import { BackgammonEngine } from './engine/backgammon.engine';
 import { MancalaEngine } from './engine/mancala.engine';
 import { BowlingEngine } from './engine/bowling.engine';
-import { TriviaEngine } from './engine/trivia.engine';
-import { WordChainEngine } from './engine/word-chain.engine';
-import { EmojiCharadesEngine } from './engine/emoji-charades.engine';
-import { MemoryEngine } from './engine/memory.engine';
 import { SketchEngine } from './engine/sketch.engine';
 import { WerewolfEngine } from './engine/werewolf.engine';
-import { ImpostorEngine } from './engine/impostor.engine';
 import { DartsEngine } from './engine/darts.engine';
 import { MinigolfEngine } from './engine/minigolf.engine';
 import { BankrollEngine } from './engine/bankroll.engine';
 import { BattleshipEngine } from './engine/battleship.engine';
 import { ReversiEngine } from './engine/reversi.engine';
-import { GomokuEngine } from './engine/gomoku.engine';
-import { BlackjackEngine } from './engine/blackjack.engine';
-import { HangmanEngine } from './engine/hangman.engine';
-import { TicTacToeEngine } from './engine/tic-tac-toe.engine';
-import { TileDuelEngine } from './engine/tile-duel.engine';
+import { MinesweeperEngine } from './engine/minesweeper.engine';
+import { GoFishEngine } from './engine/gofish.engine';
+import { PokerEngine } from './engine/poker.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -87,29 +79,21 @@ const ENTITIES = [
     PoolEngine,
     CarromEngine,
     DotsAndBoxesEngine,
-    SnakesLaddersEngine,
     BingoEngine,
     DicePartyEngine,
     BackgammonEngine,
     MancalaEngine,
     BowlingEngine,
-    TriviaEngine,
-    WordChainEngine,
-    EmojiCharadesEngine,
-    MemoryEngine,
     SketchEngine,
     WerewolfEngine,
-    ImpostorEngine,
     DartsEngine,
     MinigolfEngine,
     BankrollEngine,
     BattleshipEngine,
     ReversiEngine,
-    GomokuEngine,
-    BlackjackEngine,
-    HangmanEngine,
-    TicTacToeEngine,
-    TileDuelEngine,
+    MinesweeperEngine,
+    GoFishEngine,
+    PokerEngine,
     EngineRegistry,
     // Services
     BotService,

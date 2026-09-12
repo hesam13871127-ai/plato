@@ -12,29 +12,21 @@ const engines = [
   new (require('../src/game/engine/pool.engine').PoolEngine)(),
   new (require('../src/game/engine/carrom.engine').CarromEngine)(),
   new (require('../src/game/engine/dots-and-boxes.engine').DotsAndBoxesEngine)(),
-  new (require('../src/game/engine/snakes-ladders.engine').SnakesLaddersEngine)(),
   new (require('../src/game/engine/bingo.engine').BingoEngine)(),
   new (require('../src/game/engine/dice-party.engine').DicePartyEngine)(),
   new (require('../src/game/engine/backgammon.engine').BackgammonEngine)(),
   new (require('../src/game/engine/mancala.engine').MancalaEngine)(),
   new (require('../src/game/engine/bowling.engine').BowlingEngine)(),
-  new (require('../src/game/engine/trivia.engine').TriviaEngine)(),
-  new (require('../src/game/engine/word-chain.engine').WordChainEngine)(),
-  new (require('../src/game/engine/emoji-charades.engine').EmojiCharadesEngine)(),
-  new (require('../src/game/engine/memory.engine').MemoryEngine)(),
   new (require('../src/game/engine/sketch.engine').SketchEngine)(),
   new (require('../src/game/engine/werewolf.engine').WerewolfEngine)(),
-  new (require('../src/game/engine/impostor.engine').ImpostorEngine)(),
   new (require('../src/game/engine/darts.engine').DartsEngine)(),
   new (require('../src/game/engine/minigolf.engine').MinigolfEngine)(),
   new (require('../src/game/engine/bankroll.engine').BankrollEngine)(),
   new (require('../src/game/engine/battleship.engine').BattleshipEngine)(),
   new (require('../src/game/engine/reversi.engine').ReversiEngine)(),
-  new (require('../src/game/engine/gomoku.engine').GomokuEngine)(),
-  new (require('../src/game/engine/blackjack.engine').BlackjackEngine)(),
-  new (require('../src/game/engine/hangman.engine').HangmanEngine)(),
-  new (require('../src/game/engine/tic-tac-toe.engine').TicTacToeEngine)(),
-  new (require('../src/game/engine/tile-duel.engine').TileDuelEngine)(),
+  new (require('../src/game/engine/minesweeper.engine').MinesweeperEngine)(),
+  new (require('../src/game/engine/gofish.engine').GoFishEngine)(),
+  new (require('../src/game/engine/poker.engine').PokerEngine)(),
 ];
 
 const OUT = path.resolve(__dirname, '../../mobile/test/fixtures');
@@ -73,5 +65,5 @@ test('generate real-state fixtures for all games', () => {
     report[engine.slug] = `${n}p initial=${JSON.stringify((initial as any).board).length}B mid=${JSON.stringify((mid as any).board).length}B phase=${state.phase}`;
   }
   console.log(JSON.stringify(report, null, 1));
-  expect(engines.length).toBe(32);
+  expect(engines.length).toBe(24);
 });
