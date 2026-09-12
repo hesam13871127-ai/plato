@@ -137,7 +137,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         expired: isExpired,
       });
       if (isExpired) {
-        this.logger.debug(`Socket handshake expired: ${client.id}`);
+        // expired → silent (client will refresh); do not flood DEBUG
       } else {
         void this.errorTracking?.track({
           level: 'warning',

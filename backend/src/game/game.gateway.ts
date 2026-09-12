@@ -133,7 +133,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         expired: isExpired,
       });
       if (isExpired) {
-        this.logger.debug(`Game socket handshake expired: ${client.id}`);
+        // expired → silent (see ChatGateway)
       } else {
         this.logger.warn(`Game socket handshake rejected: ${message} (${client.id})`);
       }
