@@ -383,7 +383,7 @@ class _BankrollBoardState extends State<BankrollBoard> {
     );
   }
 
-  Widget _chipButton(int value, int max) {
+  Widget _chipButton(int value, int max, {String? label}) {
     final enabled = _myTurn && value >= 5 && value <= max;
     return ElevatedButton(
       onPressed: enabled ? () => setState(() => _amount = value) : null,
@@ -396,7 +396,10 @@ class _BankrollBoardState extends State<BankrollBoard> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         side: BorderSide(color: _amount == value ? Color(0xFFD9A94A) : Colors.white.withValues(alpha: 0.15)),
       ),
-      child: Text(value == max && max > 100 ? 'ALL' : '$value', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+      child: Text(
+        label ?? (value == max && max > 100 ? 'ALL' : '$value'),
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+      ),
     );
   }
 

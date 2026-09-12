@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/services/api_host_service.dart';
 import '../../../../core/socket/socket_io_client.dart';
 import '../../domain/entities/chat_entities.dart';
 import '../models/chat_models.dart';
@@ -387,9 +388,11 @@ class ChatSocketService {
 }
 
 /// The raw socket singleton, authenticated with the stored access token.
+/// Recreated when the (runtime) server override changes.
 final socketIoClientProvider = Provider<SocketIoClient>((ref) {
+  final baseUrl = ref.watch(apiBaseUrlProvider);
   final storage = ref.watch(secureTokenStorageProvider);
-  final client = SocketIoClient(storage: storage);
+  final client = SocketIoClient(storage: storage, baseUrl: baseUrl);
   ref.onDispose(client.dispose);
   return client;
 });

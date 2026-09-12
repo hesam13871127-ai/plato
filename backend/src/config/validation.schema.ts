@@ -17,8 +17,7 @@ export const validationSchema = Joi.object({
   DB_USERNAME: Joi.string().allow('').default('root'),
   DB_PASSWORD: Joi.string().allow('').default(''),
   DB_DATABASE: Joi.string().default('vibetable'),
-  DB_SYNCHRONIZE: Joi.boolean().default(false),
-  DB_RUN_MIGRATIONS: Joi.boolean().default(true),
+  DB_SYNCHRONIZE: Joi.boolean().default(true),
   DB_LOGGING: Joi.boolean().default(false),
 
   JWT_ACCESS_SECRET: Joi.string().min(16).required(),

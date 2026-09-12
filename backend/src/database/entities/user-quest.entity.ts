@@ -38,6 +38,7 @@ export class UserQuestEntity {
   quest: QuestEntity;
 
   /** Day (local) this quest instance belongs to, as `YYYY-MM-DD` (UTC). */
+  @Index('idx_user_quests_day')
   @Column({ type: 'date' })
   day: string;
 

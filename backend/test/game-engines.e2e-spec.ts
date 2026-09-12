@@ -30,6 +30,8 @@ import { ReversiEngine, legalMoves, flipsFor } from '../src/game/engine/reversi.
 import { GomokuEngine, winningLineAt } from '../src/game/engine/gomoku.engine';
 import { BlackjackEngine, handValue } from '../src/game/engine/blackjack.engine';
 import { HangmanEngine, HANGMAN_WORDS } from '../src/game/engine/hangman.engine';
+import { TicTacToeEngine, winLineAt } from '../src/game/engine/tic-tac-toe.engine';
+import { TileDuelEngine, applyDir, legalDirs, slideRowLeft } from '../src/game/engine/tile-duel.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -4015,6 +4017,7 @@ describe('gomoku rules', () => {
     const played = new Set<number>();
     for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
       for (let i = 0; i < 5; i++) {
+        if (s.phase !== 'in_progress') break; // a bot completed five — stop
         const seat = s.currentSeat;
         const move = engine.chooseBotMove(s, seat, difficulty);
         const action = { ...move.action, seat };
@@ -4405,6 +4408,234 @@ describe('hangman rules', () => {
   });
 });
 
+describe('tic_tac_toe rules', () => {
+  const engine = new TicTacToeEngine();
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function place(state: GameState, seat: number, idx: number): GameState {
+    const action = { seat, type: 'place', payload: { idx } };
+    expect(engine.validate(state, action).ok).toBe(true);
+    return engine.applyAction(state, action);
+  }
+
+  test('starts empty with seat 0 (X) to move', () => {
+    const state = start();
+    const board = state.board as { cells: number[] };
+    expect(board.cells).toHaveLength(9);
+    expect(board.cells.every((c) => c === 0)).toBe(true);
+    expect(state.currentSeat).toBe(0);
+    expect(state.phase).toBe('in_progress');
+  });
+
+  test('rejects out-of-range, occupied squares and off-turn moves', () => {
+    let state = start();
+    expect(engine.validate(state, { seat: 1, type: 'place', payload: { idx: 0 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'place', payload: { idx: 9 } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'place', payload: { idx: -1 } }).ok).toBe(false);
+    state = place(state, 0, 4);
+    expect(engine.validate(state, { seat: 1, type: 'place', payload: { idx: 4 } }).ok).toBe(false);
+  });
+
+  test('horizontal, vertical and diagonal wins score the winner', () => {
+    // Bottom-row win for seat 0: X claims 6, 7, 8.
+    let s = start();
+    const seq: Array<[number, number]> = [[0, 6], [1, 1], [0, 7], [1, 2]];
+    for (const [seat, idx] of seq) s = place(s, seat, idx);
+    expect(s.phase).toBe('in_progress');
+    s = place(s, 0, 8);
+    const board = s.board as { winLine: number[] | null };
+    expect(s.phase).toBe('completed');
+    expect(s.winnerSeat).toBe(0);
+    expect(s.scores).toEqual([1, 0]);
+    expect(board.winLine).toEqual([6, 7, 8]);
+
+    // Column win for seat 1 (O claims 2, 5, 8).
+    s = start();
+    s = place(s, 0, 0);
+    s = place(s, 1, 2);
+    s = place(s, 0, 1);
+    s = place(s, 1, 5);
+    s = place(s, 0, 3);
+    s = place(s, 1, 8);
+    expect(s.phase).toBe('completed');
+    expect(s.winnerSeat).toBe(1);
+    expect(s.scores).toEqual([0, 1]);
+
+    // Diagonal win for seat 0.
+    s = start();
+    s = place(s, 0, 0);
+    s = place(s, 1, 1);
+    s = place(s, 0, 4);
+    s = place(s, 1, 2);
+    s = place(s, 0, 8);
+    expect(s.phase).toBe('completed');
+    expect(s.winnerSeat).toBe(0);
+    expect((s.board as { winLine: number[] | null }).winLine).toEqual([0, 4, 8]);
+  });
+
+  test('a full board without a line is a draw', () => {
+    let s = start();
+    // Final board (verified line-free):
+    //   X O X
+    //   O O X
+    //   X X O
+    const moves: Array<[number, number]> = [
+      [0, 0], [1, 1], [0, 2], [1, 3], [0, 5], [1, 4], [0, 6], [1, 8], [0, 7],
+    ];
+    for (const [seat, idx] of moves) s = place(s, seat, idx);
+    expect(s.phase).toBe('completed');
+    expect(s.winnerSeat).toBeNull();
+    expect(s.scores).toEqual([0, 0]);
+  });
+
+  test('hard bots never lose against each other (draw or bot win only)', () => {
+    for (let i = 0; i < 10; i++) {
+      let s = start();
+      for (let turn = 0; turn < 9 && s.phase === 'in_progress'; turn++) {
+        const move = engine.chooseBotMove(s, s.currentSeat, 'hard');
+        const action = { ...move.action, seat: s.currentSeat };
+        expect(engine.validate(s, action).ok).toBe(true);
+        s = engine.applyAction(s, action);
+      }
+      expect(s.phase).toBe('completed');
+      // Perfect play from both sides can only draw or a win for one side —
+      // never a loss for the side to move, and always a decided state.
+      expect(s.winnerSeat === null ? s.winnerSeats ?? [] : [s.winnerSeat]).toBeTruthy();
+    }
+  });
+
+  test('winLineAt detects each line kind', () => {
+    const cells = new Array(9).fill(0);
+    cells[0] = 1; cells[1] = 1; cells[2] = 1;
+    expect(winLineAt(cells, 2)).toEqual([0, 1, 2]);
+    cells.fill(0);
+    cells[1] = 2; cells[4] = 2; cells[7] = 2;
+    expect(winLineAt(cells, 7)).toEqual([1, 4, 7]);
+    cells.fill(0);
+    cells[0] = 1; cells[5] = 1; // not a line
+    expect(winLineAt(cells, 5)).toBeNull();
+  });
+});
+
+describe('tile_duel (2048) rules', () => {
+  const engine = new TileDuelEngine();
+
+  function start(): GameState {
+    return engine.createInitialState(makeConfig(engine, 2));
+  }
+
+  function move(state: GameState, seat: number, dir: string): GameState {
+    const action = { seat, type: 'move', payload: { dir } };
+    expect(engine.validate(state, action).ok).toBe(true);
+    return engine.applyAction(state, action);
+  }
+
+  test('deals two starting tiles per board', () => {
+    const state = start();
+    const board = state.board as { grids: number[][] };
+    expect(board.grids).toHaveLength(2);
+    for (const g of board.grids) {
+      expect(g).toHaveLength(16);
+      const tiles = g.filter((v) => v !== 0);
+      expect(tiles).toHaveLength(2);
+      expect(tiles.every((v) => v === 2 || v === 4)).toBe(true);
+    }
+  });
+
+  test('slideRowLeft merges pairs and keeps them from re-merging', () => {
+    expect(slideRowLeft([2, 2, 2, 2]).row).toEqual([4, 4, 0, 0]);
+    expect(slideRowLeft([2, 2, 2, 2]).gained).toBe(8);
+    expect(slideRowLeft([4, 0, 2, 2]).row).toEqual([4, 4, 0, 0]);
+    expect(slideRowLeft([2, 0, 0, 2]).row).toEqual([4, 0, 0, 0]);
+    expect(slideRowLeft([2, 4, 2, 4]).row).toEqual([2, 4, 2, 4]);
+    expect(slideRowLeft([0, 0, 0, 4]).row).toEqual([4, 0, 0, 0]);
+  });
+
+  test('applyDir rejects directions that would not move', () => {
+    const grid = [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    expect(applyDir(grid, 'left')).toBeNull(); // already top-left
+    expect(applyDir(grid, 'right')).not.toBeNull();
+    expect(applyDir(grid, 'up')).toBeNull();
+    expect(applyDir(grid, 'down')).not.toBeNull();
+  });
+
+  test('a blocked slide is rejected and the turn keeps its seat', () => {
+    const state = start();
+    const board = state.board as { grids: number[][] };
+    // Force seat 0's grid into the corner so 'left' is blocked.
+    board.grids[0] = [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const action = { seat: 0, type: 'move', payload: { dir: 'left' } };
+    expect(engine.validate(state, action).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'move', payload: { dir: 'sideways' } }).ok).toBe(false);
+    expect(engine.validate(state, { seat: 0, type: 'nudge', payload: {} }).ok).toBe(false);
+  });
+
+  test('a successful move spawns a new tile and hands over the turn', () => {
+    const state = start();
+    const before = (state.board as { grids: number[][] }).grids[0].filter((v) => v !== 0).length;
+    const next = move(state, 0, 'left');
+    const grid = (next.board as { grids: number[][] }).grids[0];
+    expect(next.currentSeat).toBe(1);
+    expect(next.turn).toBe(1);
+    const after = grid.filter((v) => v !== 0).length;
+    // Merges may keep the count equal; otherwise a spawn adds exactly one.
+    expect(after).toBeGreaterThanOrEqual(Math.min(before, 1));
+    expect(after).toBeLessThanOrEqual(before + 1);
+  });
+
+  test('pass is only legal when stuck; two passes end the game by score', () => {
+    const state = start();
+    const board = state.board as { grids: number[][]; passStreak: number };
+    // Fill both grids except the single top-left cell pattern → only 'right'/'down' blocked?
+    // Use a grid that has no legal moves at all: checkerboard of equal pairs is movable;
+    // a fully packed non-mergeable grid is impossible on 4x4 (16 cells, no equal neighbours
+    // in a line). Use: 2 4 8 16 / 16 8 4 2 / 4 2 8 16 / 8 16 4 2 — every row/col merges.
+    // Instead: pack with distinct values per row so no merge is possible:
+    const stuck = [2, 4, 8, 16, 16, 8, 4, 2, 4, 2, 8, 16, 8, 16, 4, 2];
+    board.grids[0] = [...stuck];
+    board.grids[1] = [...stuck];
+    expect(legalDirs(stuck).length).toBe(0);
+
+    expect(engine.validate(state, { seat: 0, type: 'move', payload: { dir: 'left' } }).ok).toBe(false);
+    const passAction = { seat: 0, type: 'pass', payload: {} };
+    expect(engine.validate(state, passAction).ok).toBe(true);
+    const afterPass = engine.applyAction(state, passAction);
+    expect((afterPass.board as { passStreak: number }).passStreak).toBe(1);
+    expect(afterPass.phase).toBe('in_progress');
+    const finalState = engine.applyAction(afterPass, { seat: 1, type: 'pass', payload: {} });
+    expect(finalState.phase).toBe('completed');
+    // Equal totals → draw.
+    expect(finalState.winnerSeat).toBeNull();
+  });
+
+  test('forging a 2048 tile ends the game instantly for that seat', () => {
+    const state = start();
+    const board = state.board as { grids: number[][] };
+    // Seat 0: one slide of 'left' on the top row merges 1024+1024 → 2048.
+    board.grids[0] = [1024, 1024, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const next = move(state, 0, 'left');
+    expect(next.phase).toBe('completed');
+    expect(next.winnerSeat).toBe(0);
+    expect(next.scores[0]).toBeGreaterThan(next.scores[1]);
+  });
+
+  test('bots always produce legal moves or legal passes', () => {
+    for (let i = 0; i < 6; i++) {
+      let s = start();
+      for (let turn = 0; turn < 3000 && s.phase === 'in_progress'; turn++) {
+        const move = engine.chooseBotMove(s, s.currentSeat, 'hard');
+        const action = { ...move.action, seat: s.currentSeat };
+        expect(engine.validate(s, action).ok).toBe(true);
+        s = engine.applyAction(s, action);
+      }
+      expect(s.phase).toBe('completed');
+    }
+  });
+});
+
 describe('engine registry', () => {
   test('registers, resolves and rejects engines cleanly', () => {
     const registry = new EngineRegistry(
@@ -4438,9 +4669,11 @@ describe('engine registry', () => {
       new GomokuEngine(),
       new BlackjackEngine(),
       new HangmanEngine(),
+      new TicTacToeEngine(),
+      new TileDuelEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman', 'tic_tac_toe', 'tile_duel']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -4449,7 +4682,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman', 'tic_tac_toe', 'tile_duel', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });

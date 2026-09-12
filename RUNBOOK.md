@@ -46,9 +46,9 @@ cp .env.example .env
 docker compose up -d mysql
 ```
 
-این کانتینر MySQL 8.0 را روی پورت `3306` بالا می‌آورد، اسکیمای کامل را از
-`database/schema.sql` می‌سازد و دیتای اولیه (بازی‌ها + آیتم‌های فروشگاه) را از
-`database/seed.sql` لود می‌کند.
+این کانتینر فقط MySQL 8.0 را روی پورت `3306` بالا می‌آورد — هیچ فایل SQL ای
+نیازی نیست؛ API خودش با TypeORM `synchronize` کل اسکیمای دیتابیس را از
+entityها می‌سازد.
 
 **راه دوم: کل استک (MySQL + API) با Docker**
 
@@ -57,11 +57,10 @@ docker compose up -d --build     # API روی http://localhost:3000
 docker compose logs -f api       # لاگ را ببینید
 ```
 
-**راه سوم: MySQL لوکال** — اگر خودتان نصب کرده‌اید، این‌ها را یک‌بار اجرا کنید:
+**راه سوم: MySQL لوکال** — اگر خودتان نصب کرده‌اید، فقط دیتابیس را یک‌بار بسازید:
 
 ```bash
-mysql -u root -p < database/schema.sql
-mysql -u root -p vibetable < database/seed.sql
+mysql -u root -p -e "CREATE DATABASE vibetable CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
 ### ۱-۳) نصب و اجرای API
@@ -72,8 +71,10 @@ npm ci                    # نصب دقیق وابستگی‌ها (یا npm inst
 npm run start:dev         # حالت توسعه با watch — http://localhost:3000
 ```
 
-اولین اجرا مایگریشن‌ها را خودکار می‌راند (`DB_RUN_MIGRATIONS=true`)، جدول‌ها را
-می‌سازد و کاتالوگ ۳۰ بازی + آیتم‌های فروشگاه را seed می‌کند.
+اولین اجرا با TypeORM `synchronize` (`DB_SYNCHRONIZE=true`) تمام جدول‌ها را
+خودکار از entityها می‌سازد و کاتالوگ ۳۰ بازی + آیتم‌های فروشگاه را seed می‌کند.
+هیچ فایل `.sql` یا مایگریشنی وجود ندارد — entityها منبع تنها اسکیمای
+دیتابیس هستند.
 
 بررسی سلامت:
 ```bash
@@ -95,18 +96,11 @@ npm run start:prod        # اجرای dist/main.js (NODE_ENV=production)
 
 ```bash
 cd backend
-npm run test:e2e          # کل تست‌های e2e (فعلاً 292 ✓)
+npm run test:e2e          # کل تست‌های e2e (فعلاً 296 ✓)
+npm test                  # تست‌های واحد
 npx jest --config ./test/jest-e2e.json --runInBand game-engines   # فقط قواعد بازی‌ها
-npm run lint              # ESLint
 npx tsc --noEmit -p tsconfig.json   # چک تایپ
-npm run audit:schema      # پریتی entityها ↔ schema.sql (نام ستون‌ها)
-npm run audit:enums       # پریتی مقادیر unionهای TS ↔ ENUMهای MySQL
 ```
-
-> دو اسکریپت `audit:*` همان شکافی را می‌بندند که تست‌های SQLite نمی‌بینند: تست‌ها
-> جدول‌ها را از خود entityها می‌سازند، ولی در MySQL واقعی جدول‌ها از `schema.sql`
-> ساخته می‌شوند — این اسکریپت‌ها هر دو طرف را با هم مقایسه می‌کنند. بعد از هر
-> تغییر entity یا `schema.sql` اجرایشان کنید.
 
 ---
 
@@ -130,9 +124,11 @@ flutter pub get
 | iOS Simulator / دسکتاپ | `http://localhost:3000` |
 | گوشی واقعی | باید IP کامپیوتر را بدهید (پایین ⬇️) |
 
-> ⚠️ **گوشی واقعی:** کامپیوتر و گوشی باید در یک وای‌فای باشند و IP لوکال
-> کامپیوتر را وارد کنید: در صفحهٔ لاگین اپ گزینهٔ تغییر آدرس سرور هست، یا
-> `--dart-define`:
+> ⚠️ **گوشی واقعی:** کامپیوتر و گوشی باید در یک وای‌فای باشند. دو راه:
+> 1. **داخل اپ (پیشنهادی):** آیکون چرخ‌دنده در صفحهٔ لاگین → **تنظیمات → سرور**
+>    → IP کامپیوتر را بنویسید (مثلاً `192.168.1.20:3000`) → اعمال. ذخیره
+>    می‌شود و دفعات بعد خودکار است.
+> 2. **در زمان build:** `--dart-define`:
 > ```bash
 > flutter run --dart-define=API_BASE_URL=http://192.168.1.20:3000
 > ```
@@ -215,7 +211,8 @@ cd mobile && flutter pub get && flutter run -d chrome
 | مشکل | راه حل |
 |---|---|
 | `ECONNREFUSED 127.0.0.1:3306` | MySQL بالا نیست: `docker compose up -d mysql` |
-| `Table 'vibetable.xxx' doesn't exist` | مایگریشن ران نشده: `cd backend && npm run migration:run`، یا `docker compose down -v` و `up` دوباره |
+| `Table 'vibetable.xxx' doesn't exist` | در این نسخه `synchronize` همیشه روشن است (حتی اگر `DB_SYNCHRONIZE=false` در `.env` باشد نادیده گرفته می‌شود) — فقط بک‌اند را ری‌استارت کنید؛ دیتابیس خالی/پاک‌شده در استارتاپ خودش ساخته می‌شود. اگر MySQL خودش problem دارد: `docker compose down -v && docker compose up -d mysql` |
+| `CONSTRAINT \`chk_...\` failed` (دیتابیس قدیمی) | `SchemaCheckRepairService` در استارتاپ CHECKهای کهنه را خودکار با متادیتای entityها هماهنگ می‌کند — کافی است کد جدید را اجرا کنید (خط لاگ: `[SchemaCheckRepair]`) |
 | اپ در شبیه‌ساز اندروید وصل نمی‌شود | بک‌اند روی `localhost:3000` باشد؛ اپ خودش `10.0.2.2` را می‌زند — فایروال ویندوز را هم چک کنید |
 | اپ در مرورگر: CORS | `CORS_ORIGINS` در `.env` بک‌اند باید پورتِ `flutter run -d chrome` را داشته باشد (پیش‌فرض `http://localhost:8080` را دارد؛ پورت واقعی را در خروجی ترمینال فلاتر ببینید و اضافه کنید) |
 | بیلد اندروید فیل می‌شود | `flutter doctor` + `flutter clean && flutter pub get` + نسخهٔ JDK (17) |

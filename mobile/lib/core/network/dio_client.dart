@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_constants.dart';
+import '../services/api_host_service.dart';
 import '../storage/secure_token_storage.dart';
 import 'api_endpoints.dart';
 
@@ -17,10 +18,11 @@ class RefreshException implements Exception {
 ///  - automatic 401 handling: transparent refresh-token rotation, one retry,
 ///    and logout on refresh failure.
 class DioClient {
-  DioClient({required TokenStore tokenStore}) : _tokenStore = tokenStore {
+  DioClient({required TokenStore tokenStore, required String baseUrl})
+      : _tokenStore = tokenStore {
     _dio = Dio(
       BaseOptions(
-        baseUrl: '${AppConstants.apiBaseUrl}${AppConstants.apiPrefix}',
+        baseUrl: '$baseUrl${AppConstants.apiPrefix}',
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 20),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
@@ -56,9 +58,26 @@ class DioClient {
   late final Dio _dio;
   final TokenStore _tokenStore;
 
+  /// Single-flight guard: concurrent 401s must share ONE rotation. The
+  /// refresh token is single-use — if two requests rotated at the same
+  /// time, the second would present an already-invalidated token, be
+  /// rejected, and log the user out despite a perfectly healthy session.
+  Future<String>? _refreshInFlight;
+
   Dio get dio => _dio;
 
-  Future<String> _rotateTokens() async {
+  /// Closes the underlying HttpClient (called when the server override
+  /// changes and a fresh [DioClient] is built).
+  void dispose() {
+    _dio.close();
+  }
+
+  Future<String> _rotateTokens() {
+    return _refreshInFlight ??=
+        _doRotateTokens().whenComplete(() => _refreshInFlight = null);
+  }
+
+  Future<String> _doRotateTokens() async {
     final refreshToken = await _tokenStore.refreshToken;
     if (refreshToken == null || refreshToken.isEmpty) {
       throw const RefreshException('No refresh token available.');
@@ -115,7 +134,12 @@ class SecureTokenStore implements TokenStore {
 
 final secureTokenStorageProvider = Provider<SecureTokenStorage>((ref) => SecureTokenStorage());
 
+/// Recreated when the (runtime) server override changes, so every request
+/// follows the new origin.
 final dioClientProvider = Provider<DioClient>((ref) {
+  final baseUrl = ref.watch(apiBaseUrlProvider);
   final storage = ref.watch(secureTokenStorageProvider);
-  return DioClient(tokenStore: SecureTokenStore(storage));
+  final client = DioClient(tokenStore: SecureTokenStore(storage), baseUrl: baseUrl);
+  ref.onDispose(client.dispose);
+  return client;
 });

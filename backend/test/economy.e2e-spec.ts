@@ -13,7 +13,7 @@ describe('VibeTable economy (e2e)', () => {
   let app: INestApplication;
   let httpServer: Server;
 
-  // Catalogue item ids (see src/shop/shop-catalogue.ts / database/seed.sql).
+  // Catalogue item ids (see src/shop/shop-catalogue.ts).
   const CYAN_RING_FRAME = '33333333-0000-4000-8100-000000000002'; // 800, 10% -> 720
   const GLASS_BUBBLE = '33333333-0000-4000-8300-000000000001'; // 900
   const STARTER_BUBBLE = '33333333-0000-4000-8300-000000000003'; // 300, giftable

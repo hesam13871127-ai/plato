@@ -29,6 +29,7 @@ export class DailyRewardClaimEntity {
   user: UserEntity;
 
   /** Claimed day as `YYYY-MM-DD` (UTC). */
+  @Index('idx_daily_rewards_day')
   @Column({ type: 'date' })
   day: string;
 

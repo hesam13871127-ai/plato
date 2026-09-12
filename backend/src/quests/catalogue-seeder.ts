@@ -7,7 +7,7 @@ import { QUEST_CATALOGUE } from './catalogue';
 /**
  * Ensures the daily-quest catalogue exists in the database on startup.
  * Idempotent: existing quests (matched by fixed id/code) are left intact so
- * production data is never overwritten. Mirrors `database/seed.sql`.
+ * production data is never overwritten.
  */
 @Injectable()
 export class CatalogueSeeder implements OnApplicationBootstrap {
@@ -19,27 +19,32 @@ export class CatalogueSeeder implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    for (const item of QUEST_CATALOGUE) {
-      const existing = await this.quests.findOne({ where: { code: item.code } });
-      if (existing) continue;
+    try {
+      for (const item of QUEST_CATALOGUE) {
+        const existing = await this.quests.findOne({ where: { code: item.code } });
+        if (existing) continue;
 
-      await this.quests.save(
-        this.quests.create({
-          id: item.id,
-          code: item.code,
-          name: item.name,
-          description: item.description,
-          goalType: item.goalType,
-          goalTarget: item.goalTarget,
-          rewardCoins: item.rewardCoins,
-          rewardPips: item.rewardPips,
-          rewardXp: item.rewardXp,
-          rewardCurrency: item.rewardPips > 0 ? 'pips' : 'coins',
-          sortOrder: item.sortOrder,
-          isActive: true,
-        }),
-      );
+        await this.quests.save(
+          this.quests.create({
+            id: item.id,
+            code: item.code,
+            name: item.name,
+            description: item.description,
+            goalType: item.goalType,
+            goalTarget: item.goalTarget,
+            rewardCoins: item.rewardCoins,
+            rewardPips: item.rewardPips,
+            rewardXp: item.rewardXp,
+            rewardCurrency: item.rewardPips > 0 ? 'pips' : 'coins',
+            sortOrder: item.sortOrder,
+            isActive: true,
+          }),
+        );
+      }
+      this.logger.log('Daily quest catalogue ensured.');
+    } catch (error) {
+      // A boot-time seeding failure must never take the API down.
+      this.logger.error(`Quest catalogue seeding failed: ${(error as Error).message}`);
     }
-    this.logger.log('Daily quest catalogue ensured.');
   }
 }

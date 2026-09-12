@@ -151,11 +151,11 @@ export JWT_REFRESH_SECRET="$(openssl rand -hex 32)"
 export MODERATION_ADMIN_EMAILS="owner@vibetable.app"
 export CORS_ORIGINS="https://your-mobile-web-host.example"
 
-# 2. Start MySQL + API. MySQL is initialised from database/schema.sql and
-#    the API also runs TypeORM migrations on boot (DB_RUN_MIGRATIONS=true).
+# 2. Start MySQL + API. TypeORM `synchronize` creates/updates the whole
+#    schema from the entity metadata on boot (no SQL files, no migrations).
 docker compose up -d --build
 
-docker compose logs -f api               # watch migration + bootstrap
+docker compose logs -f api               # watch schema sync + bootstrap
 curl -s http://localhost:3000/health     # {"status":"ok",...}
 ```
 
@@ -163,8 +163,8 @@ Production notes:
 
 - Set `NODE_ENV=production`, strong unique JWT secrets (≥ 32 chars), real
   MySQL credentials, and `CORS_ORIGINS` to the exact web origin(s).
-- `DB_SYNCHRONIZE=false` always in production — schema comes from
-  `database/schema.sql` / migrations only.
+- `DB_SYNCHRONIZE=true` in all environments — the entities are the single
+  source of truth and the schema is synced automatically on boot.
 - SMS: set `SMS_PROVIDER=twilio` with `TWILIO_ACCOUNT_SID`,
   `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`.
 - The first account registered with an email/phone listed in

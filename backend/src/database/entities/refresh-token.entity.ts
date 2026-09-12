@@ -38,6 +38,7 @@ export class RefreshTokenEntity {
   @Column({ type: 'varchar', length: 36 })
   familyId: string;
 
+  @Index('idx_refresh_tokens_expires')
   @Column({ type: 'datetime', precision: 6 })
   expiresAt: Date;
 

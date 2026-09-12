@@ -1,6 +1,6 @@
 import { Currency, ItemRarity, ItemType } from '../database/enums';
 
-/** Seeded shop catalogue (mirrors database/seed.sql). */
+/** Seeded shop catalogue (source of truth, applied by the seeder at boot). */
 export interface ShopCatalogueItem {
   id: string;
   name: string;

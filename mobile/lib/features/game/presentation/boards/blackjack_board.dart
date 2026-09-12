@@ -452,7 +452,7 @@ class _BlackjackBoardState extends State<BlackjackBoard> {
     );
   }
 
-  Widget _chipButton(int value, int max) {
+  Widget _chipButton(int value, int max, {String? label}) {
     final enabled = _myTurn && value >= 5 && value <= max;
     return ElevatedButton(
       onPressed: enabled ? () => setState(() => _amount = value) : null,
@@ -468,7 +468,7 @@ class _BlackjackBoardState extends State<BlackjackBoard> {
         ),
       ),
       child: Text(
-        value == max && max > 100 ? 'ALL' : '$value',
+        label ?? (value == max && max > 100 ? 'ALL' : '$value'),
         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
       ),
     );

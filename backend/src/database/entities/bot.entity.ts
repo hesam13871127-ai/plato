@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   OneToOne,
   PrimaryColumn,
@@ -24,6 +25,7 @@ export class BotEntity {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
+  @Index('idx_bots_difficulty')
   @Column({ type: 'varchar', length: 64, default: 'medium' })
   difficulty: BotDifficulty;
 
@@ -33,6 +35,7 @@ export class BotEntity {
   @Column({ type: 'json', nullable: true })
   config: Record<string, unknown> | null;
 
+  @Index('idx_bots_active')
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 

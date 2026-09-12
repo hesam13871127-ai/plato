@@ -51,6 +51,8 @@ import { ReversiEngine } from './engine/reversi.engine';
 import { GomokuEngine } from './engine/gomoku.engine';
 import { BlackjackEngine } from './engine/blackjack.engine';
 import { HangmanEngine } from './engine/hangman.engine';
+import { TicTacToeEngine } from './engine/tic-tac-toe.engine';
+import { TileDuelEngine } from './engine/tile-duel.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -106,6 +108,8 @@ const ENTITIES = [
     GomokuEngine,
     BlackjackEngine,
     HangmanEngine,
+    TicTacToeEngine,
+    TileDuelEngine,
     EngineRegistry,
     // Services
     BotService,

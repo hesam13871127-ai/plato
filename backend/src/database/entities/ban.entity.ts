@@ -13,14 +13,18 @@ import { UserEntity } from './user.entity';
 /**
  * Enforcement action applied to a user. A non-null `expiresAt` is a temporary
  * ban; null with type `permanent` is indefinite.
+ *
+ * `bannedBy` is deliberately a plain string column (no users FK): it holds
+ * either a moderator's user id or the literal 'system' for automated
+ * moderation, and a FK would reject the sentinel.
  */
 @Entity('bans')
+@Index('idx_bans_user', ['userId'])
 @Index('idx_bans_active', ['userId', 'type', 'expiresAt'])
 export class BanEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index()
   @Column({ type: 'varchar', length: 36 })
   userId: string;
 
@@ -36,10 +40,6 @@ export class BanEntity {
 
   @Column({ type: 'varchar', length: 36, nullable: true })
   bannedBy: string | null;
-
-  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'banned_by' })
-  banner: UserEntity | null;
 
   @Column({ type: 'datetime', precision: 6, nullable: true })
   expiresAt: Date | null;

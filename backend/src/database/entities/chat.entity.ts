@@ -21,6 +21,7 @@ export class ChatEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index('idx_chats_type')
   @Column({ type: 'varchar', length: 16 })
   type: ChatType;
 
@@ -44,6 +45,7 @@ export class ChatEntity {
   themeKey: string | null;
 
   /** True for the public Lounge chat (single global room). */
+  @Index('idx_chats_public')
   @Column({ name: 'is_public', type: 'boolean', default: false })
   isPublic: boolean;
 
@@ -56,6 +58,7 @@ export class ChatEntity {
   @Column({ name: 'last_message_id', type: 'varchar', length: 36, nullable: true })
   lastMessageId: string | null;
 
+  @Index('idx_chats_last_message')
   @Column({ name: 'last_message_at', type: 'datetime', precision: 6, nullable: true })
   lastMessageAt: Date | null;
 

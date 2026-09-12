@@ -42,6 +42,18 @@ export class DevAdminSeeder implements OnModuleInit {
     const email = (process.env.DEV_ADMIN_EMAIL ?? DevAdminSeeder.DEFAULT_EMAIL).toLowerCase();
     const password = process.env.DEV_ADMIN_PASSWORD ?? DevAdminSeeder.DEFAULT_PASSWORD;
 
+    try {
+      await this.seed(email, password);
+    } catch (error) {
+      // A boot-time seeding failure must never take the API down.
+      this.logger.error(
+        `Dev admin seeding failed: ${(error as Error).message}`,
+      );
+    }
+  }
+
+  private async seed(email: string, password: string): Promise<void> {
+
     const existing = await this.users.findOne({ where: { email } });
     if (existing) {
       // Ensure the dev account stays usable (admin + verified) even after

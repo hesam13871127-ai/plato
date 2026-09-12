@@ -21,6 +21,8 @@ import { ReversiEngine, legalMoves } from '../src/game/engine/reversi.engine';
 import { GomokuEngine } from '../src/game/engine/gomoku.engine';
 import { BlackjackEngine, handValue } from '../src/game/engine/blackjack.engine';
 import { HangmanEngine } from '../src/game/engine/hangman.engine';
+import { TicTacToeEngine } from '../src/game/engine/tic-tac-toe.engine';
+import { TileDuelEngine, applyDir as tileDuelApplyDir, type Dir } from '../src/game/engine/tile-duel.engine';
 import { MancalaEngine } from '../src/game/engine/mancala.engine';
 import { CarromEngine } from '../src/game/engine/carrom.engine';
 import { MatchmakingService } from '../src/game/matchmaking.service';
@@ -73,8 +75,14 @@ describe('VibeTable games (e2e)', () => {
       supportsBots: boolean;
       maxPlayers: number;
     }>;
-    const playable = games.find((g) => g.status === 'active' && g.supportsBots);
-    return playable ? { slug: playable.slug, maxPlayers: playable.maxPlayers } : null;
+    const playable = games.filter((g) => g.status === 'active' && g.supportsBots);
+    // Prefer quick games: this test plays a full table with real-time bot
+    // pacing, and long strategy games (chess, 2048 Duel) blow the timeout.
+    const preferred = new Set(['dominoes', 'connect4', 'checkers', 'tic_tac_toe']);
+    const playableGame = playable.find((g) => preferred.has(g.slug)) ?? playable[0];
+    return playableGame
+      ? { slug: playableGame.slug, maxPlayers: playableGame.maxPlayers }
+      : null;
   }
 
   /** Recursively asserts no bot-marker key exists anywhere in a payload. */
@@ -789,7 +797,32 @@ function humanActionFor(
     return null;
   }
 
+  if (slug === 'tic_tac_toe') {
+    const cells = board.cells as number[] | undefined;
+    if (cells) {
+      const idx = cells.findIndex((c) => c === 0);
+      if (idx >= 0) return { type: 'place', payload: { idx } };
+    }
+    return null;
+  }
+
+  if (slug === 'tile_duel') {
+    const grids = board.grids as number[][] | undefined;
+    const grid = grids?.[seat];
+    if (grid && Array.isArray(grid) && grid.length === 16) {
+      const legal = tileDuelLegalDirs(grid);
+      if (legal.length > 0) return { type: 'move', payload: { dir: legal[0] } };
+      return { type: 'pass', payload: {} };
+    }
+    return null;
+  }
+
   return null;
+}
+
+function tileDuelLegalDirs(grid: number[]): Dir[] {
+  const dirs: Dir[] = ['left', 'right', 'up', 'down'];
+  return dirs.filter((d) => tileDuelApplyDir(grid, d) !== null);
 }
 
 function allOwned(

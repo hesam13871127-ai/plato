@@ -141,8 +141,13 @@ describe('VibeTable competitive — seasons, rewards, leaderboards (e2e)', () =>
         .findOne({ where: { userId: strong.userId } })
         .then((p) => Number(p?.coins ?? 0));
 
-      // Force the season to end and roll it over.
-      season!.endsAt = new Date(Date.now() - 1000);
+      // Force the season to end and roll it over: end it a hair after it
+      // started — in the past (triggers the rollover) but strictly after
+      // starts_at (satisfies the chk_seasons_dates check).
+      const end = new Date(Math.max(season!.startsAt.getTime() + 1, Date.now() - 1));
+      season!.endsAt = end;
+      const waitMs = Math.max(0, end.getTime() - Date.now() + 1);
+      if (waitMs > 0) await new Promise((r) => setTimeout(r, waitMs));
       await ds.getRepository(SeasonEntity).save(season!);
       const refreshed = await seasons.activeSeason();
       await seasons.ensureCalendar(new Date());

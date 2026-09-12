@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -12,6 +13,7 @@ import { Currency, ItemRarity, ItemType } from '../enums';
  * Catalogue of purchasable cosmetic / consumable items.
  */
 @Entity('shop_items')
+@Check('chk_shop_items_price', 'price >= 0 AND discount_percent BETWEEN 0 AND 100')
 export class ShopItemEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -50,6 +52,7 @@ export class ShopItemEntity {
   @Column({ type: 'boolean', default: true })
   giftable: boolean;
 
+  @Index('idx_shop_items_available')
   @Column({ type: 'boolean', default: true })
   isAvailable: boolean;
 

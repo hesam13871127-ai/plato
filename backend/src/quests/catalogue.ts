@@ -1,6 +1,6 @@
 import { QuestGoalType } from '../database/enums';
 
-/** Seeded catalogue of active daily quests (mirrors database/seed.sql). */
+/** Seeded catalogue of active daily quests (source of truth, applied by the seeder at boot). */
 export interface QuestCatalogueItem {
   id: string;
   code: string;

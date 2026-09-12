@@ -2,20 +2,30 @@ import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import type { AppConfig } from '../config/configuration';
+import { SchemaCheckRepairService } from './schema-check-repair.service';
 import { entities } from './entities';
 import { SnakeNamingStrategy } from './snake-naming.strategy';
 
 /**
- * Database wiring. Production / development uses MySQL 8.0 with migrations
- * (see `database/migrations/1700000000000-InitialSchema.ts`, which executes
- * the canonical `schema.sql`). The test environment runs the same entity
- * metadata against in-memory SQLite with `synchronize` so the API can be
- * exercised without an external database.
+ * Database wiring. There are no SQL files and no migrations in this project:
+ * TypeORM's `synchronize` keeps the database schema in lockstep with the
+ * entity metadata on every boot (fresh databases are created, existing
+ * databases are updated incrementally without touching data).
  *
- * Both paths share the SnakeNamingStrategy so the test environment addresses
- * exactly the same snake_case column names as the MySQL DDL.
+ * Production / development uses MySQL 8.0; the test environment runs the same
+ * entity metadata against in-memory SQLite with `synchronize` so the API can
+ * be exercised without an external database.
+ *
+ * Both paths share the SnakeNamingStrategy so all drivers address exactly
+ * the same snake_case column names.
+ *
+ * On MySQL, TypeORM 0.3.x does not manage CHECK constraints at all, so
+ * SchemaCheckRepairService reconciles stored checks with the entity
+ * metadata on every boot (it also heals databases created by the old
+ * schema.sql before the entity-only era).
  */
 @Module({
+  providers: [SchemaCheckRepairService],
   imports: [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -33,13 +43,28 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
             entities,
             synchronize: true,
             dropSchema: true,
+            namingStrategy: new SnakeNamingStrategy(),
             // sql.js is loaded lazily so the production (MySQL) build never
             // pulls the WASM binary into memory.
           };
         }
 
+        // The database is self-managing: entities are the single source of
+        // truth and `synchronize` reconciles the schema on every boot (fresh
+        // databases are created, existing ones updated incrementally). The
+        // old DB_SYNCHRONIZE env switch is ignored on purpose — a stale
+        // `false` left in a hand-kept .env against a wiped/empty database
+        // used to leave the app with zero tables and a crashed boot.
+        if ((process.env.DB_SYNCHRONIZE ?? 'true').toLowerCase() === 'false') {
+          logger.warn(
+            'DB_SYNCHRONIZE=false found in the environment but IGNORED — ' +
+              'this project has no migrations; the schema is always kept in ' +
+              'sync from the entities on boot.',
+          );
+        }
+
         logger.log(
-          `driver: mysql (${db.host}:${db.port}/${db.database}) | column naming: snake_case [ok]`,
+          `driver: mysql (${db.host}:${db.port}/${db.database}) | column naming: snake_case [ok] | synchronize: always on`,
         );
 
         return {
@@ -50,10 +75,8 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
           password: db.password,
           database: db.database,
           entities,
-          synchronize: db.synchronize,
-          migrationsRun: db.runMigrations && !db.synchronize,
-          migrations: [`${__dirname}/migrations/*{.ts,.js}`],
-          migrationsTableName: 'typeorm_migrations',
+          synchronize: true,
+          namingStrategy: new SnakeNamingStrategy(),
           logging: db.logging,
           timezone: 'Z',
           charset: 'utf8mb4',

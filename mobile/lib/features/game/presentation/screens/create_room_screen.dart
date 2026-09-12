@@ -30,6 +30,19 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   bool _busy = false;
   String? _error;
 
+  /// The catalogue entry for this game (min/max seats) once loaded.
+  GameCatalogEntry? _entry;
+
+  void _applySeatRange(GameCatalogEntry? entry) {
+    if (entry == null) return;
+    if (_seats < entry.minPlayers || _seats > entry.maxPlayers) {
+      // Default to the game's minimum; the user can raise it within range.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _seats = entry.minPlayers);
+      });
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -42,12 +55,17 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
       _error = null;
     });
     final repo = ref.read(gameRepositoryProvider);
+    final entry = _entry;
+    // Never submit a seat count the engine would reject.
+    final seats = entry == null
+        ? _seats
+        : _seats.clamp(entry.minPlayers, entry.maxPlayers);
     final result = await repo.createRoom(
       gameSlug: widget.gameSlug,
       name: _nameController.text.trim().isEmpty ? null : _nameController.text.trim(),
       isPrivate: _isPrivate,
       isRanked: _isRanked,
-      maxPlayers: _seats,
+      maxPlayers: seats,
       fillWithBots: _fillWithBots,
     );
     if (!mounted) return;
@@ -64,6 +82,22 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final catalog = ref.watch(gameCatalogProvider);
+    catalog.whenData((games) {
+      GameCatalogEntry? entry;
+      for (final g in games) {
+        if (g.slug == widget.gameSlug) {
+          entry = g;
+          break;
+        }
+      }
+      if (entry != null && _entry?.slug != entry.slug) {
+        _entry = entry;
+        _applySeatRange(entry);
+      }
+    });
+    final minSeats = _entry?.minPlayers ?? 2;
+    final maxSeats = _entry?.maxPlayers ?? 4;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -162,7 +196,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      for (final n in const [2, 3, 4])
+                      for (var n = minSeats; n <= maxSeats; n++)
                         Padding(
                           padding: const EdgeInsets.only(right: 10),
                           child: ChoiceChip(

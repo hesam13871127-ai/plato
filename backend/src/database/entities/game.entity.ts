@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -12,6 +13,7 @@ import { GameStatus } from '../enums';
  * Catalogue entry for a playable table game (backgammon, dominoes, Ludo…).
  */
 @Entity('games')
+@Check('chk_games_players', 'min_players >= 1 AND max_players >= min_players')
 export class GameEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -44,6 +46,7 @@ export class GameEntity {
   @Column({ type: 'boolean', default: true })
   rankedEnabled: boolean;
 
+  @Index('idx_games_status')
   @Column({ type: 'varchar', length: 16, default: 'active' })
   status: GameStatus;
 

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../i18n/app_localizations.dart';
 import '../i18n/locale_controller.dart';
+import '../services/api_host_service.dart';
 import '../services/feedback_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_controller.dart';
@@ -28,10 +29,19 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  late final TextEditingController _serverCtrl = TextEditingController();
+  bool _serverSynced = false;
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _serverCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -46,6 +56,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await prefs.setBool(key, value);
   }
 
+  void _syncServerField() {
+    final host = ref.read(apiHostServiceProvider);
+    if (!_serverSynced && host.initialized) {
+      _serverCtrl.text = host.overrideValue ?? '';
+      _serverSynced = true;
+    }
+  }
+
+  Future<void> _saveServer(String? value) async {
+    final applied = await ref.read(apiHostServiceProvider).setOverride(value);
+    _serverCtrl.text = value ?? '';
+    if (!mounted) return;
+    final isFa = ref.read(localeControllerProvider) == AppLanguage.persian;
+    ref.read(feedbackServiceProvider.notifier).success();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isFa
+              ? 'سرور: $applied — برای ادامه وارد شوید'
+              : 'Server: $applied — please sign in to continue',
+        ),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -55,6 +91,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final feedback = ref.watch(feedbackServiceProvider);
     final reduceMotion = ref.watch(reduceMotionProvider);
     final largeText = ref.watch(largeTextProvider);
+    final host = ref.watch(apiHostServiceProvider);
+    final effectiveServer = ref.watch(apiBaseUrlProvider);
+    _syncServerField();
+    final textColor = isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.deepNavy : AppColors.lightBackground,
@@ -68,6 +108,89 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          _Section(
+            title: language == AppLanguage.persian ? 'سرور' : 'Server',
+            icon: Icons.dns_rounded,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      language == AppLanguage.persian ? 'آدرس فعلی:' : 'Current:',
+                      style: TextStyle(color: textColor, fontSize: 13),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      effectiveServer,
+                      style: const TextStyle(color: AppColors.softCyan, fontSize: 13, fontFamily: 'monospace'),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _serverCtrl,
+                      enabled: host.initialized,
+                      keyboardType: TextInputType.url,
+                      autocorrect: false,
+                      textInputAction: TextInputAction.done,
+                      style: const TextStyle(fontSize: 14, fontFamily: 'monospace'),
+                      decoration: InputDecoration(
+                        hintText: 'http://192.168.1.20:3000',
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.35), fontSize: 13),
+                        isDense: true,
+                        filled: true,
+                        fillColor: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.glassStroke),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.glassStroke),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.electricPurple),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.electricPurple,
+                            ),
+                            onPressed: () => _saveServer(_serverCtrl.text),
+                            child: Text(language == AppLanguage.persian ? 'اعمال' : 'Apply'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => _saveServer(null),
+                            child: Text(
+                              language == AppLanguage.persian ? 'حالت پیش‌فرض' : 'Reset default',
+                              style: TextStyle(color: textColor),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      language == AppLanguage.persian
+                          ? 'برای گوشی واقعی: IP کامپیوتر را در همان وای‌فای وارد کنید. بعد از تغییر باید دوباره وارد شوید.'
+                          : 'On a real phone: enter your computer\'s IP on the same Wi-Fi. You will need to sign in again after changing it.',
+                      style: TextStyle(color: textColor.withOpacity(0.5), fontSize: 11, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           _Section(
             title: l10n.t('language'),
             icon: Icons.translate_rounded,

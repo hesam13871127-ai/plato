@@ -17,17 +17,22 @@ export class LoungeSeeder implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    const existing = await this.chats.findOne({
-      where: { type: 'lounge', isPublic: true },
-    });
-    if (existing) return;
-    const lounge = this.chats.create({
-      type: 'lounge',
-      title: 'Lounge',
-      isPublic: true,
-      accessPass: null,
-    });
-    await this.chats.save(lounge);
-    this.logger.log('Public Lounge chat ensured.');
+    try {
+      const existing = await this.chats.findOne({
+        where: { type: 'lounge', isPublic: true },
+      });
+      if (existing) return;
+      const lounge = this.chats.create({
+        type: 'lounge',
+        title: 'Lounge',
+        isPublic: true,
+        accessPass: null,
+      });
+      await this.chats.save(lounge);
+      this.logger.log('Public Lounge chat ensured.');
+    } catch (error) {
+      // A boot-time seeding failure must never take the API down.
+      this.logger.error(`Lounge seeding failed: ${(error as Error).message}`);
+    }
   }
 }

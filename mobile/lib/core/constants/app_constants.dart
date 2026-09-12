@@ -20,10 +20,6 @@ class AppConstants {
 
   static const String apiPrefix = '/api';
 
-  /// Socket.io real-time base (same origin as the REST API; the gateway
-  /// listens on the root namespace).
-  static String get socketBaseUrl => apiBaseUrl;
-
   static const String appName = 'VibeTable';
   static const String appVersion = '1.0.0';
 

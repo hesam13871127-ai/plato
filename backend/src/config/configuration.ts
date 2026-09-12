@@ -14,8 +14,12 @@ export interface DatabaseConfig {
   username: string;
   password: string;
   database: string;
+  /**
+   * TypeORM keeps the schema in sync with the entity metadata on boot.
+   * There are no SQL files or migrations in this project — the entities are
+   * the single source of truth for the database schema.
+   */
   synchronize: boolean;
-  runMigrations: boolean;
   logging: boolean;
 }
 
@@ -119,8 +123,7 @@ export default (): AppConfig => {
       username: process.env.DB_USERNAME ?? 'root',
       password: process.env.DB_PASSWORD ?? '',
       database: process.env.DB_DATABASE ?? 'vibetable',
-      synchronize: toBool(process.env.DB_SYNCHRONIZE, nodeEnv !== 'production'),
-      runMigrations: toBool(process.env.DB_RUN_MIGRATIONS, nodeEnv === 'production'),
+      synchronize: toBool(process.env.DB_SYNCHRONIZE, true),
       logging: toBool(process.env.DB_LOGGING, false),
     },
 

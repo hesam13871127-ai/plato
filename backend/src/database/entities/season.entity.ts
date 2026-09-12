@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -14,6 +15,7 @@ import { RankingEntity } from './ranking.entity';
  * A competitive season. Rankings are scoped per (season, game).
  */
 @Entity('seasons')
+@Check('chk_seasons_dates', 'ends_at > starts_at')
 export class SeasonEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -31,6 +33,7 @@ export class SeasonEntity {
   @Column({ type: 'datetime', precision: 6 })
   endsAt: Date;
 
+  @Index('idx_seasons_status')
   @Column({ type: 'varchar', length: 16, default: 'upcoming' })
   status: SeasonStatus;
 

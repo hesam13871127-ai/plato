@@ -29,6 +29,7 @@ export class MessageReactionEntity {
   @JoinColumn({ name: 'message_id' })
   message: MessageEntity;
 
+  @Index('idx_reactions_user')
   @Column({ name: 'user_id', type: 'varchar', length: 36 })
   userId: string;
 
