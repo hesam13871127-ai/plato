@@ -47,12 +47,20 @@ class GameHubScreen extends ConsumerWidget {
                 loading: () => const _CatalogLoader(),
                 error: (e, _) => _ErrorTile(message: e.toString()),
                 data: (games) => Column(
-                  children: games
-                      .map((g) => Padding(
-                            padding: const EdgeInsets.only(bottom: 14),
-                            child: _GameCard(game: g),
-                          ))
-                      .toList(),
+                  children: [
+                    ...games.map(
+                      (g) => Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _GameCard(game: g),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${games.length} games · Wave 7',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),

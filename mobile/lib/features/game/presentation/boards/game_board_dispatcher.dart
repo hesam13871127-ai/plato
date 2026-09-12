@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/game_entities.dart';
 import 'dominoes_board.dart';
 import 'ludo_board.dart';
@@ -133,14 +134,36 @@ class _UnknownBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: Text(
-          slug.isEmpty ? 'Waiting for table…' : 'Unknown game: $slug',
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white70),
-        ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.glassFill,
+              border: Border.all(color: AppColors.glassStroke),
+            ),
+            child: const Icon(Icons.sports_esports_rounded, size: 34, color: AppColors.softCyan),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            slug.isEmpty ? 'Waiting for the table to be ready…' : 'This table is still being set up…',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          if (slug.isNotEmpty)
+            const SizedBox(height: 6),
+          if (slug.isNotEmpty)
+            Text(
+              'game: $slug',
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontFeatures: [FontFeature.tabularFigures()]),
+            ),
+        ],
       ),
     );
   }
