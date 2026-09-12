@@ -25,20 +25,27 @@ plato/
 │   │   ├── auth/            # OTP, JWT, refresh rotation, Google/Apple, email
 │   │   ├── users/           # profile read/update + public user serializer
 │   │   ├── health/          # liveness + DB connectivity
-│   │   ├── realtime/        # Socket.io gateway
+│   │   ├── chat/            # conversations, DMs/groups, presence, voice roster
+│   │   ├── game/            # matchmaking, rooms, sessions, engines, bots
+│   │   ├── economy/         # wallet, transactions (pessimistic row locks)
+│   │   ├── shop/            # catalogue, purchase, gifting, inventory, cosmetics
+│   │   ├── quests/          # daily quests + rewards
+│   │   ├── competitive/     # seasons, ratings, leaderboards
+│   │   ├── social/          # friends, follow, block
+│   │   ├── moderation/      # reports, bans, flags, audit
+│   │   ├── admin/           # staff-only management API
 │   │   ├── database/        # entities (single source of truth for the schema)
 │   │   ├── common/          # filters, guards, interceptors, decorators, utils
-│   │   └── config/          # typed configuration + Joi validation
+│   │   └── config/          # typed configuration
+│   ├── public/panel/        # browser admin panel (served at /panel)
 │   ├── test/                # e2e integration tests (in-memory SQLite)
 │   └── Dockerfile
-├── mobile/                  # Flutter app
+├── mobile/                  # Flutter app (Riverpod, clean architecture)
 │   └── lib/
-│       ├── core/            # theme, networking, storage, routing, widgets
-│       └── features/
-│           ├── auth/        # presentation / domain / data (clean architecture)
-│           ├── home/
-│           ├── profile/
-│           └── splash/
+│       ├── core/            # networking, socket client, storage, i18n, theme
+│       └── features/        # auth, home, chat, game, shop, quests, social,
+│                            # competitive, moderation, admin, profile, splash
+├── REPAIR.bat               # Windows one-click: pull latest fix + start API
 └── docker-compose.yml       # MySQL + API, one command
 ```
 

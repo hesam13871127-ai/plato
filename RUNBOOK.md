@@ -96,9 +96,9 @@ npm run start:prod        # اجرای dist/main.js (NODE_ENV=production)
 
 ```bash
 cd backend
-npm run test:e2e          # کل تست‌های e2e (فعلاً 292 ✓)
+npm run test:e2e          # کل تست‌های e2e (فعلاً 296 ✓)
+npm test                  # تست‌های واحد
 npx jest --config ./test/jest-e2e.json --runInBand game-engines   # فقط قواعد بازی‌ها
-npm run lint              # ESLint
 npx tsc --noEmit -p tsconfig.json   # چک تایپ
 ```
 
@@ -124,9 +124,11 @@ flutter pub get
 | iOS Simulator / دسکتاپ | `http://localhost:3000` |
 | گوشی واقعی | باید IP کامپیوتر را بدهید (پایین ⬇️) |
 
-> ⚠️ **گوشی واقعی:** کامپیوتر و گوشی باید در یک وای‌فای باشند و IP لوکال
-> کامپیوتر را وارد کنید: در صفحهٔ لاگین اپ گزینهٔ تغییر آدرس سرور هست، یا
-> `--dart-define`:
+> ⚠️ **گوشی واقعی:** کامپیوتر و گوشی باید در یک وای‌فای باشند. دو راه:
+> 1. **داخل اپ (پیشنهادی):** آیکون چرخ‌دنده در صفحهٔ لاگین → **تنظیمات → سرور**
+>    → IP کامپیوتر را بنویسید (مثلاً `192.168.1.20:3000`) → اعمال. ذخیره
+>    می‌شود و دفعات بعد خودکار است.
+> 2. **در زمان build:** `--dart-define`:
 > ```bash
 > flutter run --dart-define=API_BASE_URL=http://192.168.1.20:3000
 > ```
@@ -210,6 +212,7 @@ cd mobile && flutter pub get && flutter run -d chrome
 |---|---|
 | `ECONNREFUSED 127.0.0.1:3306` | MySQL بالا نیست: `docker compose up -d mysql` |
 | `Table 'vibetable.xxx' doesn't exist` | با `synchronize` ساختن/به‌روزرسانی جدول‌ها هر بار خودکار است — بک‌اند را ری‌استارت کنید؛ اگر دیتابیس کهنه و خراب است `docker compose down -v` و `up` دوباره |
+| `CONSTRAINT \`chk_...\` failed` (دیتابیس قدیمی) | `SchemaCheckRepairService` در استارتاپ CHECKهای کهنه را خودکار با متادیتای entityها هماهنگ می‌کند — کافی است کد جدید را اجرا کنید (خط لاگ: `[SchemaCheckRepair]`) |
 | اپ در شبیه‌ساز اندروید وصل نمی‌شود | بک‌اند روی `localhost:3000` باشد؛ اپ خودش `10.0.2.2` را می‌زند — فایروال ویندوز را هم چک کنید |
 | اپ در مرورگر: CORS | `CORS_ORIGINS` در `.env` بک‌اند باید پورتِ `flutter run -d chrome` را داشته باشد (پیش‌فرض `http://localhost:8080` را دارد؛ پورت واقعی را در خروجی ترمینال فلاتر ببینید و اضافه کنید) |
 | بیلد اندروید فیل می‌شود | `flutter doctor` + `flutter clean && flutter pub get` + نسخهٔ JDK (17) |

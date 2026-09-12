@@ -45,8 +45,9 @@ async function bootstrap(): Promise<void> {
   });
 
   app.enableCors({
-    // origin: corsOrigins.length > 0 ? corsOrigins : true,
-    origin: corsOrigins.length > 0 ? ["http://localhost:50103" ]: true,
+    // Config-driven: empty or "*" allows any origin, otherwise only the
+    // listed ones (comma-separated CORS_ORIGINS).
+    origin: corsOrigins.length === 0 || corsOrigins.includes('*') ? true : corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });

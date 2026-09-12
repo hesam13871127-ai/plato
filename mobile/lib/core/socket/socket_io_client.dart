@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-import '../constants/app_constants.dart';
 import '../storage/secure_token_storage.dart';
 
 /// A small, dependency-free Socket.IO (Engine.IO v4 / Socket.IO v4) client
@@ -20,9 +19,14 @@ import '../storage/secure_token_storage.dart';
 ///    type `0` = CONNECT, `2` = EVENT, `3` = ACK (server→client response to a
 ///    client emit with acknowledgement).
 class SocketIoClient {
-  SocketIoClient({SecureTokenStorage? storage}) : _storage = storage;
+  SocketIoClient({SecureTokenStorage? storage, required String baseUrl})
+      : _storage = storage,
+        _baseUrl = baseUrl;
 
   final SecureTokenStorage? _storage;
+
+  /// Backend origin for the WebSocket upgrade (scheme + host + port).
+  final String _baseUrl;
 
   WebSocketChannel? _channel;
   bool _socketReady = false;
@@ -56,7 +60,7 @@ class SocketIoClient {
     // server emits `authenticated`). A custom namespace would prefix the path.
     _connectFrame = '40${jsonEncode(auth)}';
 
-    final uri = Uri.parse(AppConstants.socketBaseUrl);
+    final uri = Uri.parse(_baseUrl);
     final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
     // EIO=4 → Engine.IO protocol v4; transport=websocket upgrades straight in.
     final wsUrl = Uri(
