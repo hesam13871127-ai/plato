@@ -56,7 +56,7 @@ class GameHubScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${games.length} games · Wave 7',
+                      '${games.length} games · Wave 8',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6),
                     ),
@@ -326,6 +326,12 @@ String _gameEmoji(String slug) {
       return '🃏';
     case 'hangman':
       return '🔤';
+    case 'minesweepers':
+      return '💣';
+    case 'basketball':
+      return '🏀';
+    case 'archery':
+      return '🏹';
     default:
       return '🎮';
   }

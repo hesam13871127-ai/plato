@@ -32,6 +32,9 @@ import { BlackjackEngine } from './blackjack.engine';
 import { HangmanEngine } from './hangman.engine';
 import { TicTacToeEngine } from './tic-tac-toe.engine';
 import { TileDuelEngine } from './tile-duel.engine';
+import { MinesweepersEngine } from './minesweepers.engine';
+import { BasketballEngine } from './basketball.engine';
+import { ArcheryEngine } from './archery.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -77,6 +80,9 @@ export class EngineRegistry {
     hangman: HangmanEngine,
     ticTacToe: TicTacToeEngine,
     tileDuel: TileDuelEngine,
+    minesweepers: MinesweepersEngine,
+    basketball: BasketballEngine,
+    archery: ArcheryEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -110,6 +116,9 @@ export class EngineRegistry {
     this.register(hangman);
     this.register(ticTacToe);
     this.register(tileDuel);
+    this.register(minesweepers);
+    this.register(basketball);
+    this.register(archery);
   }
 
   register(engine: BaseGameEngine): void {

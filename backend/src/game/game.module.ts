@@ -53,6 +53,9 @@ import { BlackjackEngine } from './engine/blackjack.engine';
 import { HangmanEngine } from './engine/hangman.engine';
 import { TicTacToeEngine } from './engine/tic-tac-toe.engine';
 import { TileDuelEngine } from './engine/tile-duel.engine';
+import { MinesweepersEngine } from './engine/minesweepers.engine';
+import { BasketballEngine } from './engine/basketball.engine';
+import { ArcheryEngine } from './engine/archery.engine';
 import { EngineRegistry } from './engine/engine.registry';
 
 const ENTITIES = [
@@ -110,6 +113,9 @@ const ENTITIES = [
     HangmanEngine,
     TicTacToeEngine,
     TileDuelEngine,
+    MinesweepersEngine,
+    BasketballEngine,
+    ArcheryEngine,
     EngineRegistry,
     // Services
     BotService,

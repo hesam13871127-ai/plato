@@ -32,6 +32,9 @@ import { BlackjackEngine, handValue } from '../src/game/engine/blackjack.engine'
 import { HangmanEngine, HANGMAN_WORDS } from '../src/game/engine/hangman.engine';
 import { TicTacToeEngine, winLineAt } from '../src/game/engine/tic-tac-toe.engine';
 import { TileDuelEngine, applyDir, legalDirs, slideRowLeft } from '../src/game/engine/tile-duel.engine';
+import { MinesweepersEngine } from '../src/game/engine/minesweepers.engine';
+import { BasketballEngine } from '../src/game/engine/basketball.engine';
+import { ArcheryEngine } from '../src/game/engine/archery.engine';
 import type { GameState } from '../src/game/engine/types';
 
 /**
@@ -75,6 +78,9 @@ const TURN_BASED: Array<{ name: string; build: () => BaseGameEngine; players?: n
   { name: 'gomoku', build: () => new GomokuEngine() },
   { name: 'blackjack', build: () => new BlackjackEngine() },
   { name: 'hangman', build: () => new HangmanEngine() },
+  { name: 'minesweepers', build: () => new MinesweepersEngine() },
+  { name: 'basketball', build: () => new BasketballEngine() },
+  { name: 'archery', build: () => new ArcheryEngine() },
 ];
 
 describe('turn-based game engines — full bot play-through', () => {
@@ -4671,9 +4677,12 @@ describe('engine registry', () => {
       new HangmanEngine(),
       new TicTacToeEngine(),
       new TileDuelEngine(),
+      new MinesweepersEngine(),
+      new BasketballEngine(),
+      new ArcheryEngine(),
     );
     // The wave-1 engines are wired in via DI.
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman', 'tic_tac_toe', 'tile_duel']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman', 'tic_tac_toe', 'tile_duel', 'minesweepers', 'basketball', 'archery']);
     expect(registry.has('dominoes')).toBe(true);
     expect(registry.get('dominoes')).toBeInstanceOf(DominoesEngine);
     expect(registry.require('ludo')).toBeInstanceOf(LudoEngine);
@@ -4682,7 +4691,7 @@ describe('engine registry', () => {
     expect(registry.has('nonexistent')).toBe(false);
     expect(() => registry.require('nonexistent')).toThrow(/No engine registered/);
     registry.register(new DummyEngine());
-    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman', 'tic_tac_toe', 'tile_duel', '__dummy__']);
+    expect(registry.slugs).toEqual(['dominoes', 'ludo', 'ocho', 'connect4', 'checkers', 'chess', 'pool', 'carrom', 'dots_and_boxes', 'snakes_ladders', 'bingo', 'dice_party', 'backgammon', 'mancala', 'bowling', 'trivia', 'word_chain', 'emoji_charades', 'memory', 'sketch', 'werewolf', 'impostor', 'darts', 'minigolf', 'bankroll', 'battleship', 'reversi', 'gomoku', 'blackjack', 'hangman', 'tic_tac_toe', 'tile_duel', 'minesweepers', 'basketball', 'archery', '__dummy__']);
     expect(registry.require('__dummy__')).toBeInstanceOf(DummyEngine);
   });
 });
