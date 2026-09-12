@@ -76,8 +76,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           isFa
               ? 'سرور: $applied — برای ادامه وارد شوید'
               : 'Server: $applied — please sign in to continue',
-          duration: const Duration(seconds: 3),
         ),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
