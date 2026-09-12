@@ -2,6 +2,7 @@ import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import type { AppConfig } from '../config/configuration';
+import { SchemaCheckRepairService } from './schema-check-repair.service';
 import { entities } from './entities';
 import { SnakeNamingStrategy } from './snake-naming.strategy';
 
@@ -17,8 +18,14 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
  *
  * Both paths share the SnakeNamingStrategy so all drivers address exactly
  * the same snake_case column names.
+ *
+ * On MySQL, TypeORM 0.3.x does not manage CHECK constraints at all, so
+ * SchemaCheckRepairService reconciles stored checks with the entity
+ * metadata on every boot (it also heals databases created by the old
+ * schema.sql before the entity-only era).
  */
 @Module({
+  providers: [SchemaCheckRepairService],
   imports: [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

@@ -155,9 +155,14 @@ Highlights of the entity model:
 - Full foreign-key graph with `CASCADE` / `RESTRICT` / `SET NULL` as appropriate.
 - Targeted indexes for hot paths (leaderboards, message history, wallet ledger).
 - `@Check` constraints for invariants (non-negative wallets, season date
-  ranges, valid player counts, …). Note: TypeORM 0.3.x does not emit CHECK
-  constraints for the MySQL driver family, so they are enforced by the
-  in-memory SQLite used in tests; on MySQL the application logic upholds them.
+  ranges, valid player counts, …). TypeORM 0.3.x neither emits nor updates
+  CHECK constraints on the MySQL driver family, so
+  `SchemaCheckRepairService` reconciles the stored checks with the entity
+  metadata on every boot: it adds missing checks, replaces checks whose
+  expression drifted (healing databases created by the old schema.sql), and
+  drops stale `chk_*` leftovers — all through the shared TypeORM
+  `DataSource`. Everything else (columns, indexes, foreign keys) is handled
+  by `synchronize` directly.
 
 Starter data (game catalogue, shop items, daily quests, first season, public
 lounge, bot pool, dev admin) is seeded by runtime seeders in the API at
