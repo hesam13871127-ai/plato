@@ -16,6 +16,7 @@ import { UserEntity } from './user.entity';
  */
 @Entity('transactions')
 @Index('idx_transactions_user_created', ['userId', 'createdAt'])
+@Index('idx_transactions_reference', ['referenceType', 'referenceId'])
 export class TransactionEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -28,6 +29,7 @@ export class TransactionEntity {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
+  @Index('idx_transactions_type')
   @Column({ type: 'varchar', length: 32 })
   type: TransactionType;
 

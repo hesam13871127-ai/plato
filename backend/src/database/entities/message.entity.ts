@@ -13,6 +13,7 @@ import { UserEntity } from './user.entity';
 
 @Entity('messages')
 @Index('idx_messages_chat_created', ['chatId', 'createdAt'])
+@Index('idx_messages_pinned', ['chatId', 'isPinned'])
 export class MessageEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

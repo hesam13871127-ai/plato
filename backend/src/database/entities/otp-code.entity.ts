@@ -28,6 +28,7 @@ export class OtpCodeEntity {
   @Column({ type: 'varchar', length: 64 })
   codeHash: string;
 
+  @Index('idx_otp_expires')
   @Column({ type: 'datetime', precision: 6 })
   expiresAt: Date;
 

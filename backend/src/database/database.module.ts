@@ -36,6 +36,7 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
             entities,
             synchronize: true,
             dropSchema: true,
+            namingStrategy: new SnakeNamingStrategy(),
             // sql.js is loaded lazily so the production (MySQL) build never
             // pulls the WASM binary into memory.
           };
@@ -54,6 +55,7 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
           database: db.database,
           entities,
           synchronize: db.synchronize,
+          namingStrategy: new SnakeNamingStrategy(),
           logging: db.logging,
           timezone: 'Z',
           charset: 'utf8mb4',

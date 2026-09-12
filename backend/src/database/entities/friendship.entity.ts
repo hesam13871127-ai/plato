@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -19,6 +20,9 @@ import { UserEntity } from './user.entity';
  */
 @Entity('friendships')
 @Index('idx_friendship_pair', ['requesterId', 'addresseeId'], { unique: true })
+// A self-friendship/block is meaningless; the service rejects it, this is
+// the database-level backstop.
+@Check('chk_friendships_not_self', 'requester_id <> addressee_id')
 export class FriendshipEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -39,6 +43,7 @@ export class FriendshipEntity {
   @JoinColumn({ name: 'addressee_id' })
   addressee: UserEntity;
 
+  @Index('idx_friendships_status')
   @Column({ type: 'varchar', length: 16, default: 'pending' })
   status: FriendshipStatus;
 

@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -19,6 +20,7 @@ import { UserEntity } from './user.entity';
 @Entity('user_inventory')
 @Index('idx_inventory_user', ['userId'])
 @Index('idx_inventory_item', ['itemId'])
+@Check('chk_inventory_quantity', 'quantity >= 1')
 export class UserInventoryEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

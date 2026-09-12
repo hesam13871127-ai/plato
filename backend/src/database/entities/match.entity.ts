@@ -53,6 +53,7 @@ export class MatchEntity {
   @Column({ type: 'bigint', default: 0 })
   entryFeeCoins: number;
 
+  @Index('idx_matches_status')
   @Column({ type: 'varchar', length: 16, default: 'pending' })
   status: MatchStatus;
 
@@ -74,6 +75,7 @@ export class MatchEntity {
   @OneToMany(() => MatchPlayerEntity, (player) => player.match, { cascade: true })
   players: MatchPlayerEntity[];
 
+  @Index('idx_matches_created')
   @CreateDateColumn({ type: 'datetime', precision: 6 })
   createdAt: Date;
 

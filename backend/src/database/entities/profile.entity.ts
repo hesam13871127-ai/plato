@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -16,6 +17,8 @@ import { UserEntity } from './user.entity';
  * login credentials. The profile is identified by its `user_id` foreign key.
  */
 @Entity('profiles')
+@Check('chk_profiles_wallet', 'coins >= 0 AND pips >= 0')
+@Check('chk_profiles_stats', 'games_won + games_lost + games_drawn <= games_played')
 export class ProfileEntity {
   /** Primary key and foreign key to `users.id` (1:1). */
   @PrimaryColumn({ name: 'user_id', type: 'varchar', length: 36 })
@@ -35,12 +38,14 @@ export class ProfileEntity {
   @Column({ type: 'varchar', length: 512, nullable: true })
   avatarUrl: string | null;
 
+  @Index('idx_profiles_country')
   @Column({ type: 'varchar', length: 32, nullable: true })
   country: string | null;
 
   @Column({ type: 'varchar', length: 512, nullable: true })
   bio: string | null;
 
+  @Index('idx_profiles_level')
   @Column({ type: 'int', default: 0 })
   level: number;
 

@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -22,6 +23,9 @@ import { BotEntity } from './bot.entity';
  * person signs in with any provider; providers then link onto the same row.
  */
 @Entity('users')
+// Real accounts always carry a phone or an email; bots are synthetic and
+// intentionally have neither (bot pool seeder).
+@Check('chk_users_phone_or_identity', 'phone IS NOT NULL OR email IS NOT NULL OR is_bot = 1')
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -30,6 +34,7 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string | null;
 
+  @Index({ unique: true })
   @Column({ type: 'varchar', length: 255, nullable: true, select: false })
   phoneNormalized: string | null;
 
@@ -43,6 +48,7 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 64, default: 'phone' })
   primaryProvider: AuthProvider;
 
+  @Index('idx_users_status')
   @Column({ type: 'varchar', length: 64, default: 'active' })
   status: AccountStatus;
 
@@ -53,6 +59,7 @@ export class UserEntity {
   @Column({ type: 'boolean', default: false })
   isVerified: boolean;
 
+  @Index('idx_users_is_bot')
   @Column({ type: 'boolean', default: false })
   isBot: boolean;
 
@@ -65,6 +72,7 @@ export class UserEntity {
   @Column({ type: 'date', nullable: true })
   dateOfBirth: Date | null;
 
+  @Index('idx_users_presence')
   @Column({ type: 'varchar', length: 32, default: 'offline' })
   presence: UserPresence;
 

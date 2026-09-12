@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -18,6 +19,7 @@ import { RoomPlayerEntity } from './room-player.entity';
  * A lobby/table created by a player. Rooms become matches once a game starts.
  */
 @Entity('rooms')
+@Check('chk_rooms_fee', 'entry_fee_coins >= 0')
 export class RoomEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -41,6 +43,7 @@ export class RoomEntity {
   @Column({ type: 'varchar', length: 128, nullable: true })
   name: string | null;
 
+  @Index('idx_rooms_access_code')
   @Column({ type: 'varchar', length: 64, nullable: true })
   accessCode: string | null;
 
@@ -56,6 +59,7 @@ export class RoomEntity {
   @Column({ type: 'int', default: 2 })
   maxPlayers: number;
 
+  @Index('idx_rooms_status')
   @Column({ type: 'varchar', length: 16, default: 'waiting' })
   status: RoomStatus;
 

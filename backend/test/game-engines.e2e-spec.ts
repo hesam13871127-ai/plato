@@ -4015,6 +4015,7 @@ describe('gomoku rules', () => {
     const played = new Set<number>();
     for (const difficulty of ['easy', 'medium', 'hard', 'expert'] as const) {
       for (let i = 0; i < 5; i++) {
+        if (s.phase !== 'in_progress') break; // a bot completed five — stop
         const seat = s.currentSeat;
         const move = engine.chooseBotMove(s, seat, difficulty);
         const action = { ...move.action, seat };

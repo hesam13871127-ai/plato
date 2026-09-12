@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -15,6 +16,8 @@ import { UserQuestEntity } from './user-quest.entity';
  * day; progress rows are tracked in `user_quests`.
  */
 @Entity('quests')
+@Check('chk_quests_target', 'goal_target >= 1')
+@Check('chk_quests_rewards', 'reward_coins >= 0 AND reward_pips >= 0 AND reward_xp >= 0')
 export class QuestEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -52,6 +55,7 @@ export class QuestEntity {
   @Column({ type: 'int', default: 1 })
   sortOrder: number;
 
+  @Index('idx_quests_active')
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 

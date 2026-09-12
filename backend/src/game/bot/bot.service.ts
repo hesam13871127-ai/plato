@@ -77,6 +77,7 @@ export class BotService {
         const level = 1 + Math.floor(Math.random() * 40);
         const wins = Math.floor(Math.random() * 120);
         const losses = Math.floor(wins * (0.6 + Math.random() * 0.9));
+        const drawn = Math.floor(Math.random() * 10);
 
         const user = manager.create(UserEntity, {
           id: uuidv4(),
@@ -104,10 +105,10 @@ export class BotService {
           xp: level * 100,
           coins: 500 + Math.floor(Math.random() * 9500),
           pips: Math.floor(Math.random() * 200),
-          gamesPlayed: wins + losses,
+          gamesPlayed: wins + losses + drawn,
           gamesWon: wins,
           gamesLost: losses,
-          gamesDrawn: Math.floor(Math.random() * 10),
+          gamesDrawn: drawn,
           streakDays: Math.floor(Math.random() * 7),
           giftsSent: Math.floor(Math.random() * 30),
           giftsReceived: Math.floor(Math.random() * 60),

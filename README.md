@@ -143,14 +143,21 @@ There are **no SQL files and no migrations** — the TypeORM entities in
 `backend/src/database/entities/` are the single source of truth. TypeORM
 `synchronize` (enabled by `DB_SYNCHRONIZE=true`, the default) creates the
 schema on first boot and keeps it in sync with the entities on every boot,
-without touching existing data.
+without touching existing data. All database access in the API goes through
+TypeORM (repositories + query builder + `DataSource`); there is no direct
+driver usage anywhere.
 
 Highlights of the entity model:
 
 - UUID primary keys, `DATETIME(6)` UTC timestamps, `BIGINT` money.
+- snake_case column names via `SnakeNamingStrategy` (shared by the MySQL and
+  SQLite paths), so runtime and DDL can never drift apart.
 - Full foreign-key graph with `CASCADE` / `RESTRICT` / `SET NULL` as appropriate.
 - Targeted indexes for hot paths (leaderboards, message history, wallet ledger).
-- `ENUM`s for statuses (see `backend/src/database/enums.ts`).
+- `@Check` constraints for invariants (non-negative wallets, season date
+  ranges, valid player counts, …). Note: TypeORM 0.3.x does not emit CHECK
+  constraints for the MySQL driver family, so they are enforced by the
+  in-memory SQLite used in tests; on MySQL the application logic upholds them.
 
 Starter data (game catalogue, shop items, daily quests, first season, public
 lounge, bot pool, dev admin) is seeded by runtime seeders in the API at
