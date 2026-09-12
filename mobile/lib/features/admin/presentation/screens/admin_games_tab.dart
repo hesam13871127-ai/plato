@@ -230,7 +230,7 @@ class _AddGameDialogState extends State<_AddGameDialog> {
           TextField(
             controller: _slug,
             style: const TextStyle(color: AppColors.textPrimary),
-            decoration: const InputDecoration(hintText: 'Slug (e.g. blackjack)'),
+            decoration: const InputDecoration(hintText: 'Slug (e.g. poker)'),
           ),
         ],
       ),

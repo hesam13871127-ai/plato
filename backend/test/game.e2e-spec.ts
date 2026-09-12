@@ -71,8 +71,8 @@ describe('VibeTable games (e2e)', () => {
     }>;
     const playable = games.filter((g) => g.status === 'active' && g.supportsBots);
     // Prefer quick games: this test plays a full table with real-time bot
-    // pacing, and long strategy games (chess, 2048 Duel) blow the timeout.
-    const preferred = new Set(['dominoes', 'connect4', 'checkers', 'tic_tac_toe']);
+    // pacing, and long strategy games (chess, backgammon) blow the timeout.
+    const preferred = new Set(['dominoes', 'connect4', 'checkers']);
     const playableGame = playable.find((g) => preferred.has(g.slug)) ?? playable[0];
     return playableGame
       ? { slug: playableGame.slug, maxPlayers: playableGame.maxPlayers }
@@ -381,8 +381,8 @@ function humanActionFor(
     return null;
   }
 
-  if (slug === 'snakes_ladders' || slug === 'bingo') {
-    return { type: slug === 'bingo' ? 'draw' : 'roll', payload: {} };
+  if (slug === 'bingo') {
+    return { type: 'draw', payload: {} };
   }
 
   if (slug === 'dice_party') {
@@ -759,15 +759,6 @@ function humanActionFor(
           }
         }
       }
-    }
-    return null;
-  }
-
-  if (slug === 'tic_tac_toe') {
-    const cells = board.cells as number[] | undefined;
-    if (cells) {
-      const idx = cells.findIndex((c) => c === 0);
-      if (idx >= 0) return { type: 'place', payload: { idx } };
     }
     return null;
   }
