@@ -186,6 +186,17 @@ describe('planTableCheckRepairs', () => {
 });
 
 describe('SchemaCheckRepairService (mocked MySQL)', () => {
+  // mysql2 resolves `query()` to the [rows, fields] tuple — the exact shape
+  // the real driver returns (this is what the shape-masking regression
+  // covered: the sqljs shape `[rows]` used to mask a misread of `rows[0]`).
+  const mysql2Result = (ddl: string) => [
+    [{ Table: 'users', 'Create Table': ddl }],
+    [
+      { name: 'Table', type: 254 },
+      { name: 'Create Table', type: 252 },
+    ],
+  ];
+
   it('heals an existing database that still carries the stale strict check', async () => {
     const executed: string[] = [];
     const dataSource = {
@@ -205,7 +216,7 @@ describe('SchemaCheckRepairService (mocked MySQL)', () => {
       ],
       query: jest.fn(async (sql: string) => {
         if (sql.startsWith('SHOW CREATE TABLE `users`')) {
-          return [{ Table: 'users', 'Create Table': STALE_USERS_DDL }];
+          return mysql2Result(STALE_USERS_DDL);
         }
         executed.push(sql);
         return [];
@@ -244,7 +255,7 @@ describe('SchemaCheckRepairService (mocked MySQL)', () => {
       ],
       query: jest.fn(async (sql: string) => {
         if (sql.startsWith('SHOW CREATE TABLE `users`')) {
-          return [{ Table: 'users', 'Create Table': inSyncDdl }];
+          return mysql2Result(inSyncDdl);
         }
         executed.push(sql);
         return [];
@@ -253,6 +264,36 @@ describe('SchemaCheckRepairService (mocked MySQL)', () => {
 
     const service = new SchemaCheckRepairService(dataSource as never);
     await service.repairCheckConstraints();
+    expect(executed).toEqual([]);
+  });
+
+  it('treats an empty SHOW CREATE TABLE result as nothing to do', async () => {
+    const executed: string[] = [];
+    const dataSource = {
+      driver: { options: { type: 'mysql' } },
+      isInitialized: true,
+      entityMetadatas: [
+        {
+          tableName: 'users',
+          checks: [
+            {
+              name: 'chk_users_phone_or_identity',
+              expression: 'phone IS NOT NULL OR email IS NOT NULL OR is_bot = 1',
+            },
+          ],
+        },
+      ],
+      query: jest.fn(async (sql: string) => {
+        if (sql.startsWith('SHOW CREATE TABLE `users`')) {
+          return [[], []]; // mysql2 zero-row shape
+        }
+        executed.push(sql);
+        return [];
+      }),
+    };
+
+    const service = new SchemaCheckRepairService(dataSource as never);
+    await expect(service.repairCheckConstraints()).resolves.toBeUndefined();
     expect(executed).toEqual([]);
   });
 

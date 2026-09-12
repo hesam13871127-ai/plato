@@ -400,12 +400,22 @@ export class SchemaCheckRepairService implements OnModuleInit {
 
       const plans: TableCheckPlan[] = [];
       for (const table of expected) {
-        const rows = await this.dataSource.query(
+        const raw = await this.dataSource.query(
           `SHOW CREATE TABLE \`${escapeIdentifier(table.tableName)}\``,
         );
+        // mysql2/mariadb resolve `query()` to the [rows, fields] tuple;
+        // sql.js resolves it to the rows array directly. Normalise both.
+        const rows = Array.isArray(raw) && Array.isArray(raw[0]) ? raw[0] : raw;
         const row = Array.isArray(rows) ? rows[0] : rows;
         const createSql: string =
           row?.['Create Table'] ?? row?.['Create View'] ?? '';
+        if (!createSql) {
+          // Never issue blind ALTERs when the table's DDL could not be read.
+          this.logger.warn(
+            `could not read CREATE TABLE for \`${table.tableName}\`; skipping check reconciliation for it`,
+          );
+          continue;
+        }
         const stored = parseStoredChecks(createSql);
         const plan = planTableCheckRepairs(table.tableName, stored, table.checks);
         if (plan.sql) plans.push(plan);
