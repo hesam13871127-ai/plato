@@ -324,6 +324,26 @@ const CATALOG: GameSeed[] = [
     supportsBots: true,
     rankedEnabled: true,
     status: 'active',
+  },  {
+    slug: 'tic_tac_toe',
+    name: 'Tic-Tac-Toe',
+    description: 'The classic three-by-three — claim a row, column or diagonal before your rival does.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 2,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
+  },  {
+    slug: 'tile_duel',
+    name: '2048 Duel',
+    description: 'Each player owns a 2048 board — slide, merge and be the first to forge the 2048 tile.',
+    minPlayers: 2,
+    maxPlayers: 2,
+    avgDurationMinutes: 8,
+    supportsBots: true,
+    rankedEnabled: true,
+    status: 'active',
   },
 ];
 

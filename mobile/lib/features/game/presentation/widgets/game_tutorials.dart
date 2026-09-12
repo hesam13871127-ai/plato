@@ -940,5 +940,51 @@ class GameTutorials {
         bodyFa: 'کلمه را کامل کن تا بیست‌وپنج امتیاز بونوس بگیری. بعد از سه کلمه، بیشترین امتیاز بازی را می‌برد.',
       ),
     ],
+    'tic_tac_toe': [
+      TutorialStep(
+        emoji: '❌',
+        titleEn: 'Claim a square',
+        titleFa: 'خانه بگیر',
+        bodyEn: 'You are X, your rival is O. On your turn tap any free square to claim it.',
+        bodyFa: 'تو ایکس (X) ای و حریفات دور (O). در نوبتت روی هر خانهٔ خالی بزن تا آن را از آن خود کنی.',
+      ),
+      TutorialStep(
+        emoji: '📏',
+        titleEn: 'Line up three',
+        titleFa: 'سه تایی بساز',
+        bodyEn: 'A full row, column or diagonal of three claims the game on the spot — watch for the golden flash.',
+        bodyFa: 'سه تا در یک ردیف، ستون یا قطر یعنی برد در همان لحظه — به درخشش طلایی خط برنده دقت کن.',
+      ),
+      TutorialStep(
+        emoji: '🧠',
+        titleEn: 'Block and counter',
+        titleFa: 'مسدود کن و جواب بده',
+        bodyEn: 'If your rival has two in a line, take the third square. Control the centre and keep both corners open.',
+        bodyFa: 'اگر حریف دو خانهٔ یک خط را دارد، سوم را بگیر. وسط را در اختیار بگیر و گوشه‌ها را باز نگه‌دار.',
+      ),
+    ],
+    'tile_duel': [
+      TutorialStep(
+        emoji: '🧩',
+        titleEn: 'Your own board',
+        titleFa: 'بورد خودت',
+        bodyEn: 'Each player owns a private 2048 board. On your turn drag your board (or use the arrows) to slide one line.',
+        bodyFa: 'هر بازیکن یک بورد ۲۰۴۸ خصوصی دارد. در نوبتت بوردت را بکش (یا از کلیدهای جهت استفاده کن) تا یک خط را جابه‌جا کنی.',
+      ),
+      TutorialStep(
+        emoji: '🤝',
+        titleEn: 'Merge to climb',
+        titleFa: 'ادغام کن و بالا برو',
+        bodyEn: 'Equal tiles merge when they collide and a new tile drops in after every slide. Bigger tiles mean a bigger total.',
+        bodyFa: 'کاشی‌های هم‌عدد هنگام برخورد ادغام می‌شوند و بعد از هر حرکت یک کاشی جدید می‌افتد. کاشی‌های بزرگ‌تر یعنی مجموع بیشتر.',
+      ),
+      TutorialStep(
+        emoji: '🏆',
+        titleEn: 'Forge the 2048',
+        titleFa: 'کاشی ۲۰۴۸ را بساز',
+        bodyEn: 'First to merge the golden 2048 tile wins instantly. If both boards get stuck, the higher total takes the duel.',
+        bodyFa: 'هرکس زودتر کاشی طلایی ۲۰۴۸ بسازد همان لحظه می‌برد. اگر هر دو بورد گرفتار شوند، مجموع بالاتر دوئل را می‌برد.',
+      ),
+    ],
   };
 }

@@ -30,6 +30,8 @@ import { ReversiEngine } from './reversi.engine';
 import { GomokuEngine } from './gomoku.engine';
 import { BlackjackEngine } from './blackjack.engine';
 import { HangmanEngine } from './hangman.engine';
+import { TicTacToeEngine } from './tic-tac-toe.engine';
+import { TileDuelEngine } from './tile-duel.engine';
 
 /**
  * Look-up table of every playable engine. New games register here; the rest of
@@ -73,6 +75,8 @@ export class EngineRegistry {
     gomoku: GomokuEngine,
     blackjack: BlackjackEngine,
     hangman: HangmanEngine,
+    ticTacToe: TicTacToeEngine,
+    tileDuel: TileDuelEngine,
   ) {
     this.register(dominoes);
     this.register(ludo);
@@ -104,6 +108,8 @@ export class EngineRegistry {
     this.register(gomoku);
     this.register(blackjack);
     this.register(hangman);
+    this.register(ticTacToe);
+    this.register(tileDuel);
   }
 
   register(engine: BaseGameEngine): void {
