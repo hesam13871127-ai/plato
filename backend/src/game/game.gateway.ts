@@ -124,8 +124,19 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
           client.emit('game:reconnect', snapshot);
         }
       }
-    } catch {
-      client.emit('unauthorized', { message: 'Invalid or expired access token.' });
+    } catch (error) {
+      const message = error instanceof Error ? (error as Error).message : 'invalid token';
+      const isExpired = (error as { name?: string })?.name === 'TokenExpiredError' || message === 'jwt expired';
+      client.emit('unauthorized', {
+        message: isExpired ? 'Access token expired.' : 'Invalid or expired access token.',
+        code: isExpired ? 'token_expired' : 'invalid_token',
+        expired: isExpired,
+      });
+      if (isExpired) {
+        this.logger.debug(`Game socket handshake expired: ${client.id}`);
+      } else {
+        this.logger.warn(`Game socket handshake rejected: ${message} (${client.id})`);
+      }
       client.disconnect(true);
     }
   }

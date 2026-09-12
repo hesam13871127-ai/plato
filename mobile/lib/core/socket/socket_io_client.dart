@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import '../constants/app_constants.dart';
+import '../network/api_endpoints.dart';
 import '../storage/secure_token_storage.dart';
 
 /// A small, dependency-free Socket.IO (Engine.IO v4 / Socket.IO v4) client
@@ -36,6 +39,12 @@ class SocketIoClient {
   bool _intentionalClose = false;
   bool _connecting = false;
   int _reconnectAttempts = 0;
+
+  // --- token-expired handling ---
+  bool _handlingExpired = false;
+  String? _lastDisconnectCode;
+  Future<bool>? _refreshInFlight;
+  int _consecutiveExpired = 0;
 
   final Map<String, Set<void Function(dynamic data)>> _eventHandlers = {};
   final Map<int, Completer<dynamic>> _pendingAcks = {};
@@ -82,7 +91,9 @@ class SocketIoClient {
       await channel.ready;
       _socketReady = true;
       _connecting = false;
-      _reconnectAttempts = 0;
+      // Don't reset _reconnectAttempts fully on jwt-expired loops — it provides
+      // backoff, but on a successful `authenticated` we reset.
+      // Keep existing attempts for now.
 
       _socketSub = channel.stream.listen(
         _onRawData,
@@ -226,14 +237,97 @@ class SocketIoClient {
       if (decoded.isEmpty) return;
       final event = decoded[0] as String?;
       if (event == null) return;
-      if (event == 'authenticated') isAuthenticated = true;
-      if (event == 'unauthorized') isAuthenticated = false;
       final data = decoded.length > 1 ? decoded[1] : null;
+      if (event == 'authenticated') {
+        isAuthenticated = true;
+        _reconnectAttempts = 0;
+        _consecutiveExpired = 0;
+        _lastDisconnectCode = null;
+      }
+      if (event == 'unauthorized') {
+        isAuthenticated = false;
+        final isExpired = _isExpiredUnauthorized(data);
+        if (isExpired) {
+          _lastDisconnectCode = 'token_expired';
+          _consecutiveExpired++;
+          // Kick off a refresh without blocking the event dispatch.
+          // The next reconnect will use the fresh token.
+          if (!_handlingExpired) {
+            _handlingExpired = true;
+            // ignore: discarded_futures
+            _tryRefresh().whenComplete(() => _handlingExpired = false);
+          }
+        } else {
+          _lastDisconnectCode = 'unauthorized';
+        }
+      }
       for (final handler in List<void Function(dynamic)>.of(_eventHandlers[event] ?? const [])) {
         handler(data);
       }
     } on Object {
       // Ignore malformed frames defensively.
+    }
+  }
+
+  bool _isExpiredUnauthorized(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final code = data['code'] as String?;
+      if (code == 'token_expired') return true;
+      if (data['expired'] == true) return true;
+      final msg = (data['message'] as String?)?.toLowerCase() ?? '';
+      if (msg.contains('expired')) return true;
+    } else if (data is Map) {
+      final code = data['code'] as String?;
+      if (code == 'token_expired') return true;
+      if (data['expired'] == true) return true;
+    }
+    return false;
+  }
+
+  Future<bool> _tryRefresh() async {
+    if (_refreshInFlight != null) return _refreshInFlight!;
+    final f = _doRefresh();
+    _refreshInFlight = f;
+    try {
+      return await f;
+    } finally {
+      _refreshInFlight = null;
+    }
+  }
+
+  Future<bool> _doRefresh() async {
+    final refreshToken = await _storage?.refreshToken;
+    if (refreshToken == null || refreshToken.isEmpty) return false;
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: '$_baseUrl${AppConstants.apiPrefix}',
+        connectTimeout: const Duration(seconds: 8),
+        receiveTimeout: const Duration(seconds: 8),
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      ));
+      final res = await dio.post<Map<String, dynamic>>(
+        ApiEndpoints.refresh,
+        data: {'refreshToken': refreshToken},
+        options: Options(headers: {'Authorization': ''}),
+      );
+      final wrapper = res.data;
+      // Server replies { data: { accessToken, refreshToken, ... } }  OR  { accessToken, ... }
+      final Map<String, dynamic>? data = (wrapper?['data'] as Map<String, dynamic>?) ?? wrapper;
+      final at = data?['accessToken'] as String?;
+      final rt = data?['refreshToken'] as String?;
+      if (at != null && at.isNotEmpty && rt != null && rt.isNotEmpty) {
+        await _storage?.saveTokens(accessToken: at, refreshToken: rt);
+        _consecutiveExpired = 0;
+        return true;
+      }
+      return false;
+    } catch (_) {
+      // Single-use refresh token may already be consumed — on failure we
+      // surface unauthorized again; the app's HTTP layer will eventually
+      // clear storage and redirect to login.
+      // Don't clear here immediately — let the HTTP refresh flow decide.
+      // After 3 consecutive expired loops we back off harder.
+      return false;
     }
   }
 
@@ -294,6 +388,29 @@ class SocketIoClient {
 
   void _scheduleReconnect() {
     if (_disposed || _intentionalClose) return;
+    // If the last disconnect was due to an expired JWT we must refresh
+    // before the next handshake — otherwise we'd hammer the server with the
+    // same stale token every ~500ms (observed `jwt expired` flood). Refresh
+    // is single-flight so concurrent sockets share the rotation.
+    if (_lastDisconnectCode == 'token_expired') {
+      _reconnectTimer?.cancel();
+      // Cap the hot-loop: after 3 consecutive expiries back off to 8s.
+      final expiredDelayMs = _consecutiveExpired >= 3 ? 8000 : 1200;
+      _reconnectTimer = Timer(Duration(milliseconds: expiredDelayMs), () async {
+        if (_disposed || _intentionalClose) return;
+        final ok = await _tryRefresh();
+        if (_disposed || _intentionalClose) return;
+        if (!ok) {
+          // Refresh failed — still attempt a reconnect (maybe token was already
+          // refreshed by the HTTP layer), but keep backing off to avoid spam.
+          // After many failures the HTTP 401 path will clear tokens and the
+          // app will redirect to login, which disposes this client.
+        }
+        _lastDisconnectCode = null;
+        await connect();
+      });
+      return;
+    }
     _reconnectTimer?.cancel();
     _reconnectAttempts++;
     final delay = Duration(

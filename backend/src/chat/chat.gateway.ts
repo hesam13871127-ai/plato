@@ -129,14 +129,24 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       this.broadcastPresence(client.userId, 'online');
       this.logger.log(`Socket connected: user=${client.userId}`);
     } catch (error) {
-      client.emit('unauthorized', { message: 'Invalid or expired access token.' });
-      void this.errorTracking?.track({
-        level: 'warning',
-        source: 'ws',
-        message: `Socket handshake rejected: ${error instanceof Error ? error.message : 'invalid token'}`,
-        path: 'ws:/chat',
-        context: { socketId: client.id },
+      const message = error instanceof Error ? error.message : 'invalid token';
+      const isExpired = (error as { name?: string })?.name === 'TokenExpiredError' || message === 'jwt expired';
+      client.emit('unauthorized', {
+        message: isExpired ? 'Access token expired.' : 'Invalid or expired access token.',
+        code: isExpired ? 'token_expired' : 'invalid_token',
+        expired: isExpired,
       });
+      if (isExpired) {
+        this.logger.debug(`Socket handshake expired: ${client.id}`);
+      } else {
+        void this.errorTracking?.track({
+          level: 'warning',
+          source: 'ws',
+          message: `Socket handshake rejected: ${message}`,
+          path: 'ws:/chat',
+          context: { socketId: client.id },
+        });
+      }
       client.disconnect(true);
     }
   }
