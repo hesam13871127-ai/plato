@@ -211,7 +211,7 @@ cd mobile && flutter pub get && flutter run -d chrome
 | مشکل | راه حل |
 |---|---|
 | `ECONNREFUSED 127.0.0.1:3306` | MySQL بالا نیست: `docker compose up -d mysql` |
-| `Table 'vibetable.xxx' doesn't exist` | با `synchronize` ساختن/به‌روزرسانی جدول‌ها هر بار خودکار است — بک‌اند را ری‌استارت کنید؛ اگر دیتابیس کهنه و خراب است `docker compose down -v` و `up` دوباره |
+| `Table 'vibetable.xxx' doesn't exist` | در این نسخه `synchronize` همیشه روشن است (حتی اگر `DB_SYNCHRONIZE=false` در `.env` باشد نادیده گرفته می‌شود) — فقط بک‌اند را ری‌استارت کنید؛ دیتابیس خالی/پاک‌شده در استارتاپ خودش ساخته می‌شود. اگر MySQL خودش problem دارد: `docker compose down -v && docker compose up -d mysql` |
 | `CONSTRAINT \`chk_...\` failed` (دیتابیس قدیمی) | `SchemaCheckRepairService` در استارتاپ CHECKهای کهنه را خودکار با متادیتای entityها هماهنگ می‌کند — کافی است کد جدید را اجرا کنید (خط لاگ: `[SchemaCheckRepair]`) |
 | اپ در شبیه‌ساز اندروید وصل نمی‌شود | بک‌اند روی `localhost:3000` باشد؛ اپ خودش `10.0.2.2` را می‌زند — فایروال ویندوز را هم چک کنید |
 | اپ در مرورگر: CORS | `CORS_ORIGINS` در `.env` بک‌اند باید پورتِ `flutter run -d chrome` را داشته باشد (پیش‌فرض `http://localhost:8080` را دارد؛ پورت واقعی را در خروجی ترمینال فلاتر ببینید و اضافه کنید) |

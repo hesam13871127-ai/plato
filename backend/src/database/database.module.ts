@@ -49,8 +49,22 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
           };
         }
 
+        // The database is self-managing: entities are the single source of
+        // truth and `synchronize` reconciles the schema on every boot (fresh
+        // databases are created, existing ones updated incrementally). The
+        // old DB_SYNCHRONIZE env switch is ignored on purpose — a stale
+        // `false` left in a hand-kept .env against a wiped/empty database
+        // used to leave the app with zero tables and a crashed boot.
+        if ((process.env.DB_SYNCHRONIZE ?? 'true').toLowerCase() === 'false') {
+          logger.warn(
+            'DB_SYNCHRONIZE=false found in the environment but IGNORED — ' +
+              'this project has no migrations; the schema is always kept in ' +
+              'sync from the entities on boot.',
+          );
+        }
+
         logger.log(
-          `driver: mysql (${db.host}:${db.port}/${db.database}) | column naming: snake_case [ok] | synchronize: ${db.synchronize}`,
+          `driver: mysql (${db.host}:${db.port}/${db.database}) | column naming: snake_case [ok] | synchronize: always on`,
         );
 
         return {
@@ -61,7 +75,7 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
           password: db.password,
           database: db.database,
           entities,
-          synchronize: db.synchronize,
+          synchronize: true,
           namingStrategy: new SnakeNamingStrategy(),
           logging: db.logging,
           timezone: 'Z',

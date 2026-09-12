@@ -18,29 +18,34 @@ export class ShopCatalogueSeeder implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    for (const item of SHOP_CATALOGUE) {
-      const existing = await this.shopItems.findOne({ where: { id: item.id } });
-      if (existing) continue;
+    try {
+      for (const item of SHOP_CATALOGUE) {
+        const existing = await this.shopItems.findOne({ where: { id: item.id } });
+        if (existing) continue;
 
-      await this.shopItems.save(
-        this.shopItems.create({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          type: item.type,
-          rarity: item.rarity,
-          price: item.price,
-          currency: item.currency,
-          discountPercent: item.discountPercent,
-          isUniqueOwned: item.isUniqueOwned,
-          giftable: item.giftable,
-          isAvailable: true,
-          stock: 0,
-          sortOrder: item.sortOrder,
-          metadata: item.metadata,
-        }),
-      );
+        await this.shopItems.save(
+          this.shopItems.create({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            type: item.type,
+            rarity: item.rarity,
+            price: item.price,
+            currency: item.currency,
+            discountPercent: item.discountPercent,
+            isUniqueOwned: item.isUniqueOwned,
+            giftable: item.giftable,
+            isAvailable: true,
+            stock: 0,
+            sortOrder: item.sortOrder,
+            metadata: item.metadata,
+          }),
+        );
+      }
+      this.logger.log('Shop catalogue ensured.');
+    } catch (error) {
+      // A boot-time seeding failure must never take the API down.
+      this.logger.error(`Shop catalogue seeding failed: ${(error as Error).message}`);
     }
-    this.logger.log('Shop catalogue ensured.');
   }
 }

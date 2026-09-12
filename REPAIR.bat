@@ -60,11 +60,15 @@ call npm install
 echo.
 echo  ==========================================================
 echo    SUCCESS LOOKS LIKE THIS - watch for these lines:
-echo      [DatabaseModule] driver: mysql ^(...^) ^| column naming: snake_case [ok]
+echo      [DatabaseModule] driver: mysql ^(...^) ^| column naming: snake_case [ok] ^| synchronize: always on
 echo      [SchemaCheckRepair] ... (schema self-check, normal)
 echo      [GameBootstrap] Game subsystem ready (N bots in pool).
 echo      Nest application successfully started
-echo    (a few lines of WARN ModerationAdminSeeder are NORMAL)
+echo    NORMAL / ignore:
+echo      WARN "DB_SYNCHRONIZE=false found ... IGNORED"  (your old .env line - harmless)
+echo      a few lines of WARN ModerationAdminSeeder
+echo    If the API started but shows ERROR lines with the full stack,
+echo    take a photo of the window and send it.
 echo  ==========================================================
 echo.
 call npm run start:dev
